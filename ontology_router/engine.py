@@ -6,8 +6,10 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Iterable
 
-from .models import Paper, RoundStats, Term
+from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
 from .providers import ProviderError, SearchProvider
+
+DOWN_RELATIONS = ("mechanism", "measurement", "failure_mode", "method")
 
 REQUIRED_RELATIONS = ("mechanism", "measurement", "failure_mode", "method", "neighbor_field")
 STOPWORDS = {"a","an","and","are","as","at","be","been","being","but","by","can","could","did","do","does","for","from","had","has","have","how","if","in","into","is","it","its","may","might","more","most","of","on","or","our","should","so","than","that","the","their","them","then","there","these","they","this","to","under","using","was","we","were","what","when","where","which","who","why","will","with","within","without","would","across","reliably","change","effect","effects","impact","study","paper","papers","research","results","new","based","approach","using","used","large","system"}
@@ -227,41 +229,171 @@ def build_graph(question: str, terms: list[Term], papers: list[Paper]) -> dict:
             edges.append({"from": node_id, "to": term_id, "type": "supports"})
     return {"nodes": nodes, "edges": edges}
 
-def run_router(question: str, providers: list[SearchProvider], *, max_rounds: int = 6, results_per_query: int = 20) -> dict:
-    papers, searched, rounds, provider_errors = [], set(), [], []
-    queries = seed_queries(question)
-    previous_grounded = set()
-    for round_number in range(1, max_rounds + 1):
-        round_queries = [q for q in queries if normalize(q) not in {normalize(x) for x in searched}]
-        if not round_queries: break
-        incoming = []
-        for query in round_queries:
+def canonical_root(question: str, max_tokens: int = 6) -> str:
+    """Single root topic for the whole run. One question -> one canonical node."""
+    selected = tokens(question)
+    return " ".join(selected[:max_tokens]) or question.strip().lower()
+
+
+def relation_to_direction(relation: str, source_kind: str) -> str:
+    if source_kind in {"field", "broader_topic"}:
+        return UP
+    if relation in DOWN_RELATIONS:
+        return DOWN
+    return SIDEWAYS
+
+
+def _query_for_node(node: ConceptNode) -> str:
+    # Direction steers priority, not query mangling: query stays the label.
+    return node.label
+
+
+def run_agent(
+    question: str,
+    providers: list[SearchProvider],
+    policy: AgentPolicy | None = None,
+    *,
+    results_per_query: int = 20,
+) -> dict:
+    """Single-root, agent-budget traversal.
+
+    One root topic; the agent decides depth/direction via policy.
+    Concepts accumulate until max_nodes / max_depth / max_rounds / saturation.
+    """
+    policy = policy or AgentPolicy()
+    root_label = canonical_root(question)
+    concepts: dict[str, ConceptNode] = {}
+    root = ConceptNode("c0", root_label, "root", 0, 1.0, [], "", root_label, 0)
+    concepts[root.node_id] = root
+    visited = {normalize(root_label)}
+    papers: list[Paper] = []
+    searched: set[str] = set()
+    rounds: list[RoundStats] = []
+    provider_errors: list[str] = []
+    frontier: list[ConceptNode] = [root]
+    counter = 1
+    previous_grounded: set[str] = set()
+    status = "partial"
+    stop_reason = "no additional distinct queries"
+
+    for round_number in range(1, max(1, policy.max_rounds) + 1):
+        if len(concepts) >= policy.max_nodes:
+            status, stop_reason = "partial", "agent node budget reached"
+            break
+        expandable = [c for c in sorted(frontier, key=lambda c: c.weight, reverse=True)
+                      if c.depth < policy.max_depth]
+        if policy.per_direction_cap is not None:
+            expandable = expandable[: max(1, policy.per_direction_cap)]
+        else:
+            expandable = expandable[:5]  # per-round query budget; concepts unbounded
+        round_queries = []
+        for node in expandable:
+            q = _query_for_node(node)
+            if normalize(q) not in {normalize(x) for x in searched}:
+                round_queries.append((node, q))
+        if not round_queries:
+            status, stop_reason = "partial", "no additional distinct queries"
+            break
+        incoming: list[Paper] = []
+        for node, query in round_queries:
             searched.add(query)
             for provider in providers:
-                try: incoming.extend(provider.search(query, results_per_query))
-                except ProviderError as exc: provider_errors.append(f"{provider.name}: {exc}")
+                try:
+                    found = provider.search(query, results_per_query)
+                    for p in found:
+                        p.found_by = list(dict.fromkeys([*p.found_by, query]))
+                    incoming.extend(found)
+                except ProviderError as exc:
+                    provider_errors.append(f"{provider.name}: {exc}")
         papers, added = _dedupe_papers(papers, incoming)
+        for node, query in round_queries:
+            for p in papers:
+                if query in p.found_by and p.paper_id not in node.paper_ids:
+                    node.paper_ids.append(p.paper_id)
+            node.support = len(node.paper_ids)
         terms = extract_terms(question, papers)
         covered, gaps = coverage(terms)
         grounded_now = {t.text for t in terms if t.confidence in {"high", "medium"}}
-        checks = _stop_checks(round_number, papers, terms, gaps, new_papers=added, new_grounded_terms=len(grounded_now - previous_grounded))
-        rounds.append(RoundStats(round_number, round_queries, added, len(papers), len(grounded_now - previous_grounded), len(grounded_now), gaps, checks))
+        # Grow concepts from newly grounded terms; agent budget is the ceiling.
+        new_frontier: list[ConceptNode] = []
+        for term in terms:
+            if term.confidence not in {"high", "medium"}:
+                continue
+            key = normalize(term.text)
+            if key in visited:
+                continue
+            direction = relation_to_direction(term.relation, "term")
+            depth = 1
+            # Attach to highest-weight expandable parent that shares a paper.
+            parent = expandable[0] if expandable else root
+            for cand in expandable:
+                if set(cand.paper_ids) & set(term.paper_ids):
+                    parent = cand
+                    break
+            depth = parent.depth + 1
+            if depth > policy.max_depth:
+                continue
+            if round_number > 1 and len(term.paper_ids) < policy.support_threshold:
+                continue
+            if len(concepts) >= policy.max_nodes:
+                break
+            weight = term.score * policy.direction_weight(direction) * (policy.decay ** depth)
+            node_id = f"c{counter}"
+            counter += 1
+            node = ConceptNode(node_id, term.text, direction, depth, round(weight, 4),
+                               list(term.paper_ids[:8]), parent.node_id, parent.label,
+                               len(term.paper_ids))
+            concepts[node_id] = node
+            visited.add(key)
+            new_frontier.append(node)
+        new_frontier.sort(key=lambda c: c.weight, reverse=True)
+        checks = _stop_checks(round_number, papers, terms, gaps,
+                              new_papers=added,
+                              new_grounded_terms=len(grounded_now - previous_grounded))
+        checks["node_budget"] = len(concepts) < policy.max_nodes
+        checks["has_frontier"] = bool(new_frontier)
+        rounds.append(RoundStats(round_number, [q for _, q in round_queries], added,
+                                 len(papers), len(grounded_now - previous_grounded),
+                                 len(grounded_now), gaps, checks))
         previous_grounded = grounded_now
+        frontier = new_frontier
         if not papers and provider_errors:
-            status, stop_reason = "failed", "live providers were unreachable or returned no evidence"; break
+            status, stop_reason = "failed", "live providers were unreachable or returned no evidence"
+            break
         if all(checks.values()):
-            status, stop_reason = "ready", "all usability checks passed"; break
-        queries = next_queries(question, terms, gaps, searched)
-        if added == 0 and not queries:
-            status, stop_reason = "partial", "search produced no new evidence"; break
+            status, stop_reason = "ready", "all usability checks passed"
+            break
+        if added == 0 and not new_frontier:
+            status, stop_reason = "partial", "search produced no new evidence"
+            break
     else:
         status, stop_reason = "partial", "maximum rounds reached"
+
     if not papers:
-        status, stop_reason, terms = "failed", "no papers could be retrieved", []
+        terms: list[Term] = []
         covered, gaps = {r: [] for r in REQUIRED_RELATIONS}, list(REQUIRED_RELATIONS)
+        status, stop_reason = "failed", "no papers could be retrieved"
     else:
         terms = extract_terms(question, papers)
         covered, gaps = coverage(terms)
-        if "status" not in locals(): status, stop_reason = "partial", "no additional distinct queries"
+        if status == "partial" and stop_reason == "no additional distinct queries" and not rounds:
+            pass
     top = terms[:30]
-    return {"version": 4, "question": question, "status": status, "stop_reason": stop_reason, "coverage": covered, "gaps": gaps, "recommended_queries": next_queries(question, terms, gaps, set()), "terms": [t.to_dict() for t in top], "papers": [p.to_dict() for p in sorted(papers, key=lambda p: (p.cited_by_count, p.year or 0), reverse=True)[:50]], "rounds": [r.to_dict() for r in rounds], "provider_errors": list(dict.fromkeys(provider_errors)), "graph": build_graph(question, top, papers)}
+    concept_list = sorted(concepts.values(), key=lambda c: (c.depth, -c.weight))
+    return {"version": 5, "question": question, "root_topic": root_label,
+            "status": status, "stop_reason": stop_reason,
+            "coverage": covered, "gaps": gaps,
+            "recommended_queries": next_queries(question, terms, gaps, set()),
+            "terms": [t.to_dict() for t in top],
+            "concepts": [c.to_dict() for c in concept_list],
+            "policy": policy.to_dict(),
+            "papers": [p.to_dict() for p in sorted(papers, key=lambda p: (p.cited_by_count, p.year or 0), reverse=True)[:50]],
+            "rounds": [r.to_dict() for r in rounds],
+            "provider_errors": list(dict.fromkeys(provider_errors)),
+            "graph": build_graph(question, top, papers)}
+
+
+def run_router(question: str, providers: list[SearchProvider], *, max_rounds: int = 6, results_per_query: int = 20) -> dict:
+    """Backward-compat wrapper: default policy, single root."""
+    return run_agent(question, providers, AgentPolicy(max_rounds=max(1, max_rounds)),
+                     results_per_query=results_per_query)

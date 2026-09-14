@@ -1,46 +1,43 @@
-# Eonrise v0.5
+# Eonrise v1.1
 
-Eonrise turns one question into a grounded research map: mechanisms, measurements, failure modes, methods, neighboring fields, evidence, gaps, and the next searches.
+One question → one root topic → agent-owned up/down/sideways traversal.
 
-## Two modes
-
-### Live mode
-
-For a normal computer with internet. Crossref works without signup; OpenAlex adds richer topic nesting with a free key.
+## Use
 
 ```bash
+# Offline / reproducible (no network)
+python -m ontology_router "how does spaced repetition improve memory" --mode assistant --bundle tests/fixtures/papers.json --out output
+
+# Live (Crossref + optional OpenAlex)
 python -m ontology_router "your question" --mode live --email you@example.com --out output
+
+# Agent steers depth and direction
+python -m ontology_router "memory retention" --mode assistant --bundle tests/fixtures/papers.json --out output \
+  --agent-name deep-diver --max-depth 5 --max-nodes 200 --down-weight 2.0 --sideways-weight 0.5
 ```
 
-### Assistant mode
+## Rule
 
-For ChatGPT, restricted machines, reproducible runs, or saved research. It uses a JSON evidence bundle and makes no network request.
-
-```bash
-python -m ontology_router "your question" --mode assistant --bundle evidence.json --out output
-```
-
-The report exposes remaining gaps and recommended searches. An assistant can search those, append evidence to the bundle, and rerun until the stopping checks pass.
+Single root topic. Each agent carries its own budget (`--max-nodes`, `--max-depth`,
+`--up/--down/--sideways-weight`) and recurses until budget, depth, or saturation.
+Two agents, same question, different policies → different maps. See `docs/SPEC-v1.md`.
 
 ## Output
 
-- `report.md` — compact human-facing brief
-- `internal_report.md` — full research trace
-- `research_map.json` — full evidence and run history
+- `report.md` — compact brief with direction groups
+- `internal_report.md` — concept tree + evidence
+- `research_map.json` — full evidence, concepts, policy, run history
 - `graph.json` — nodes and typed edges for a UI
 
-## Stop rule
-
-Eonrise stops only when it has enough papers, all five angles are grounded, several search paths contributed evidence, top terms are mostly supported, and another round adds almost nothing.
-
-## Tests
+## Gauntlet
 
 ```bash
 python -m unittest discover -s tests -v
+python -m gauntlet.run
 ```
 
-Standard library only.
+Builder → redteam loop: 12 unit tests + 6 offline attacks (vague, single-word,
+non-English, empty bundle, duplicates, hostile input) + artifact smoke. All must
+pass before OSS release.
 
-## Operating contract
-
-For broad work, Eonrise is the default depth layer. Research stays deep internally while the user-facing answer stays minimal. See `docs/OPERATING_CONTRACT.md`.
+Standard library only. MIT.
