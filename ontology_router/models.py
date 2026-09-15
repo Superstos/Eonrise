@@ -53,9 +53,16 @@ class RoundStats:
     grounded_terms: int
     gaps: list[str]
     stop_checks: dict[str, bool]
+    gap_queries: list[str] = field(default_factory=list)
+    new_on_topic: int = 0
+    on_topic_papers: int = 0
     def to_dict(self) -> dict[str, Any]: return asdict(self)
 
 # --- v1.1: single-root agent traversal ---
+
+# Run outcomes. `usable` sits between: every gap that could be repaired was searched,
+# at least 4 of 5 relations grounded, one may remain honestly empty.
+STATUSES = ("ready", "usable", "partial", "failed")
 
 UP = "up"
 DOWN = "down"

@@ -35,6 +35,30 @@ class MemoryStore:
         with self.path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(slim, ensure_ascii=False) + "\n")
 
+    def background_labels(self, root_topic: str = "", min_roots: int = 3) -> set[str]:
+        """Labels that ranked highly on unrelated past questions.
+
+        `computer science` and `artificial intelligence` led the top ten of every run
+        regardless of the question. A label that keeps winning across different roots is
+        describing the library, not the question.
+        """
+        if not self.path.exists():
+            return set()
+        seen: dict[str, set[str]] = {}
+        for line in self.path.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            root = str(rec.get("root_topic", ""))
+            if not root or root == root_topic:
+                continue
+            for concept in rec.get("concepts", [])[:12]:
+                label = str(concept.get("label", "")).strip().lower()
+                if label:
+                    seen.setdefault(label, set()).add(root)
+        return {label for label, roots in seen.items() if len(roots) >= min_roots}
+
     def recall(self, question: str, limit: int = 3) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []

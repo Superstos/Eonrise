@@ -51,6 +51,33 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001 - gauntlet must report, not crash
             gates.append(("assistant smoke emits 4 artifacts + root", False, f"{type(exc).__name__}: {exc}"))
 
+    if not quick:
+        # Offline drift gate: a corpus that is half on-topic and half a neighbouring
+        # literature must not put the neighbour in the map.
+        try:
+            from ontology_router.engine import run_agent as _run
+            from ontology_router.models import AgentPolicy as _Policy, Paper as _Paper
+
+            class _Mixed:
+                name = "gauntlet-mixed"
+
+                def search(self, query, limit=20):
+                    on = [_Paper(f"on{i}", f"Saturation criteria for iterative exploration, study {i}",
+                                 keywords=["saturation"]) for i in range(10)]
+                    off = [_Paper(f"off{i}", f"Protein structure and dynamics under iterative refinement, part {i}",
+                                  keywords=["protein structure and dynamics"]) for i in range(12)]
+                    return on + off
+
+            drift = _run("when should an iterative search or exploration process stop using saturation",
+                         [_Mixed()], _Policy(name="gauntlet", max_nodes=60, max_depth=3, max_rounds=2))
+            labels = " ".join(c["label"] for c in drift["concepts"]) + " " +                      " ".join(t["text"] for t in drift["terms"])
+            ok = "protein" not in labels and bool(drift["terms"])
+            gates.append(("drift guard keeps a neighbouring literature out", ok,
+                          f"concepts={len(drift['concepts'])} on_topic={drift.get('on_topic_papers')}"))
+        except Exception as exc:  # noqa: BLE001
+            gates.append(("drift guard keeps a neighbouring literature out", False,
+                          f"{type(exc).__name__}: {exc}"))
+
     print("# Gauntlet report")
     failed = 0
     for name, passed, detail in gates:

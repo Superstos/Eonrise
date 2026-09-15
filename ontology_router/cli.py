@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from .engine import run_agent
+from .engine import canonical_root, run_agent
 from .memory import MemoryStore
 from .models import AgentPolicy
 from .providers import CachedHttpClient, CrossrefProvider, EvidenceBundleProvider, OpenAlexProvider
@@ -17,12 +17,12 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("question", help="Research question or topic in plain language")
     p.add_argument("--out", default="eonrise-output", help="Output directory")
     p.add_argument("--email", default=os.getenv("CROSSREF_EMAIL", ""), help="Email for Crossref polite pool")
-    p.add_argument("--openalex-key", default=os.getenv("OPENALEX_API_KEY", ""), help="OpenAlex API key")
+    p.add_argument("--openalex-key", default=os.getenv("OPENALEX_API_KEY", ""), help="OpenAlex API key (optional: raises rate limits, enables --semantic)")
     p.add_argument("--semantic", action="store_true", help="Use OpenAlex semantic search")
     p.add_argument("--mode", choices=("live", "assistant"), default="live", help="live: search scholarly APIs; assistant: use an offline evidence bundle")
     p.add_argument("--bundle", help="JSON evidence bundle for assistant mode")
     p.add_argument("--fixture", help=argparse.SUPPRESS)
-    p.add_argument("--crossref-only", action="store_true", help="Skip OpenAlex even when a key exists")
+    p.add_argument("--crossref-only", action="store_true", help="Skip OpenAlex (Crossref has no abstracts or topics; expect neighbor_field to stay empty)")
     p.add_argument("--max-rounds", type=int, default=6)
     p.add_argument("--results", type=int, default=20, help="Results per query/provider")
     p.add_argument("--http-timeout", type=int, default=12, help="Seconds per live API request")
@@ -51,8 +51,10 @@ def main() -> None:
         mode = "assistant"
     else:
         providers = [CrossrefProvider(http, args.email)]
-        if args.openalex_key and not args.crossref_only:
-            providers.append(OpenAlexProvider(http, args.openalex_key, args.semantic))
+        if not args.crossref_only:
+            # OpenAlex is on by default and needs no key: it is the only source carrying
+            # abstracts and a topic hierarchy, which `neighbor_field` depends on.
+            providers.append(OpenAlexProvider(http, args.openalex_key, args.semantic, args.email))
         mode = "live"
     policy = AgentPolicy(
         name=args.agent_name,
@@ -64,12 +66,19 @@ def main() -> None:
         sideways_weight=args.sideways_weight,
         support_threshold=max(1, args.support_threshold),
     )
-    result = run_agent(args.question, providers, policy, results_per_query=max(1, args.results))
+    store = MemoryStore(cache / "memory.jsonl")
+    try:
+        background = store.background_labels(canonical_root(args.question))
+    except OSError:
+        background = set()
+    result = run_agent(args.question, providers, policy, results_per_query=max(1, args.results),
+                       background=background)
+    result["background_terms_penalised"] = len(background)
     result["mode"] = mode
     result["input_bundle"] = str(Path(bundle_path).resolve()) if bundle_path else ""
     if not args.no_memory:
         try:
-            MemoryStore(cache / "memory.jsonl").append_run(result)
+            store.append_run(result)
         except OSError:
             pass
     write_outputs(result, args.out)

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from ontology_router.engine import run_agent
-from ontology_router.models import AgentPolicy, Paper
+from ontology_router.models import STATUSES, AgentPolicy, Paper
 from ontology_router.providers import EvidenceBundleProvider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
@@ -24,7 +24,7 @@ class RedteamTests(unittest.TestCase):
 
     def test_vague_query(self):
         r = run("stuff about thinking and things")
-        self.assertIn(r["status"], ("ready", "partial", "failed"))
+        self.assertIn(r["status"], STATUSES)
         self.assertTrue(r["root_topic"])
 
     def test_single_word(self):
@@ -34,7 +34,7 @@ class RedteamTests(unittest.TestCase):
 
     def test_non_english(self):
         r = run("mémoire et oubli apprentissage")
-        self.assertIn(r["status"], ("ready", "partial", "failed"))
+        self.assertIn(r["status"], STATUSES)
         self.assertTrue(r["root_topic"])
 
     def test_empty_bundle(self):
@@ -65,7 +65,7 @@ class RedteamTests(unittest.TestCase):
 
     def test_hostile_input_no_crash(self):
         r = run("'; DROP TABLE papers; -- <script>alert(1)</script>" * 3)
-        self.assertIn(r["status"], ("ready", "partial", "failed"))
+        self.assertIn(r["status"], STATUSES)
         for paper in r["papers"]:
             self.assertIsInstance(paper, dict)
 

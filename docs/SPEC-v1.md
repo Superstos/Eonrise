@@ -50,3 +50,101 @@ token overlap so reruns compound.
 No toolchain on this machine and no proven hot path. `normalize` / `_dedupe_papers` /
 n-gram extraction are isolated pure functions — first candidates for a later Rust
 extension. No rewrite until profiling says so.
+
+# v1.2 — drift guards, gap repair, keyless OpenAlex
+
+Added 2026-09-15 after running Eonrise on itself four times and measuring the artifacts.
+Findings: `references/eonrise-enhancement/00-index.md` in the training-grounds repo.
+
+## What was wrong
+
+| Defect | Measurement |
+|---|---|
+| Crossref carries no topic hierarchy and few abstracts | 0% subjects, 16% abstracts over 200 kept papers |
+| `neighbor_field` therefore cannot ground | gap in 6/6 runs |
+| Sub-queries drop the question | a map-quality run ended in gene-ontology literature |
+| Drift reads as productivity | 120-158 new papers per round keeps `saturated` false |
+| `next_queries` never searched | computed at exit, printed, never fed back |
+| Marker words label relations alone | `high performance computing` = measurement, `kidney failure` = failure mode |
+| Concept budget spent on paraphrases | 69-81% substring-redundant labels |
+| Papers kept by citations | median year 2006-2013 |
+| `ready` needs all five relations | 4/4 runs `partial` |
+
+## Rules added
+
+- **Providers.** OpenAlex is default and keyless; a key only raises limits and enables
+  `--semantic`. `--crossref-only` is an explicit downgrade.
+- **Topical gate.** `topical_papers()` keeps a paper when it shares two root tokens, or one
+  root token plus another question token. Concepts are extracted from that subset only.
+  Below `MIN_TOPICAL_CORPUS` (8) the gate stands down so small bundles still work.
+- **Saturation.** counts on-topic arrivals, not all arrivals.
+- **Gap repair.** `GAP_QUERY_SLOTS` (2) of the 5 per-round queries come from
+  `next_queries`. The cue steers retrieval; it may not become a finding.
+- **Relation guard.** `mechanism/measurement/failure_mode/method` need on-topic support, and
+  a term made only of gap-cue words is demoted to `topic`.
+- **Concept identity.** `concept_key()` is a stemmed token set; a label that contains or is
+  contained by a taken key does not get its own node.
+- **Keep score.** on-topic first, then recency + citations, before truncating to 50.
+- **Status.** `ready` > `usable` (4-5 of 5 relations, gaps repaired where possible) >
+  `partial` > `failed`. `STATUSES` in `models.py` is the closed vocabulary.
+- **Round stats.** carry `gap_queries`, `new_on_topic`, `on_topic_papers`;
+  `internal_report.md` prints them as a Search integrity table.
+
+## Gate additions
+
+`tests/test_drift_guards.py` — 22 tests, each written to fail in both directions
+(the gate must block the drifted paper AND pass the on-topic one). Verified by mutation:
+removing the relation guard and the redundancy skip fails 4 of them.
+
+## Known limits (measured, not fixed)
+
+- The topical gate is token overlap. A paper sharing two common root words survives:
+  a dark-matter detector paper passed a question about stopping criteria. Corpus-frequency
+  weighting was implemented and reverted — it could not separate those cases without
+  starving the on-topic set.
+- `failure_mode` still fails to ground on 3 of 4 self-test questions even after gap repair.
+- `neighbor_field` now grounds, but often as an OpenAlex domain label
+  ("biochemistry genetics and molecular biology") rather than a useful adjacent field.
+
+
+# v1.3 — release candidate
+
+Added 2026-09-15, driven by running the v1.2 build on its own weak spots.
+
+## What the v1.2 runs exposed
+
+| Finding | Measurement |
+|---|---|
+| Discipline names dominate every map | `computer science` in the top 10 of 8/8 runs |
+| `GENERIC_FIELDS` was checked on one source of four | same label also arrives as keyword, topic, title n-gram |
+| Provider hierarchy is mostly shelf labels | `fields` = Physical Sciences / Computer Science / Artificial Intelligence on 25 of 50 papers |
+| `failure_mode` never grounds | 50 papers, 35 abstracts, 8 with a limitation cue, 12 distinct phrases, 0 repeated — the support>=2 rule killed all of them |
+| Sentence fragments become concepts | `relation between`, `problem very terms`, `you actually` |
+| Term list keeps paraphrases | `search algorithm` and `search algorithms` in one top five |
+
+## Rules added
+
+- **One gate for generic labels.** `_add_candidate` drops `GENERIC_FIELDS`, fragment edges
+  (`WEAK_EDGE` first or last token) and filler (`FILLER` anywhere).
+- **Hierarchy is a neighbour, never a competitor.** Topic paths and fields always carry
+  `neighbor_field`; OpenAlex contributes only its subfield, not domain or field.
+- **Background penalty.** `MemoryStore.background_labels` collects labels that ranked high
+  under three or more unrelated roots; their score is halved.
+- **Limitations from sentences.** `limitation_phrases()` reads the words after a limitation
+  cue and marks them explicit, because every paper words its limitation differently and the
+  two-paper rule erased all of them. The sentence travels with the term and is printed.
+- **Paraphrase collapse on reported terms.** `dedupe_terms()` applies the concept-key rule
+  to the term list, not only to the concept tree.
+
+## Gate additions
+
+Third gauntlet gate: an offline half-on-topic/half-neighbouring corpus must not put the
+neighbour in the map. 50 unit tests.
+
+## Measured, v1.2 -> v1.3
+
+| | v1.2 | v1.3 |
+|---|---|---|
+| `computer science` in top 10 | 8/8 runs | 0/4 runs |
+| `failure_mode` grounded | 0/4 runs | 3/3 runs, each quoted from its abstract |
+| Neighbour labels | "biochemistry genetics and molecular biology" in 3/4 | "numerical analysis", "statistics probability and uncertainty", "management science and operations research" |

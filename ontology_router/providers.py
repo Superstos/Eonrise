@@ -77,15 +77,26 @@ def _display_name(value): return str(value.get("display_name", "")) if isinstanc
 
 class OpenAlexProvider:
     name = "openalex"
-    def __init__(self, http, api_key=None, semantic=False): self.http, self.api_key, self.semantic = http, api_key or os.getenv("OPENALEX_API_KEY", ""), semantic
+    def __init__(self, http, api_key=None, semantic=False, email=""):
+        self.http = http
+        self.api_key = api_key or os.getenv("OPENALEX_API_KEY", "")
+        self.semantic = semantic
+        self.email = email or os.getenv("CROSSREF_EMAIL", "")
     def search(self, query, limit=20):
-        if not self.api_key: raise ProviderError("OpenAlex requires OPENALEX_API_KEY or --openalex-key")
-        params = {"search.semantic" if self.semantic else "search": query, "per_page": str(max(1,min(limit,100))), "api_key": self.api_key, "select": "id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_topic,topics,keywords"}
+        # OpenAlex answers without a key. A key only raises rate limits, and semantic
+        # search needs one; keyless keyword search is the default because Crossref
+        # carries no abstracts or topic hierarchy (measured: 16% / 0%).
+        semantic = self.semantic and bool(self.api_key)
+        params = {"search.semantic" if semantic else "search": query, "per_page": str(max(1,min(limit,100))), "select": "id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_topic,topics,keywords"}
+        if self.api_key: params["api_key"] = self.api_key
+        elif self.email: params["mailto"] = self.email
         payload = self.http.get_json("https://api.openalex.org/works?" + urllib.parse.urlencode(params)); papers = []
         for item in payload.get("results", []):
             title = str(item.get("title", "")).strip()
             if not title: continue
-            primary = item.get("primary_topic") or {}; hierarchy = [_display_name(primary.get(k)) for k in ("domain","field","subfield") if _display_name(primary.get(k))]
+            primary = item.get("primary_topic") or {}; # Only the subfield: domain and field are labels like "Physical Sciences" or
+            # "Computer Science", which crowded out every real neighbour in live runs.
+            hierarchy = [_display_name(primary.get("subfield"))] if _display_name(primary.get("subfield")) else []
             topic_name = _display_name(primary); keywords = [_display_name(x) for x in item.get("keywords",[]) if _display_name(x)] + [_display_name(x) for x in item.get("topics",[])[:5] if _display_name(x)]
             papers.append(Paper(str(item.get("id", "")) or str(item.get("doi", "")), title, _restore_abstract(item.get("abstract_inverted_index")), str(item.get("doi") or item.get("id") or ""), str(item.get("doi") or ""), item.get("publication_year"), int(item.get("cited_by_count",0) or 0), self.name, list(dict.fromkeys(keywords)), hierarchy, [topic_name] if topic_name else [], "", [query]))
         return papers

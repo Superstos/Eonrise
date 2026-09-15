@@ -7,10 +7,17 @@ def render_compact_markdown(result: dict) -> str:
     lines = ["# Eonrise brief", "", f"**Question:** {result['question']}",
              f"**Root topic:** {result.get('root_topic', '')}",
              f"**Status:** {result['status']} — {result['stop_reason']}",
-             f"**Evidence:** {len(result['papers'])} papers, {len(result.get('concepts', []))} concepts",
+             f"**Evidence:** {len(result['papers'])} papers kept of {result.get('retrieved_papers', len(result['papers']))} retrieved"
+             f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts",
              "", "## Grounded map", ""]
     for relation, terms in result["coverage"].items():
         label = relation.replace("_", " ").title(); shown = ", ".join(terms[:3]) if terms else "not grounded yet"; lines.append(f"- **{label}:** {shown}")
+    quotes = [t for t in result.get("limitations", []) if t.get("examples")]
+    if quotes:
+        # A limitation phrase is only worth as much as the sentence it came from.
+        lines.extend(["", "## Stated limitations", ""])
+        for term in quotes[:3]:
+            lines.append(f'- **{term["text"]}** — "{term["examples"][0][:180]}"')
     concepts = result.get("concepts", [])
     if concepts:
         by_dir: dict[str, list[str]] = {}
@@ -38,6 +45,22 @@ def render_markdown(result: dict) -> str:
     for c in result.get("concepts", [])[:30]:
         lines.append(f"- `{'  ' * min(c.get('depth', 0), 4)}{c.get('label', '')}` ({c.get('direction', '')}, w={c.get('weight', 0)}, n={c.get('support', 0)})")
     lines.extend(["", "## Deep search routes", ""]); lines.extend(f"- `{q}`" for q in result["recommended_queries"])
+    rounds = result.get("rounds") or []
+    if rounds:
+        lines.extend(["", "## Search integrity", "",
+                      "| Round | Queries | New papers | On topic (total) | Gap queries | Gaps left |",
+                      "|---|---|---|---|---|---|"])
+        for r in rounds:
+            lines.append("| {} | {} | {} | {} | {} | {} |".format(
+                r.get("round_number"), len(r.get("queries", [])), r.get("new_papers"),
+                r.get("on_topic_papers", 0), len(r.get("gap_queries") or []),
+                ", ".join(r.get("gaps", [])) or "none"))
+    quotes = [t for t in result.get("limitations", []) if t.get("examples")]
+    if quotes:
+        lines.extend(["", "## Stated limitations (quoted)", ""])
+        for term in quotes:
+            for example in term["examples"][:2]:
+                lines.append(f'- **{term["text"]}** ({term["support"]} papers) — "{example[:220]}"')
     lines.extend(["", "## Evidence", ""])
     for paper in result["papers"][:15]: lines.append(f"- [{paper['title']}]({paper.get('url') or paper.get('doi') or ''}) ({paper.get('year') or 'n.d.'}, {paper['provider']})")
     return "\n".join(lines) + "\n"
