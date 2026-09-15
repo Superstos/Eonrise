@@ -5,9 +5,10 @@ import json
 import os
 from pathlib import Path
 
+from .corpus import CorpusStore
 from .engine import canonical_root, run_agent
 from .memory import MemoryStore
-from .models import AgentPolicy
+from .models import AgentPolicy, Paper
 from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
                          EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
                          SemanticScholarProvider)
@@ -41,6 +42,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--sideways-weight", type=float, default=1.0)
     p.add_argument("--support-threshold", type=int, default=2, help="Papers needed to expand past round 1")
     p.add_argument("--no-memory", action="store_true", help="Skip appending to local memory store")
+    p.add_argument("--corpus", default="", help="Paper store to read and grow (default: <cache>/corpus.jsonl)")
+    p.add_argument("--no-corpus", action="store_true", help="Do not read or write the local paper store")
     return p
 
 
@@ -48,6 +51,7 @@ def main() -> None:
     args = parser().parse_args()
     cache = Path.home() / ".cache" / "eonrise"
     http = CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
+    corpus = None if args.no_corpus else CorpusStore(args.corpus or (cache / "corpus.jsonl"))
     bundle_path = args.bundle or args.fixture
     if args.mode == "assistant" or bundle_path:
         if not bundle_path:
@@ -79,6 +83,10 @@ def main() -> None:
             if args.s2_key: chosen.append("semanticscholar")
             if args.core_key: chosen.append("core")
         providers = [available[name]() for name in dict.fromkeys(chosen)]
+        # The store answers first and costs nothing: a paper already held needs no API
+        # credit, and OpenAlex now charges them.
+        if corpus is not None:
+            providers.insert(0, corpus)
         mode = "live"
     policy = AgentPolicy(
         name=args.agent_name,
@@ -105,6 +113,12 @@ def main() -> None:
             store.append_run(result)
         except OSError:
             pass
+    if corpus is not None:
+        try:
+            result["corpus_added"] = corpus.add([Paper.from_dict(p) for p in result["papers"]])
+            result["corpus_size"] = corpus.stats()["papers"]
+        except OSError:
+            pass
     write_outputs(result, args.out)
     print(json.dumps({
         "mode": mode,
@@ -114,6 +128,7 @@ def main() -> None:
         "agent": policy.name,
         "concepts": len(result.get("concepts", [])),
         "papers": len(result["papers"]),
+        "corpus": result.get("corpus_size", 0),
         "gaps": result["gaps"],
         "output": str(Path(args.out).resolve()),
     }, indent=2))

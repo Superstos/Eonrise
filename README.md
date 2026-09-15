@@ -1,4 +1,4 @@
-# Eonrise v0.4
+# Eonrise v0.5
 
 One question → one root topic → agent-owned up/down/sideways traversal.
 
@@ -45,6 +45,19 @@ means Crossref alone, which carries no subjects and few abstracts.
 
 Papers are merged across sources by DOI, so a Crossref record with no abstract inherits
 one from Europe PMC when both return it.
+
+## The paper store
+
+Every run writes the papers it kept to `~/.cache/eonrise/corpus.jsonl` and every later run
+searches that store before it touches the network. Three things compound off it:
+
+- **Budget** — a paper already held costs no API credit, and OpenAlex now charges them.
+- **Evidence** — a thin Crossref record is enriched the day Europe PMC returns the same DOI
+  with an abstract, and the enrichment is kept.
+- **Cross-literature leads** — Swanson-style discovery needs two large literatures gathered
+  separately. One run cannot build them; a year of runs can.
+
+`--corpus PATH` picks a different store, `--no-corpus` turns it off.
 
 ## What a brief contains
 

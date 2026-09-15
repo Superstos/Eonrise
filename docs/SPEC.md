@@ -266,3 +266,35 @@ Drift now traces to one place: the topical gate is word overlap. The question ab
 connections between literatures kept papers on Puerto Rican diasporic music, because both
 share the word "connections". Concept-level matching, not a longer stopword list, is the
 next real step.
+
+
+# v0.5 — the paper store
+
+Added 2026-09-15. The first feature chosen because it compounds with the others rather than
+standing alone.
+
+## Why this one
+
+Three problems measured over the previous passes had one shared cause: every run started
+from nothing.
+
+| Problem | Evidence | What a store does about it |
+|---|---|---|
+| OpenAlex credits run out | 16 searches per run against ~100 anonymous searches a day | A held paper costs no credit |
+| Crossref records carry no abstract | 10 abstracts in 41 on-topic papers | The same DOI from Europe PMC fills it in, and the fill is kept |
+| Swanson ABC finds nothing | 2 junk bridges across three runs, 50 papers each | Literatures accumulate across runs instead of dying with one |
+
+## Shape
+
+`corpus.py` holds an append-only JSONL of papers merged by DOI, and answers `search` like
+any other provider. The CLI inserts it ahead of the network providers, so a stored paper is
+found before a credit is spent, and writes the run's kept papers back at the end.
+
+It calls no network, so it is fully testable offline: 8 tests cover a second run reading the
+first run's papers, duplicate merging, enrichment of a thin record, a half-written line not
+destroying the store, copies rather than shared objects, and the one-shared-word rejection.
+
+## Deliberately not done yet
+
+Corpus-level term statistics for the topical gate. The store must hold a few thousand papers
+before co-occurrence means anything; building the statistic now would tune it on noise.
