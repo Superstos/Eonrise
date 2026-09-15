@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import math
+import time
 import re
 from collections import Counter
 from dataclasses import dataclass
 from typing import Iterable
 
 from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
-from .providers import ProviderError, SearchProvider
+from .providers import ProviderError, ProviderUnavailable, SearchProvider
+from .scheduling import ProviderStates, order_for
 
 # Re-exported so engine.py stays the traversal and callers keep one import site.
 from .evidence import (
@@ -141,6 +143,7 @@ def run_agent(
     *,
     results_per_query: int = 20,
     background: set[str] | None = None,
+    states: ProviderStates | None = None,
 ) -> dict:
     """Single-root, agent-budget traversal.
 
@@ -156,6 +159,7 @@ def run_agent(
     papers: list[Paper] = []
     searched: set[str] = set()
     rounds: list[RoundStats] = []
+    states = states if states is not None else ProviderStates()
     provider_errors: list[str] = []
     provider_calls: Counter[str] = Counter()
     provider_failures: Counter[str] = Counter()
@@ -199,17 +203,28 @@ def run_agent(
             status, stop_reason = "partial", "no additional distinct queries"
             break
         incoming: list[Paper] = []
+        # Ask the source that carries what this round is missing, and skip one that is
+        # rate limited until its window passes -- including a window set by an earlier run.
+        by_name = {p.name: p for p in providers}
+        ordered = [by_name[n] for n in order_for([p.name for p in providers], last_gaps, states)]
         for node, query in round_queries:
             searched.add(query)
-            for provider in providers:
+            for provider in ordered:
                 provider_calls[provider.name] += 1
                 try:
                     found = provider.search(query, results_per_query)
                     for p in found:
                         p.found_by = list(dict.fromkeys([*p.found_by, query]))
                     incoming.extend(found)
+                    states.observe(provider.name, True)
+                except ProviderUnavailable as exc:
+                    provider_failures[provider.name] += 1
+                    states.observe(provider.name, False)
+                    states.block(provider.name, getattr(exc, "retry_after", 0.0) or 0.0, str(exc))
+                    provider_errors.append(f"{provider.name}: {exc}")
                 except ProviderError as exc:
                     provider_failures[provider.name] += 1
+                    states.observe(provider.name, False)
                     provider_errors.append(f"{provider.name}: {exc}")
         papers, added = _dedupe_papers(papers, incoming)
         for node, query in round_queries:
@@ -336,6 +351,7 @@ def run_agent(
             "rounds": [r.to_dict() for r in rounds],
             "provider_errors": list(dict.fromkeys(provider_errors)),
             "providers_down": down_providers,
+            "providers_blocked": sorted(n for n, st in states.states.items() if not st.available(time.time())),
             "graph": build_graph(question, top, kept_papers)}
 
 

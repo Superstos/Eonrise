@@ -298,3 +298,43 @@ destroying the store, copies rather than shared objects, and the one-shared-word
 
 Corpus-level term statistics for the topical gate. The store must hold a few thousand papers
 before co-occurrence means anything; building the statistic now would tune it on noise.
+
+
+# v0.6 — source scheduling
+
+Added 2026-09-15, the second feature in the compounding chain and the one Astra named when
+it reviewed the architecture: budget and availability needed somewhere to live that is not
+the HTTP client.
+
+## A gate change that was tried and rejected first
+
+Drift traces to the topical gate being word overlap. The attempted fix was to also require
+an adjacent word pair from the root, tested offline against four saved runs:
+
+| Run | Kept now | Relations now | Kept, phrase gate | Relations, phrase gate |
+|---|---|---|---|---|
+| hypothesis generation | 27 | 4/5 | 5 | 1/5 |
+| hidden connections | 50 | 2/5 | 10 | 0/5 |
+| causal mechanism | 49 | 2/5 | 18 | 2/5 |
+| stopping criteria | 50 | 2/5 | 24 | 1/5 |
+
+It dropped papers that were plainly on topic — "Causal-Text: An Interpretable Framework for
+Causal Inference" among them — and grounded fewer relations everywhere. Rejected. Combined
+with the corpus-frequency weighting rejected in v0.3, the gate has now failed two different
+tightenings; the next attempt should widen the evidence, not narrow the filter.
+
+## What shipped instead
+
+`scheduling.py`: provider capability, availability and order, with no network and no engine
+imports.
+
+- `order_for(names, gaps, states)` ranks sources by what the round is missing — abstracts
+  for `failure_mode`, `mechanism`, `measurement`, `method`; subject labels for
+  `neighbor_field` — and breaks ties by credit cost.
+- `ProviderStates` persists a block to `~/.cache/eonrise/providers.json`, so the eight-hour
+  OpenAlex window is paid once rather than once per run.
+- 10 tests, offline, both directions: a blocked source leaves the order and returns when its
+  window passes, a corrupt state file changes nothing, no provider is silently dropped.
+
+Capability numbers come from one measured query. They are a routing preference, not a
+ranking of scientific worth, and they are written in one table to be argued with.

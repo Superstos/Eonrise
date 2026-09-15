@@ -13,6 +13,7 @@ from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajPr
                          EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
                          SemanticScholarProvider)
 from .report import write_outputs
+from .scheduling import ProviderStates
 
 
 def parser() -> argparse.ArgumentParser:
@@ -103,8 +104,15 @@ def main() -> None:
         background = store.background_labels(canonical_root(args.question))
     except OSError:
         background = set()
+    # Availability lives longer than one process: a source rate limited for eight hours
+    # should not be re-discovered by tomorrow's run.
+    states = ProviderStates(cache / "providers.json")
     result = run_agent(args.question, providers, policy, results_per_query=max(1, args.results),
-                       background=background)
+                       background=background, states=states)
+    try:
+        states.save()
+    except OSError:
+        pass
     result["background_terms_penalised"] = len(background)
     result["mode"] = mode
     result["input_bundle"] = str(Path(bundle_path).resolve()) if bundle_path else ""

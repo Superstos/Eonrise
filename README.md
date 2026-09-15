@@ -1,4 +1,4 @@
-# Eonrise v0.5
+# Eonrise v0.6
 
 One question → one root topic → agent-owned up/down/sideways traversal.
 
@@ -45,6 +45,18 @@ means Crossref alone, which carries no subjects and few abstracts.
 
 Papers are merged across sources by DOI, so a Crossref record with no abstract inherits
 one from Europe PMC when both return it.
+
+## Source scheduling
+
+Sources are not interchangeable, and a rate limit outlives the process.
+
+- The round asks the source that carries what it is missing: `failure_mode` is read out of
+  abstract sentences, so Europe PMC goes first; `neighbor_field` is read off subject labels,
+  so DOAJ does. Crossref is never asked first while a richer source is available.
+- A `429` carrying a long `Retry-After` blocks that source in `~/.cache/eonrise/providers.json`
+  until its window passes, so tomorrow's run skips it instead of spending a call to learn
+  the same thing.
+- A tie goes to the cheaper source: DOAJ before OpenAlex, which charges 10 credits a search.
 
 ## The paper store
 
