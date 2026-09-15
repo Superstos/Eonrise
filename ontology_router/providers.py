@@ -141,3 +141,98 @@ class EvidenceBundleProvider:
         ranked.sort(key=lambda x: x[0], reverse=True); return [p for _, p in ranked[:limit]]
 
 FixtureProvider = EvidenceBundleProvider
+
+class EuropePMCProvider:
+    """Keyless, no credit budget, and the richest free metadata measured: on a 20-paper
+    probe it returned 20 abstracts, 18 keyword lists and 7 MeSH headings, where Crossref
+    returned 16% abstracts and no subjects at all. Life-sciences weighted, so it pairs
+    with a general provider rather than replacing one."""
+    name = "europepmc"
+    def __init__(self, http, email=""): self.http, self.email = http, email
+    def search(self, query, limit=20):
+        params = {"query": query, "format": "json", "resultType": "core",
+                  "pageSize": str(max(1, min(limit, 100)))}
+        if self.email: params["email"] = self.email
+        payload = self.http.get_json("https://www.ebi.ac.uk/europepmc/webservices/rest/search?" + urllib.parse.urlencode(params))
+        papers = []
+        for item in payload.get("resultList", {}).get("result", []):
+            title = _strip_markup(item.get("title"))
+            if not title: continue
+            doi = str(item.get("doi") or "").strip()
+            keywords = [k for k in ((item.get("keywordList") or {}).get("keyword") or []) if k]
+            mesh = [m.get("descriptorName") for m in ((item.get("meshHeadingList") or {}).get("meshHeading") or []) if m.get("descriptorName")]
+            journal = ((item.get("journalInfo") or {}).get("journal") or {}).get("title") or ""
+            url = f"https://doi.org/{doi}" if doi else f"https://europepmc.org/article/{item.get('source','MED')}/{item.get('id','')}"
+            try: year = int(item.get("pubYear") or 0) or None
+            except (TypeError, ValueError): year = None
+            papers.append(Paper(doi or f"epmc:{item.get('id','')}", title, _strip_markup(item.get("abstractText")),
+                                url, doi, year, int(item.get("citedByCount") or 0), self.name,
+                                list(dict.fromkeys(keywords)), [], list(dict.fromkeys(mesh))[:5], journal, [query]))
+        return papers
+
+class DoajProvider:
+    """Keyless and small, but every article carries an abstract, author keywords and an
+    LCC subject term — the subject label Crossref never supplies."""
+    name = "doaj"
+    def __init__(self, http, email=""): self.http = http
+    def search(self, query, limit=20):
+        url = ("https://doaj.org/api/search/articles/" + urllib.parse.quote(query) +
+               "?" + urllib.parse.urlencode({"pageSize": str(max(1, min(limit, 100)))}))
+        papers = []
+        for item in self.http.get_json(url).get("results", []):
+            b = item.get("bibjson") or {}
+            title = _strip_markup(b.get("title"))
+            if not title: continue
+            doi = next((i.get("id", "") for i in b.get("identifier", []) if i.get("type") == "doi"), "")
+            subjects = [s.get("term") for s in b.get("subject", []) if s.get("term")]
+            link = next((l.get("url", "") for l in b.get("link", []) if l.get("url")), "")
+            try: year = int(b.get("year") or 0) or None
+            except (TypeError, ValueError): year = None
+            papers.append(Paper(doi or f"doaj:{item.get('id','')}", title, _strip_markup(b.get("abstract")),
+                                f"https://doi.org/{doi}" if doi else link, doi, year, 0, self.name,
+                                list(dict.fromkeys(b.get("keywords") or [])), list(dict.fromkeys(subjects)),
+                                [], (b.get("journal") or {}).get("title", ""), [query]))
+        return papers
+
+class SemanticScholarProvider:
+    """Broad coverage and its own field-of-study labels. The keyless pool is shared and
+    answers 429 under any load, so a free key (S2_API_KEY) is what makes it usable."""
+    name = "semanticscholar"
+    FIELDS = "title,abstract,fieldsOfStudy,year,citationCount,externalIds,venue"
+    def __init__(self, http, api_key=""): self.http, self.api_key = http, api_key or os.getenv("S2_API_KEY", "")
+    def search(self, query, limit=20):
+        url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(
+            {"query": query, "limit": str(max(1, min(limit, 100))), "fields": self.FIELDS})
+        payload = self.http.get_json(url, {"x-api-key": self.api_key} if self.api_key else None)
+        papers = []
+        for item in payload.get("data", []):
+            title = _strip_markup(item.get("title"))
+            if not title: continue
+            doi = str((item.get("externalIds") or {}).get("DOI") or "")
+            fields = [f for f in (item.get("fieldsOfStudy") or []) if f]
+            papers.append(Paper(doi or f"s2:{item.get('paperId','')}", title, _strip_markup(item.get("abstract")),
+                                f"https://doi.org/{doi}" if doi else f"https://www.semanticscholar.org/paper/{item.get('paperId','')}",
+                                doi, item.get("year"), int(item.get("citationCount") or 0), self.name,
+                                [], fields, [], item.get("venue") or "", [query]))
+        return papers
+
+class CoreProvider:
+    """Open-access full texts with abstracts on every hit. Keyless requests answer for a
+    while and then 429, so treat CORE_API_KEY as required for a real run."""
+    name = "core"
+    def __init__(self, http, api_key=""): self.http, self.api_key = http, api_key or os.getenv("CORE_API_KEY", "")
+    def search(self, query, limit=20):
+        url = "https://api.core.ac.uk/v3/search/works?" + urllib.parse.urlencode(
+            {"q": query, "limit": str(max(1, min(limit, 100)))})
+        payload = self.http.get_json(url, {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None)
+        papers = []
+        for item in payload.get("results", []):
+            title = _strip_markup(item.get("title"))
+            if not title: continue
+            doi = str(item.get("doi") or "")
+            subjects = [s for s in (item.get("subjects") or []) if isinstance(s, str)]
+            papers.append(Paper(doi or f"core:{item.get('id','')}", title, _strip_markup(item.get("abstract")),
+                                f"https://doi.org/{doi}" if doi else str(item.get("downloadUrl") or ""),
+                                doi, item.get("yearPublished"), 0, self.name,
+                                [], list(dict.fromkeys(subjects))[:5], [], "", [query]))
+        return papers

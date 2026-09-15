@@ -1,4 +1,4 @@
-# Eonrise v0.3.1
+# Eonrise v0.4
 
 One question → one root topic → agent-owned up/down/sideways traversal.
 
@@ -24,10 +24,27 @@ Two agents, same question, different policies → different maps. See `docs/SPEC
 
 ## Providers
 
-OpenAlex runs by default and needs no key; a key only raises rate limits and enables
-`--semantic`. Crossref alone carries no topic hierarchy and few abstracts (measured over
-200 retrieved papers: 0% subjects, 16% abstracts), which leaves `neighbor_field`
-permanently empty — `--crossref-only` accepts that trade deliberately.
+Four keyless sources run by default; two more join when a free key is present. Measured on
+one query, 20 results each:
+
+| Source | Key | Abstracts | Keywords | Subjects |
+|---|---|---|---|---|
+| Europe PMC | none | 20/20 | 18/20 | 7/20 MeSH |
+| DOAJ | none | 8/8 | 7/8 | 8/8 LCC |
+| Crossref | none | 16% | 0% | 0% |
+| OpenAlex | none, but see below | good | good | good |
+| Semantic Scholar | free key | — | — | fields of study |
+| CORE | free key | 10/10 | — | — |
+
+OpenAlex now charges credits: anonymous is 1,000 credits a day and a search costs 10, so
+roughly 100 searches — one Eonrise run spends about 16. A free key raises the budget 10×
+(openalex.org/settings/api). Semantic Scholar and CORE answer `429` without a key, so they
+stay out of the default set until `--s2-key` / `S2_API_KEY` or `--core-key` / `CORE_API_KEY`
+is supplied. `--providers crossref,europepmc` picks any subset; `--crossref-only` still
+means Crossref alone, which carries no subjects and few abstracts.
+
+Papers are merged across sources by DOI, so a Crossref record with no abstract inherits
+one from Europe PMC when both return it.
 
 ## What a brief contains
 

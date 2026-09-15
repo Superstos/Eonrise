@@ -8,7 +8,9 @@ from pathlib import Path
 from .engine import canonical_root, run_agent
 from .memory import MemoryStore
 from .models import AgentPolicy
-from .providers import CachedHttpClient, CrossrefProvider, EvidenceBundleProvider, OpenAlexProvider
+from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
+                         EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
+                         SemanticScholarProvider)
 from .report import write_outputs
 
 
@@ -22,7 +24,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--mode", choices=("live", "assistant"), default="live", help="live: search scholarly APIs; assistant: use an offline evidence bundle")
     p.add_argument("--bundle", help="JSON evidence bundle for assistant mode")
     p.add_argument("--fixture", help=argparse.SUPPRESS)
-    p.add_argument("--crossref-only", action="store_true", help="Skip OpenAlex (Crossref has no abstracts or topics; expect neighbor_field to stay empty)")
+    p.add_argument("--crossref-only", action="store_true", help="Crossref alone (no abstracts or topics; expect neighbor_field to stay empty)")
+    p.add_argument("--providers", default="", help="Comma-separated subset of: crossref,openalex,europepmc,doaj,semanticscholar,core")
+    p.add_argument("--s2-key", default=os.getenv("S2_API_KEY", ""), help="Semantic Scholar key (free; the keyless pool answers 429 under load)")
+    p.add_argument("--core-key", default=os.getenv("CORE_API_KEY", ""), help="CORE key (free; keyless requests 429 after a few calls)")
     p.add_argument("--max-rounds", type=int, default=6)
     p.add_argument("--results", type=int, default=20, help="Results per query/provider")
     p.add_argument("--http-timeout", type=int, default=12, help="Seconds per live API request")
@@ -50,11 +55,30 @@ def main() -> None:
         providers = [EvidenceBundleProvider(bundle_path)]
         mode = "assistant"
     else:
-        providers = [CrossrefProvider(http, args.email)]
-        if not args.crossref_only:
-            # OpenAlex is on by default and needs no key: it is the only source carrying
-            # abstracts and a topic hierarchy, which `neighbor_field` depends on.
-            providers.append(OpenAlexProvider(http, args.openalex_key, args.semantic, args.email))
+        # Measured on one query, 20 results each: Europe PMC returned 20/20 abstracts and
+        # 18/20 keyword lists, DOAJ 8/8 abstracts with an LCC subject each, Crossref 16%
+        # abstracts and no subjects. Keyless sources run by default; the two that need a
+        # free key join only when one is supplied.
+        available = {
+            "crossref": lambda: CrossrefProvider(http, args.email),
+            "openalex": lambda: OpenAlexProvider(http, args.openalex_key, args.semantic, args.email),
+            "europepmc": lambda: EuropePMCProvider(http, args.email),
+            "doaj": lambda: DoajProvider(http, args.email),
+            "semanticscholar": lambda: SemanticScholarProvider(http, args.s2_key),
+            "core": lambda: CoreProvider(http, args.core_key),
+        }
+        if args.providers:
+            chosen = [n.strip().lower() for n in args.providers.split(",") if n.strip()]
+            unknown = [n for n in chosen if n not in available]
+            if unknown:
+                raise SystemExit(f"unknown provider(s): {', '.join(unknown)}")
+        elif args.crossref_only:
+            chosen = ["crossref"]
+        else:
+            chosen = ["crossref", "openalex", "europepmc", "doaj"]
+            if args.s2_key: chosen.append("semanticscholar")
+            if args.core_key: chosen.append("core")
+        providers = [available[name]() for name in dict.fromkeys(chosen)]
         mode = "live"
     policy = AgentPolicy(
         name=args.agent_name,

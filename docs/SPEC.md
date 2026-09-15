@@ -184,3 +184,42 @@ as unable to ground `neighbor_field`, and nothing in the brief said so.
   prints a **Degraded** line naming it and what the map is missing because of it.
 
 Measured: the same question that spent 16 doomed OpenAlex calls now spends 1.
+
+
+# v0.4 — more sources, and a smaller engine
+
+Added 2026-09-15, after OpenAlex's credit limit made a single-source run the normal case.
+
+## Sources
+
+Four keyless providers now run by default (Crossref, OpenAlex, Europe PMC, DOAJ); Semantic
+Scholar and CORE join when a free key is supplied. Same question, same day, OpenAlex still
+rate limited:
+
+| | 2 sources | 4 sources |
+|---|---|---|
+| papers retrieved | 263 | 790 |
+| on-topic | 41 | 50 |
+| concepts | 7 | 14 |
+| relations missing | 4 | 3 |
+
+## Architecture review
+
+GPT-6-Astra reviewed the shape before more sources were added. Its calls, and what was done:
+
+- **Keep one class per source.** Six twenty-line adapters are cheaper than a spec language
+  that grows conditionals. Revisit only when eight of ten adapters are pure field renames.
+- **Do not weight evidence by which source supplied it.** One query cannot justify a
+  universal ranking; score the record in hand, not the provider's reputation.
+- **Split evidence interpretation out of traversal.** Done: `evidence.py` takes the corpus
+  and returns grounded, ranked terms; `engine.py` keeps rounds, gap repair, budgets and
+  status. Engine went from 650 to 342 lines.
+- **Not yet built:** a `scheduling.py` holding per-source budget state and next-source
+  choice. Cooldown currently lives in the HTTP client, which is enough for one process.
+
+## Known open question
+
+Europe PMC supplied 3 of 50 kept papers in the run above: keep-ranking still prefers
+citations over metadata richness, and the papers that ground relations are the ones with
+abstracts. Left as measured, not patched, because one query cannot settle source order
+across domains.
