@@ -322,7 +322,10 @@ def run_agent(
             "status": status, "stop_reason": stop_reason,
             "coverage": covered, "gaps": gaps,
             # kept separately: these rank below the top 30 but carry the quoted sentence
-            "limitations": [t.to_dict() for t in top_terms(terms, "failure_mode", 5, grounded_only=True)],
+            # Only sentences a paper actually wrote. Title n-grams containing "failure"
+            # were being quoted here as stated limitations.
+            "limitations": [t.to_dict() for t in top_terms(terms, "failure_mode", 5, grounded_only=True)
+                            if t.stated_limitation],
             "recommended_queries": next_queries(question, terms, gaps, set()),
             "terms": [t.to_dict() for t in top],
             "concepts": [c.to_dict() for c in concept_list],

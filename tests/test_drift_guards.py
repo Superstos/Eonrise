@@ -429,3 +429,33 @@ class DegradedProviderReportTests(unittest.TestCase):
 
     def test_brief_stays_quiet_when_every_provider_answered(self):
         self.assertNotIn("Degraded", report.render_compact_markdown({**self.BASE, "providers_down": []}))
+
+
+class StatedLimitationTests(unittest.TestCase):
+    """A title carrying the word "failure" is not a limitation the authors stated."""
+
+    def _papers(self):
+        return [
+            Paper("p1", "Assessing the connections between state failure and terrorism", "",
+                  "u1", "", 2020, 3, "crossref", [], [], [], "", ["state failure"]),
+            Paper("p2", "State failure and terrorism reviewed", "", "u2", "", 2021, 2,
+                  "crossref", [], [], [], "", ["state failure"]),
+            Paper("p3", "Measuring state failure across regions", "Our state failure sample is "
+                  "limited to three regions, so the estimates do not generalise.", "u3", "", 2022, 5,
+                  "crossref", [], [], [], "", ["state failure"]),
+            Paper("p4", "State failure indicators compared", "A limitation is that the state "
+                  "failure index does not generalise beyond three regions.", "u4", "", 2023, 4,
+                  "crossref", [], [], [], "", ["state failure"]),
+        ]
+
+    def test_title_phrase_is_not_flagged_as_stated(self):
+        terms = extract_terms("what causes state failure", self._papers())
+        titles = [t for t in terms if t.text == "connections between state failure"]
+        self.assertTrue(all(not t.stated_limitation for t in titles))
+
+    def test_sentence_from_an_abstract_is_flagged(self):
+        terms = extract_terms("what causes state failure", self._papers())
+        stated = [t for t in terms if t.stated_limitation]
+        self.assertTrue(stated, "a sentence saying 'a limitation is' must be marked stated")
+        self.assertTrue(any("limitation" in e.lower() or "limited" in e.lower()
+                            for t in stated for e in t.examples))

@@ -223,3 +223,46 @@ Europe PMC supplied 3 of 50 kept papers in the run above: keep-ranking still pre
 citations over metadata richness, and the papers that ground relations are the ones with
 abstracts. Left as measured, not patched, because one query cannot settle source order
 across domains.
+
+
+# v0.4.1 — what three self-runs found
+
+Run 2026-09-15 on three questions about research discovery itself, live, four providers.
+
+| Run | Status | On topic | Concepts | Relations grounded |
+|---|---|---|---|---|
+| hypothesis generation | usable | 27 | 38 | 4/5 |
+| hidden connections between literatures | partial | 59 | 32 | 3/5 |
+| causal mechanism extraction | partial | 49 | 23 | 3/5 |
+
+## Bug the runs exposed
+
+The brief quoted "Assessing the Connections between State Failure, Insurgency, and
+Terrorism" as a stated limitation. That is a title, from a paper with no abstract: the
+title n-gram was relation-typed `failure_mode` because it contains the word "failure", and
+the brief printed the title as though the authors had written a limit. A `stated_limitation`
+flag is now set only by `limitation_phrases`, and the brief prints nothing else.
+
+## A feature that was built, measured and removed
+
+Swanson's ABC linking — find a term B shared by two literatures that share no paper, which
+is how fish oil and Raynaud's syndrome were connected in 1986. It was implemented against
+the evidence Eonrise already collects, then measured on the three runs above:
+
+| Run | Terms | Bridges found | Useful |
+|---|---|---|---|
+| hypothesis generation | 51 | 2 | no — both bridged on the MeSH term "animals", 1 paper each side |
+| hidden connections | 58 | 0 | — |
+| causal mechanism | 60 | 0 | — |
+
+The method needs two large literatures gathered separately; a 50-paper corpus centred on
+one question has no disconnected second side to bridge to. The code was removed rather than
+shipped as a lead generator that mostly emits noise. What it would need first: retrieval
+that gathers an A-literature and a C-literature separately, several hundred papers each.
+
+## The ceiling, restated with evidence
+
+Drift now traces to one place: the topical gate is word overlap. The question about hidden
+connections between literatures kept papers on Puerto Rican diasporic music, because both
+share the word "connections". Concept-level matching, not a longer stopword list, is the
+next real step.

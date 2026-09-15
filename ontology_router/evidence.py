@@ -41,6 +41,7 @@ class CandidateEvidence:
     examples: list[str]
     explicit_count: int = 0
     title_count: int = 0
+    stated_limitation: bool = False  # the paper wrote this limitation in a sentence
     relation_votes: Counter | None = None
     def __post_init__(self) -> None:
         if self.relation_votes is None:
@@ -212,7 +213,7 @@ def _relation_for(term: str, context: str, source_kind: str, question_tokens: se
         return "core"
     return "topic"
 
-def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper, relation: str, example: str, explicit: bool = False, in_title: bool = False) -> None:
+def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper, relation: str, example: str, explicit: bool = False, in_title: bool = False, stated_limitation: bool = False) -> None:
     key = normalize(term)
     if not key or len(key.split()) > 6 or len(key) > 80:
         return
@@ -234,6 +235,7 @@ def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper
         item.examples.append(example)
     item.explicit_count += int(explicit)
     item.title_count += int(in_title)
+    item.stated_limitation = item.stated_limitation or stated_limitation
     item.relation_votes[relation] += 1
 
 def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[str] | None) -> str:
@@ -276,7 +278,7 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
             # explicit: the paper says this itself, in a sentence kept as the example.
             # Every paper words its limitation differently, so demanding two papers agree
             # on the wording left `failure_mode` empty on 4/4 live runs.
-            _add_candidate(candidates, phrase, paper, "failure_mode", sentence, explicit=True)
+            _add_candidate(candidates, phrase, paper, "failure_mode", sentence, explicit=True, stated_limitation=True)
         for phrase in _ngrams(paper.abstract, 2, 4):
             phrase_tokens = set(tokens(phrase))
             if any(phrase_tokens & marker_set for marker_set in RELATION_MARKERS.values()):
@@ -296,7 +298,9 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
             confidence = "low"
         if support == 1 and ev.explicit_count == 0:
             continue
-        terms.append(Term(key, relation, round(score, 3), confidence, sorted(ev.papers), sorted(ev.providers), sorted(ev.queries), ev.examples))
+        terms.append(Term(key, relation, round(score, 3), confidence, sorted(ev.papers),
+                          sorted(ev.providers), sorted(ev.queries), ev.examples,
+                          stated_limitation=ev.stated_limitation))
     ranked = sorted(terms, key=lambda t: (t.confidence == "high", t.score), reverse=True)
     return dedupe_terms(ranked)
 
@@ -347,3 +351,4 @@ def coverage(terms: list[Term], minimum_per_relation: int = 2) -> tuple[dict[str
         covered[relation] = [item.text for item in items]
         if len(items) < minimum_per_relation: gaps.append(relation)
     return covered, gaps
+

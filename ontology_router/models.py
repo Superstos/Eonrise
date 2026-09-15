@@ -38,6 +38,9 @@ class Term:
     providers: list[str]
     queries: list[str]
     examples: list[str]
+    # True only when a paper wrote this limitation in a sentence. A title carrying the
+    # word "failure" was being quoted in the brief as if the authors had stated a limit.
+    stated_limitation: bool = False
     @property
     def support(self) -> int: return len(self.paper_ids)
     def to_dict(self) -> dict[str, Any]:
