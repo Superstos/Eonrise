@@ -453,6 +453,8 @@ def run_agent(
     searched: set[str] = set()
     rounds: list[RoundStats] = []
     provider_errors: list[str] = []
+    provider_calls: Counter[str] = Counter()
+    provider_failures: Counter[str] = Counter()
     frontier: list[ConceptNode] = [root]
     counter = 1
     previous_grounded: set[str] = set()
@@ -496,12 +498,14 @@ def run_agent(
         for node, query in round_queries:
             searched.add(query)
             for provider in providers:
+                provider_calls[provider.name] += 1
                 try:
                     found = provider.search(query, results_per_query)
                     for p in found:
                         p.found_by = list(dict.fromkeys([*p.found_by, query]))
                     incoming.extend(found)
                 except ProviderError as exc:
+                    provider_failures[provider.name] += 1
                     provider_errors.append(f"{provider.name}: {exc}")
         papers, added = _dedupe_papers(papers, incoming)
         for node, query in round_queries:
@@ -604,6 +608,9 @@ def run_agent(
                 status = "usable"
                 repaired = " after gap repair" if searched_gap_queries else ""
                 stop_reason = f"{len(REQUIRED_RELATIONS) - len(gaps)}/5 relations grounded{repaired}"
+    # A provider that answered nothing all run changes what the map can contain, so the
+    # brief says so instead of quietly reading as a Crossref-only result.
+    down_providers = sorted(n for n, calls in provider_calls.items() if calls and provider_failures[n] == calls)
     top = terms[:30]
     concept_list = sorted(concepts.values(), key=lambda c: (c.depth, -c.weight))
     kept_papers = sorted(papers, key=lambda p: _keep_score(p, on_topic), reverse=True)[:50]
@@ -621,6 +628,7 @@ def run_agent(
             "papers": [p.to_dict() for p in kept_papers],
             "rounds": [r.to_dict() for r in rounds],
             "provider_errors": list(dict.fromkeys(provider_errors)),
+            "providers_down": down_providers,
             "graph": build_graph(question, top, kept_papers)}
 
 

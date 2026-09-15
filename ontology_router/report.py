@@ -8,8 +8,14 @@ def render_compact_markdown(result: dict) -> str:
              f"**Root topic:** {result.get('root_topic', '')}",
              f"**Status:** {result['status']} — {result['stop_reason']}",
              f"**Evidence:** {len(result['papers'])} papers kept of {result.get('retrieved_papers', len(result['papers']))} retrieved"
-             f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts",
-             "", "## Grounded map", ""]
+             f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts"]
+    down = result.get("providers_down") or []
+    if down:
+        # A run that lost OpenAlex has no keywords and few abstracts. Reading the map
+        # without knowing that is how a degraded run passes for a thin literature.
+        lines.append(f"**Degraded:** {', '.join(down)} answered nothing this run — "
+                     "expect fewer abstracts, no keywords and no topic hierarchy.")
+    lines.extend(["", "## Grounded map", ""])
     for relation, terms in result["coverage"].items():
         label = relation.replace("_", " ").title(); shown = ", ".join(terms[:3]) if terms else "not grounded yet"; lines.append(f"- **{label}:** {shown}")
     quotes = [t for t in result.get("limitations", []) if t.get("examples")]

@@ -1,4 +1,4 @@
-# Eonrise v1.1 spec — single root, agent-owned recursion
+# Eonrise v0.1 spec — single root, agent-owned recursion
 
 Locked 2026-09-14. Replaces the 2–4 topic split.
 
@@ -51,7 +51,7 @@ No toolchain on this machine and no proven hot path. `normalize` / `_dedupe_pape
 n-gram extraction are isolated pure functions — first candidates for a later Rust
 extension. No rewrite until profiling says so.
 
-# v1.2 — drift guards, gap repair, keyless OpenAlex
+# v0.2 — drift guards, gap repair, keyless OpenAlex
 
 Added 2026-09-15 after running Eonrise on itself four times and measuring the artifacts.
 Findings: `references/eonrise-enhancement/00-index.md` in the training-grounds repo.
@@ -107,11 +107,11 @@ removing the relation guard and the redundancy skip fails 4 of them.
   ("biochemistry genetics and molecular biology") rather than a useful adjacent field.
 
 
-# v1.3 — release candidate
+# v0.3 — release candidate
 
-Added 2026-09-15, driven by running the v1.2 build on its own weak spots.
+Added 2026-09-15, driven by running the v0.2 build on its own weak spots.
 
-## What the v1.2 runs exposed
+## What the v0.2 runs exposed
 
 | Finding | Measurement |
 |---|---|
@@ -141,10 +141,46 @@ Added 2026-09-15, driven by running the v1.2 build on its own weak spots.
 Third gauntlet gate: an offline half-on-topic/half-neighbouring corpus must not put the
 neighbour in the map. 50 unit tests.
 
-## Measured, v1.2 -> v1.3
+## Measured, v0.2 -> v0.3
 
-| | v1.2 | v1.3 |
+| | v0.2 | v0.3 |
 |---|---|---|
 | `computer science` in top 10 | 8/8 runs | 0/4 runs |
 | `failure_mode` grounded | 0/4 runs | 3/3 runs, each quoted from its abstract |
 | Neighbour labels | "biochemistry genetics and molecular biology" in 3/4 | "numerical analysis", "statistics probability and uncertainty", "management science and operations research" |
+
+
+# v0.3.1 — provider honesty
+
+Added 2026-09-15, driven by running the v0.3 build on two of its own weak spots.
+
+## What the runs exposed
+
+Both live runs looked like algorithm failures: 41 and 26 on-topic papers produced 7 and 3
+concepts, and 4 to 5 of the 5 relations stayed empty. The cause was not the algorithm.
+
+| | stopping run | technique run |
+|---|---|---|
+| on-topic papers | 41 | 26 |
+| from OpenAlex | 0 | 0 |
+| OpenAlex calls, all HTTP 429 | 16 | 13 |
+| papers carrying keywords | 0 | 0 |
+| papers carrying a topic hierarchy | 0 | 0 |
+| papers carrying an abstract | 10 | 2 |
+| candidate phrases | 164 | — |
+| candidates surviving `support >= 2 or explicit` | 11 | — |
+
+OpenAlex answered every request with `429` and `Retry-After: 30746` — a quota window about
+eight hours wide. The run degraded to Crossref-only, which is the exact case v0.2 measured
+as unable to ground `neighbor_field`, and nothing in the brief said so.
+
+## Fix
+
+- A `429` whose `Retry-After` is at or above 120s puts that host in cooldown for the rest
+  of the run; later calls raise `ProviderUnavailable` without touching the network. A short
+  `Retry-After` is still retried, because a burst limit is worth waiting out.
+- Rate pacing is per host, so a busy Crossref no longer spends OpenAlex's interval.
+- `providers_down` lists any provider that failed every call it was given, and the brief
+  prints a **Degraded** line naming it and what the map is missing because of it.
+
+Measured: the same question that spent 16 doomed OpenAlex calls now spends 1.

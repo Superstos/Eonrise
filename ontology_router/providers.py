@@ -9,6 +9,10 @@ from typing import Protocol
 from .models import Paper
 
 class ProviderError(RuntimeError): pass
+class ProviderUnavailable(ProviderError):
+    """A provider told us to come back later. Retrying inside this run cannot help."""
+    def __init__(self, message: str, retry_after: float = 0.0):
+        super().__init__(message); self.retry_after = retry_after
 class SearchProvider(Protocol):
     name: str
     def search(self, query: str, limit: int) -> list[Paper]: ...
@@ -21,27 +25,46 @@ class CachedHttpClient:
     max_retries: int = 2
     min_interval: float = 0.15
     cache_ttl_seconds: int = 7 * 24 * 60 * 60
+    # A Retry-After longer than this is a quota window, not a burst limit: waiting it out
+    # inside one run is impossible, so the host is dropped for the rest of the run.
+    cooldown_threshold: float = 120.0
     def __post_init__(self) -> None:
         self.cache_dir.mkdir(parents=True, exist_ok=True); self._last_request = 0.0
+        self._host_last: dict[str, float] = {}; self._host_cooldown: dict[str, str] = {}
     def get_json(self, url: str, headers: dict[str, str] | None = None) -> dict:
         key = hashlib.sha256(url.encode()).hexdigest(); cache_file = self.cache_dir / f"{key}.json"
         if cache_file.exists() and time.time() - cache_file.stat().st_mtime <= self.cache_ttl_seconds:
             return json.loads(cache_file.read_text(encoding="utf-8"))
+        host = urllib.parse.urlsplit(url).netloc
+        if host in self._host_cooldown:
+            # 16 doomed requests per run is how the previous build spent a rate limit.
+            raise ProviderUnavailable(self._host_cooldown[host])
         merged = {"User-Agent": self.user_agent, "Accept": "application/json"}; merged.update(headers or {})
         last_error = None
         for attempt in range(self.max_retries):
-            elapsed = time.monotonic() - self._last_request
+            elapsed = time.monotonic() - self._host_last.get(host, 0.0)
             if elapsed < self.min_interval: time.sleep(self.min_interval - elapsed)
             try:
-                self._last_request = time.monotonic()
+                self._last_request = self._host_last[host] = time.monotonic()
                 with urllib.request.urlopen(urllib.request.Request(url, headers=merged), timeout=self.timeout) as response:
                     payload = json.loads(response.read().decode()); cache_file.write_text(json.dumps(payload)); return payload
             except urllib.error.HTTPError as exc:
                 last_error = exc
-                if exc.code not in {429,500,502,503,504}: break
+                if exc.code == 429:
+                    wait = _retry_after_seconds(exc)
+                    if wait >= self.cooldown_threshold:
+                        message = f"{host} rate limited, retry in {int(wait)}s"
+                        self._host_cooldown[host] = message
+                        raise ProviderUnavailable(message, wait) from exc
+                elif exc.code not in {500,502,503,504}: break
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc: last_error = exc
             time.sleep(2**attempt)
         raise ProviderError(f"Request failed: {url}: {last_error}")
+
+def _retry_after_seconds(exc) -> float:
+    raw = (getattr(exc, "headers", None) or {}).get("Retry-After", "")
+    try: return float(str(raw).strip())
+    except (TypeError, ValueError): return 0.0
 
 def _strip_markup(value):
     if not value: return ""

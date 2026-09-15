@@ -1,4 +1,4 @@
-# Eonrise v1.3
+# Eonrise v0.3.1
 
 One question → one root topic → agent-owned up/down/sideways traversal.
 
@@ -20,7 +20,7 @@ python -m ontology_router "memory retention" --mode assistant --bundle tests/fix
 
 Single root topic. Each agent carries its own budget (`--max-nodes`, `--max-depth`,
 `--up/--down/--sideways-weight`) and recurses until budget, depth, or saturation.
-Two agents, same question, different policies → different maps. See `docs/SPEC-v1.md`.
+Two agents, same question, different policies → different maps. See `docs/SPEC.md`.
 
 ## Providers
 
@@ -52,6 +52,11 @@ round still returns new papers, so saturation never fires. Three guards:
 - **Background penalty** — a label that ranked high under three or more unrelated past
   questions scores half. Run memory makes reruns compound.
 - **Limitations** — read from abstract sentences that state one, not from keywords.
+- **Provider health** — a `429` carrying a long `Retry-After` is a quota window, not a
+  burst limit, so that host is dropped for the rest of the run instead of being asked 16
+  more times. If a provider answered nothing, the brief says **Degraded** at the top:
+  losing OpenAlex means no keywords, no topic hierarchy and few abstracts, and a map read
+  without knowing that looks like a thin literature rather than a thin run.
 
 ## Status
 

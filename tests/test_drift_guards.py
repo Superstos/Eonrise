@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
+from unittest import mock
 
 from ontology_router.engine import (
     GAP_QUERY_SLOTS,
@@ -15,6 +18,7 @@ from ontology_router.engine import (
     topical_papers,
 )
 from ontology_router.models import STATUSES, AgentPolicy, Paper
+from ontology_router import providers, report
 from ontology_router.providers import CachedHttpClient, OpenAlexProvider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
@@ -375,3 +379,53 @@ class OpenAlexKeylessTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _raiser(error, calls):
+    def fake(request, timeout=0):
+        calls.append(getattr(request, "full_url", request))
+        raise error
+    return fake
+
+
+class ProviderCooldownTests(unittest.TestCase):
+    """A long Retry-After is a quota window: one run cannot wait it out."""
+
+    def test_long_retry_after_stops_further_calls_to_that_host(self):
+        err = urllib.error.HTTPError("https://api.openalex.org/works?q=1", 429, "Too Many Requests",
+                                     {"Retry-After": "30746"}, None)
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp:
+            client = CachedHttpClient(cache_dir=Path(tmp), min_interval=0.0, max_retries=2)
+            with mock.patch("urllib.request.urlopen", side_effect=_raiser(err, calls)), mock.patch("time.sleep"):
+                with self.assertRaises(providers.ProviderUnavailable):
+                    client.get_json("https://api.openalex.org/works?q=1")
+                with self.assertRaises(providers.ProviderUnavailable):
+                    client.get_json("https://api.openalex.org/works?q=2")
+        self.assertEqual(len(calls), 1, "second call must fail fast without touching the network")
+
+    def test_short_retry_after_still_retries(self):
+        err = urllib.error.HTTPError("https://api.crossref.org/works?q=1", 429, "Too Many Requests",
+                                     {"Retry-After": "1"}, None)
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp:
+            client = CachedHttpClient(cache_dir=Path(tmp), min_interval=0.0, max_retries=2)
+            with mock.patch("urllib.request.urlopen", side_effect=_raiser(err, calls)), mock.patch("time.sleep"):
+                with self.assertRaises(providers.ProviderError) as ctx:
+                    client.get_json("https://api.crossref.org/works?q=1")
+        self.assertNotIsInstance(ctx.exception, providers.ProviderUnavailable)
+        self.assertEqual(len(calls), 2, "a burst limit is worth retrying inside the run")
+
+
+class DegradedProviderReportTests(unittest.TestCase):
+    BASE = {"question": "q", "root_topic": "q", "status": "partial", "stop_reason": "x",
+            "papers": [], "retrieved_papers": 0, "on_topic_papers": 0, "concepts": [],
+            "coverage": {"mechanism": []}, "gaps": ["mechanism"],
+            "recommended_queries": [], "limitations": []}
+
+    def test_brief_names_a_provider_that_answered_nothing(self):
+        text = report.render_compact_markdown({**self.BASE, "providers_down": ["openalex"]})
+        self.assertIn("**Degraded:** openalex", text)
+
+    def test_brief_stays_quiet_when_every_provider_answered(self):
+        self.assertNotIn("Degraded", report.render_compact_markdown({**self.BASE, "providers_down": []}))
