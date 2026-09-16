@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from . import __version__
 from .models import Paper
 
 class ProviderError(RuntimeError): pass
@@ -20,7 +21,7 @@ class SearchProvider(Protocol):
 @dataclass
 class CachedHttpClient:
     cache_dir: Path
-    user_agent: str = "eonrise/0.5"
+    user_agent: str = f"eonrise/{__version__}"
     timeout: int = 12
     max_retries: int = 2
     min_interval: float = 0.15
