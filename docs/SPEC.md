@@ -476,3 +476,28 @@ What did ship is the half that needs no belief: `append_run` now records **claim
 down-relation terms with their supporting paper ids and the sentence each was read from.
 Nothing ranks on them yet. A claim not written down when it is made cannot be measured later
 at all.
+
+## v0.8.1 — a failed run is a failed process
+
+Reported from a live session 2026-09-16: Europe PMC socket-timed out, the run retrieved
+nothing, and `python -m ontology_router.cli` exited **0**. The brief it wrote was worse than
+the exit code — `Status: failed` sat above five "not grounded yet" relations and a
+`**Degraded:**` line, which reads like a thin literature rather than a broken search.
+
+Two fixes, both verified in both directions:
+
+1. `cli.main` raises `SystemExit(2)` when `status == "failed"`. Verified: empty bundle →
+   exit 2, `tests/fixtures/papers.json` → exit 0.
+2. The compact brief leads a failed run with the provider errors and the sentence
+   *"the search failed, not because the literature is silent"*, and suppresses the
+   `**Degraded:**` line in that case, since that line describes a usable partial run.
+
+The stdout summary also carries `providers_down` and the first five `provider_errors`, so a
+caller scripting Eonrise sees the cause without opening the artifact.
+
+**Not reproduced:** the same report said the output directory was empty. `write_outputs`
+runs unconditionally after the round loop and produced all four artifacts in every failure
+path tried, including a total provider outage. No code path exits 0 without writing.
+
+Version constants aligned: `__init__.py` said `0.5.0` while `pyproject.toml` said `0.8.0`;
+both now read `0.8.1`.
