@@ -1,4 +1,4 @@
-# Eonrise v0.8
+# Eonrise
 
 One question → one root topic → agent-owned up/down/sideways traversal.
 
@@ -119,7 +119,7 @@ python -m unittest discover -s tests -v
 python -m gauntlet.run
 ```
 
-Builder → redteam loop: 50 unit tests + 6 offline attacks (vague, single-word,
+Builder → redteam loop: the unit suite + 6 offline attacks (vague, single-word,
 non-English, empty bundle, duplicates, hostile input) + artifact smoke + an offline
 drift gate. All three gauntlet gates must pass before release.
 
