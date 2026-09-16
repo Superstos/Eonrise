@@ -53,8 +53,11 @@ class SingleRootTests(unittest.TestCase):
     def test_relation_to_direction_mapping(self):
         self.assertEqual(relation_to_direction("mechanism", "term"), "down")
         self.assertEqual(relation_to_direction("method", "term"), "down")
-        self.assertEqual(relation_to_direction("neighbor_field", "term"), "sideways")
+        # Up used to be unreachable: concepts are always built with source_kind "term",
+        # so only the `field` branch could return it and no caller passed `field`.
+        self.assertEqual(relation_to_direction("neighbor_field", "term"), "up")
         self.assertEqual(relation_to_direction("topic", "field"), "up")
+        self.assertEqual(relation_to_direction("topic", "term"), "sideways")
 
 
 if __name__ == "__main__":

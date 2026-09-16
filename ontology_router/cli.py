@@ -123,10 +123,12 @@ def main() -> None:
             pass
     if corpus is not None:
         try:
-            result["corpus_added"] = corpus.add([Paper.from_dict(p) for p in result["papers"]])
+            stored = result.pop("corpus_papers", None) or result["papers"]
+            result["corpus_added"] = corpus.add([Paper.from_dict(p) for p in stored])
             result["corpus_size"] = corpus.stats()["papers"]
         except OSError:
             pass
+    result.pop("corpus_papers", None)  # the store's copy, never the artifact's
     write_outputs(result, args.out)
     print(json.dumps({
         "mode": mode,

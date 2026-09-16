@@ -35,6 +35,11 @@ def render_compact_markdown(result: dict) -> str:
                 if by_dir.get(direction):
                     lines.append(f"- **{direction}:** " + ", ".join(by_dir[direction][:4]))
     if result["gaps"]: lines.extend(["", "**Gaps:** " + ", ".join(x.replace("_", " ") for x in result["gaps"])])
+    dormant = result.get("dormant_relations") or []
+    if dormant:
+        lines.extend(["", "**Not in this literature:** " + ", ".join(x.replace("_", " ") for x in dormant)
+                      + " — two full rounds produced no candidate at all, so the run stopped "
+                        "spending queries on it rather than calling it an unfilled gap."])
     if result["recommended_queries"]:
         lines.extend(["", "## Next searches", ""]); lines.extend(f"- `{q}`" for q in result["recommended_queries"][:3])
     return "\n".join(lines) + "\n"
