@@ -338,3 +338,67 @@ imports.
 
 Capability numbers come from one measured query. They are a routing preference, not a
 ranking of scientific worth, and they are written in one table to be argued with.
+
+# v0.7 — a relation needs a sentence, not a label
+
+## The failure it closes
+
+A run on "how do search systems reuse results from earlier queries to write better later
+queries" reported its mechanisms as `service oriented architecture and web services` and
+`advanced data storage technologies`, and its measurements as `human resource development
+and performance evaluation`. None of those are mechanisms or measurements. All three are
+provider subject labels: OpenAlex keywords that matched a relation marker word
+("architecture", "performance", "evaluation") and were promoted on that word alone. The
+"evidence" stored beside each one was a paper title, because no sentence anywhere said the
+thing.
+
+Labels are free and infinite — every paper carries several, and providers assign them by
+classifier. A sentence costs a real abstract from a real paper. Before this change the
+cheapest evidence outranked the truest.
+
+## The rule
+
+A down-relation (`mechanism`, `measurement`, `failure_mode`, `method`) is kept only when the
+term was read out of an abstract at least once — an abstract n-gram or a stated-limitation
+sentence. Otherwise the term stays in the map as `topic`. Subject labels and topic paths are
+unaffected as `neighbor_field`: naming the neighbourhood is exactly what they are good for.
+
+`CandidateEvidence.abstract_count` records the provenance at admission time;
+`_guard_relation` reads it. Title n-grams do not count — measured, they supply junk like
+`connections between state failure`.
+
+## Measured, 7 saved runs, offline
+
+| Run | Down-relation terms in top 30 | Abstract-backed | Dropped |
+|---|---|---|---|
+| v9-query-feedback | 3 | 0 | 3 |
+| v7-stopping | 2 | 0 | 2 |
+| v7-map-quality | 4 | 1 | 3 |
+| v7-polysemy | 4 | 3 | 1 |
+| x3-mechanism | 9 | 8 | 1 |
+| x1-hypothesis | 6 | 5 | 1 |
+| x2-undiscovered | 2 | 0 | 2 |
+
+Every obviously wrong term is in the dropped column. Three runs lose their mechanism row
+entirely and now report it as a gap — which is the honest reading, since those rows had
+never been anything but labels.
+
+## Why this compounds
+
+Abstracts arrive from Europe PMC, DOAJ and the local paper store, and the store keeps them.
+The more the store holds, the more relations can be grounded in sentences. The label path
+saturates immediately; the sentence path grows with the corpus.
+
+## Deliberately not done
+
+The example stored beside an abstract n-gram is still the paper title, not the sentence the
+phrase came from. Capturing the sentence would make the brief's Evidence section quotable.
+One improvement per pass; this is the next one.
+
+## Dead end recorded
+
+Requiring a kept paper's topical hits to come from author words (title + keywords) rather
+than assigned subject labels. Measured on 7 saved runs: it dropped 2 of 50 in
+v9-query-feedback (correctly) but 23 of 50 in x1-hypothesis, including "Accelerating
+scientific discovery with Co-Scientist" — plainly on topic. Third failed tightening of the
+topical gate. The gate is not the lever.

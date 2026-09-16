@@ -42,6 +42,7 @@ class CandidateEvidence:
     explicit_count: int = 0
     title_count: int = 0
     stated_limitation: bool = False  # the paper wrote this limitation in a sentence
+    abstract_count: int = 0  # times the term was read out of an abstract, not a label
     relation_votes: Counter | None = None
     def __post_init__(self) -> None:
         if self.relation_votes is None:
@@ -213,7 +214,7 @@ def _relation_for(term: str, context: str, source_kind: str, question_tokens: se
         return "core"
     return "topic"
 
-def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper, relation: str, example: str, explicit: bool = False, in_title: bool = False, stated_limitation: bool = False) -> None:
+def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper, relation: str, example: str, explicit: bool = False, in_title: bool = False, stated_limitation: bool = False, from_abstract: bool = False) -> None:
     key = normalize(term)
     if not key or len(key.split()) > 6 or len(key) > 80:
         return
@@ -236,9 +237,10 @@ def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper
     item.explicit_count += int(explicit)
     item.title_count += int(in_title)
     item.stated_limitation = item.stated_limitation or stated_limitation
+    item.abstract_count += int(from_abstract)
     item.relation_votes[relation] += 1
 
-def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[str] | None) -> str:
+def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[str] | None, abstract_backed: bool = True) -> str:
     """Keep a down-relation label only when it is about the question.
 
     Two measured failures this closes: `high performance computing` scored as a
@@ -252,6 +254,14 @@ def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[
     if term_tokens <= {stem(t) for t in GAP_CUE_TOKENS.get(relation, set())}:
         return "topic"
     if on_topic is not None and not (paper_ids & on_topic):
+        return "topic"
+    if not abstract_backed:
+        # A provider's subject label is free and infinite; a sentence costs a real paper.
+        # Without this the cheapest evidence outranks the truest, and a brief reports
+        # `service oriented architecture and web services` as the question's mechanism
+        # with a paper title as its proof. Measured on 7 saved runs: 13 of 30 down-relation
+        # terms had never been read out of an abstract, and every obvious junk label was
+        # among them.
         return "topic"
     return relation
 
@@ -278,15 +288,15 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
             # explicit: the paper says this itself, in a sentence kept as the example.
             # Every paper words its limitation differently, so demanding two papers agree
             # on the wording left `failure_mode` empty on 4/4 live runs.
-            _add_candidate(candidates, phrase, paper, "failure_mode", sentence, explicit=True, stated_limitation=True)
+            _add_candidate(candidates, phrase, paper, "failure_mode", sentence, explicit=True, stated_limitation=True, from_abstract=True)
         for phrase in _ngrams(paper.abstract, 2, 4):
             phrase_tokens = set(tokens(phrase))
             if any(phrase_tokens & marker_set for marker_set in RELATION_MARKERS.values()):
-                _add_candidate(candidates, phrase, paper, _relation_for(phrase, context, "abstract", q_tokens), paper.title)
+                _add_candidate(candidates, phrase, paper, _relation_for(phrase, context, "abstract", q_tokens), paper.title, from_abstract=True)
     terms: list[Term] = []
     for key, ev in candidates.items():
         support = len(ev.papers)
-        relation = _guard_relation(key, ev.relation_votes.most_common(1)[0][0], ev.papers, on_topic)
+        relation = _guard_relation(key, ev.relation_votes.most_common(1)[0][0], ev.papers, on_topic, ev.abstract_count > 0)
         background_penalty = 0.5 if background and key in background else 1.0
         score = 1.25 * math.log1p(support) + 0.34 * min(ev.explicit_count, 3) + 0.18 * min(ev.title_count, 3) + 0.16 * min(len(ev.queries), 4) + 0.20 * min(len(ev.providers), 2) + 0.35 * (len(set(key.split()) & q_tokens) / max(len(set(key.split())), 1)) + 0.08 * min(len(key.split()), 4)
         score *= background_penalty

@@ -459,3 +459,40 @@ class StatedLimitationTests(unittest.TestCase):
         self.assertTrue(stated, "a sentence saying 'a limitation is' must be marked stated")
         self.assertTrue(any("limitation" in e.lower() or "limited" in e.lower()
                             for t in stated for e in t.examples))
+
+
+class AbstractBackedRelationTests(unittest.TestCase):
+    """A subject label may name the neighbourhood; only a sentence may name a mechanism."""
+
+    def _label_papers(self):
+        # Every paper carries the label as a provider keyword and nowhere else.
+        return [
+            Paper(f"p{i}", f"Query reuse in practice, part {i}", "This report surveys industrial "
+                  "deployments and reports adoption counts by sector.", f"u{i}", "", 2020 + i, 4,
+                  "openalex", [], ["service oriented architecture and web services"],
+                  ["Computer Science"], "", ["query reuse"])
+            for i in range(1, 5)
+        ]
+
+    def _sentence_papers(self):
+        return [
+            Paper(f"s{i}", f"Query reuse in practice, part {i}",
+                  "The system works by caching an attention mechanism over earlier result sets, "
+                  "and the attention mechanism is refreshed per round.", f"v{i}", "", 2020 + i, 4,
+                  "europepmc", [], [], [], "", ["query reuse"])
+            for i in range(1, 5)
+        ]
+
+    def test_label_only_term_cannot_be_a_mechanism(self):
+        terms = extract_terms("how does query reuse work", self._label_papers())
+        label = [t for t in terms if t.text == "service oriented architecture and web services"]
+        self.assertTrue(label, "the label should still reach the map")
+        self.assertTrue(all(t.relation not in {"mechanism", "measurement", "method", "failure_mode"}
+                            for t in label),
+                        "a provider label with no sentence behind it must not claim a relation")
+
+    def test_sentence_term_still_becomes_a_mechanism(self):
+        terms = extract_terms("how does query reuse work", self._sentence_papers())
+        found = [t for t in terms if "attention mechanism" in t.text]
+        self.assertTrue(found, "a phrase read out of an abstract must survive")
+        self.assertEqual("mechanism", found[0].relation)

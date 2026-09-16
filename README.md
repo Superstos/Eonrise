@@ -1,4 +1,4 @@
-# Eonrise v0.6
+# Eonrise v0.7
 
 One question → one root topic → agent-owned up/down/sideways traversal.
 
