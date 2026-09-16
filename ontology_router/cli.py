@@ -140,8 +140,15 @@ def main() -> None:
         "papers": len(result["papers"]),
         "corpus": result.get("corpus_size", 0),
         "gaps": result["gaps"],
+        "providers_down": result.get("providers_down", []),
+        "provider_errors": result.get("provider_errors", [])[:5],
         "output": str(Path(args.out).resolve()),
     }, indent=2))
+    # A run that retrieved nothing exited 0 and printed a brief that read like a thin
+    # literature. A socket timeout against one provider is not a research finding, and a
+    # caller scripting Eonrise has no other signal: `failed` is now a failed process.
+    if result["status"] == "failed":
+        raise SystemExit(2)
 
 
 if __name__ == "__main__":

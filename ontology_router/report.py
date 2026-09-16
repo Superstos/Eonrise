@@ -9,8 +9,15 @@ def render_compact_markdown(result: dict) -> str:
              f"**Status:** {result['status']} — {result['stop_reason']}",
              f"**Evidence:** {len(result['papers'])} papers kept of {result.get('retrieved_papers', len(result['papers']))} retrieved"
              f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts"]
+    errors = result.get("provider_errors") or []
+    if result["status"] == "failed" and errors:
+        # Not a thin literature — a broken run. Without the error text the brief blames
+        # the field for what a socket timeout did.
+        lines.extend(["", "**This run retrieved nothing. The map below is empty because the "
+                          "search failed, not because the literature is silent.**", ""])
+        lines.extend(f"- `{e}`" for e in errors[:5])
     down = result.get("providers_down") or []
-    if down:
+    if down and result["status"] != "failed":
         # A run that lost OpenAlex has no keywords and few abstracts. Reading the map
         # without knowing that is how a degraded run passes for a thin literature.
         lines.append(f"**Degraded:** {', '.join(down)} answered nothing this run — "
