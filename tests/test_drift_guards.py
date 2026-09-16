@@ -496,3 +496,31 @@ class AbstractBackedRelationTests(unittest.TestCase):
         found = [t for t in terms if "attention mechanism" in t.text]
         self.assertTrue(found, "a phrase read out of an abstract must survive")
         self.assertEqual("mechanism", found[0].relation)
+
+
+class ClaimMemoryTests(unittest.TestCase):
+    """A run records what it established, not only what it read."""
+
+    def test_grounded_down_relations_are_written_as_claims(self):
+        import json
+        import tempfile
+        from ontology_router.memory import MemoryStore
+        with tempfile.TemporaryDirectory() as tmp:
+            store = MemoryStore(Path(tmp) / "memory.jsonl")
+            store.append_run({
+                "question": "how does query reuse work",
+                "root_topic": "query reuse",
+                "terms": [
+                    {"text": "attention mechanism", "relation": "mechanism", "confidence": "high",
+                     "paper_ids": ["p1"], "examples": ["The system caches an attention mechanism."]},
+                    {"text": "computer science", "relation": "neighbor_field", "confidence": "high",
+                     "paper_ids": ["p2"], "examples": ["A paper title"]},
+                    {"text": "weak idea", "relation": "mechanism", "confidence": "low",
+                     "paper_ids": ["p3"], "examples": [""]},
+                ],
+            })
+            written = json.loads(store.path.read_text(encoding="utf-8").strip())
+        claims = written["claims"]
+        self.assertEqual(1, len(claims), "only grounded down-relation terms are claims")
+        self.assertEqual("attention mechanism", claims[0]["text"])
+        self.assertIn("attention mechanism", claims[0]["example"])

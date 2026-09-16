@@ -101,10 +101,18 @@ def _keep_score(paper: Paper, on_topic: set[str]) -> tuple:
     """Which 50 of several hundred papers survive into the artifact.
 
     Citations alone kept the canon: measured median year 2006-2013 across four runs.
-    Topical fit leads, then recency, then citations.
+    Topical fit leads, then whether the paper can ground anything at all, then recency,
+    metadata richness and citations.
+
+    An abstract outranks a citation count here because of v0.7: a paper with no abstract
+    cannot supply a mechanism, a measurement, a method or a failure mode. It can only add
+    a subject label. Ranking it above a paper that carries text was ranking the artifact's
+    least useful evidence first.
     """
     recency = 0.0 if not paper.year else max(0.0, min((paper.year - 2010) / 15.0, 1.0))
-    return (paper.paper_id in on_topic, round(recency + math.log1p(paper.cited_by_count) / 12.0, 4))
+    richness = min(len(paper.keywords) + len(paper.fields) + len(paper.topic_path), 6) / 6.0
+    return (paper.paper_id in on_topic, bool(paper.abstract),
+            round(recency + 0.6 * richness + math.log1p(paper.cited_by_count) / 12.0, 4))
 
 
 def build_graph(question: str, terms: list[Term], papers: list[Paper]) -> dict:
@@ -124,7 +132,12 @@ def build_graph(question: str, terms: list[Term], papers: list[Paper]) -> dict:
     return {"nodes": nodes, "edges": edges}
 
 def relation_to_direction(relation: str, source_kind: str) -> str:
-    if source_kind in {"field", "broader_topic"}:
+    """Up was unreachable. Every concept was created with source_kind `"term"`, so the
+    branch above it never ran and 28 of 30 nodes in a measured run came back `sideways`.
+    A `neighbor_field` term IS the broader classification the paper sits under, so it is
+    what up means here — and up carries half the weight, which is the point of naming it.
+    """
+    if source_kind in {"field", "broader_topic"} or relation == "neighbor_field":
         return UP
     if relation in DOWN_RELATIONS:
         return DOWN
@@ -168,6 +181,11 @@ def run_agent(
     previous_grounded: set[str] = set()
     last_terms: list[Term] = []
     last_gaps: list[str] = []
+    # A relation the literature never mentions is not a gap to chase. Tracked per round so
+    # two rounds of silence is the evidence, not one unlucky query.
+    silent_rounds: Counter = Counter()
+    corpus_saved = 0  # paid calls the local store made unnecessary
+    dormant: set[str] = set()
     taken_keys: set[frozenset[str]] = {concept_key(root_label)}
     on_topic: set[str] = set()
     previous_on_topic = 0
@@ -209,13 +227,22 @@ def run_agent(
         ordered = [by_name[n] for n in order_for([p.name for p in providers], last_gaps, states)]
         for node, query in round_queries:
             searched.add(query)
+            local_hits = 0
             for provider in ordered:
+                # v0.6 ordered the providers and then called every one of them, so a paper
+                # already held cost exactly as much as a paper fetched. The store only pays
+                # off if it can end the query: a full local answer stops the paid calls.
+                if local_hits >= results_per_query and provider.name != "corpus":
+                    corpus_saved += 1
+                    continue
                 provider_calls[provider.name] += 1
                 try:
                     found = provider.search(query, results_per_query)
                     for p in found:
                         p.found_by = list(dict.fromkeys([*p.found_by, query]))
                     incoming.extend(found)
+                    if provider.name == "corpus":
+                        local_hits = len(found)
                     states.observe(provider.name, True)
                 except ProviderUnavailable as exc:
                     provider_failures[provider.name] += 1
@@ -243,6 +270,15 @@ def run_agent(
         corpus = [p for p in papers if p.paper_id in on_topic] if topic_filter is not None else papers
         terms = extract_terms(question, corpus, topic_filter, background)
         covered, gaps = coverage(terms)
+        for relation in REQUIRED_RELATIONS:
+            if any(t.relation == relation for t in terms):
+                silent_rounds[relation] = 0
+            else:
+                silent_rounds[relation] += 1
+        # Two full rounds with not one candidate term: the question does not have this
+        # facet in this literature. Chasing it spends the query budget on cue words.
+        dormant = {r for r, n in silent_rounds.items() if n >= 2}
+        gaps = [g for g in gaps if g not in dormant]
         last_terms, last_gaps = terms, gaps
         grounded_now = {t.text for t in terms if t.confidence in {"high", "medium"}}
         # Grow concepts from newly grounded terms; agent budget is the ceiling.
@@ -335,7 +371,12 @@ def run_agent(
     kept_papers = sorted(papers, key=lambda p: _keep_score(p, on_topic), reverse=True)[:50]
     return {"version": 5, "question": question, "root_topic": root_label,
             "status": status, "stop_reason": stop_reason,
-            "coverage": covered, "gaps": gaps,
+            "coverage": covered, "gaps": gaps, "dormant_relations": sorted(dormant),
+            # Every paper retrieved this run, not the kept 50. The artifact shows 50; the
+            # store learns from all of them. Capping the store at what a reader sees threw
+            # away ~90% of each run's evidence before the next run could reuse it.
+            "corpus_papers": [p.to_dict() for p in papers],
+            "calls_saved_by_corpus": corpus_saved,
             # kept separately: these rank below the top 30 but carry the quoted sentence
             # Only sentences a paper actually wrote. Title n-grams containing "failure"
             # were being quoted here as stated limitations.

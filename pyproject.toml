@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eonrise"
-version = "0.7.0"
+version = "0.8.0"
 description = "Single-root, agent-budget research traversal with drift guards: one topic, up/down/sideways"
 requires-python = ">=3.8"
 license = {text = "MIT"}

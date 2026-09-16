@@ -31,6 +31,19 @@ class MemoryStore:
                 {k: p.get(k) for k in ("paper_id", "title", "doi", "url", "year")}
                 for p in record.get("papers", [])[:20]
             ],
+            # What the run actually established, not just what it read. A claim is a
+            # grounded down-relation term with the papers that support it and the sentence
+            # it was read from. Nothing ranks on these yet -- the replay test that would
+            # justify that cannot discriminate until runs are stored whole -- but a claim
+            # not written down when it is made cannot be measured later at all.
+            "claims": [
+                {"text": t.get("text"), "relation": t.get("relation"),
+                 "confidence": t.get("confidence"), "paper_ids": (t.get("paper_ids") or [])[:8],
+                 "example": (t.get("examples") or [""])[0]}
+                for t in record.get("terms", [])
+                if t.get("relation") in {"mechanism", "measurement", "failure_mode", "method"}
+                and t.get("confidence") in {"high", "medium"}
+            ][:30],
         }
         with self.path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(slim, ensure_ascii=False) + "\n")

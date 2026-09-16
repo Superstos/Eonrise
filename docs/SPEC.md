@@ -402,3 +402,77 @@ than assigned subject labels. Measured on 7 saved runs: it dropped 2 of 50 in
 v9-query-feedback (correctly) but 23 of 50 in x1-hypothesis, including "Accelerating
 scientific discovery with Co-Scientist" — plainly on topic. Third failed tightening of the
 topical gate. The gate is not the lever.
+
+# v0.8 — six defects a second reader found, and one idea its own test killed
+
+GPT-5.6 (thinking effort high) read the repo at `9efcdd0` through a GitHub connector. It
+could not run the tests — its sandbox cannot resolve github.com — and it said so unprompted.
+It made six code-level claims. All six were verified in the source before anything changed.
+
+| Claim | Verified at | Fixed |
+|---|---|---|
+| `MemoryStore.recall()` never seeds a run | `memory.py:62`, zero callers | no — see below |
+| Only the kept 50 papers reach the store | `cli.py:126` | yes |
+| The `up` direction is unreachable | `engine.py:260` always passed `"term"` | yes |
+| `_keep_score` ignores evidence richness | `engine.py:100` | yes |
+| All five relations are mandatory | `evidence.py:357` | yes |
+| Ordering never saves a paid call | `engine.py:212`, no break | yes |
+
+## The `up` direction was a lie in the artifact
+
+`relation_to_direction` returned `up` only for source kinds `field` / `broader_topic`, and
+concepts are always built with `"term"`. So the branch never ran, every non-down concept came
+back `sideways`, and the measured 118-of-120 sideways map was partly an artefact of the
+mapping rather than of the literature. A `neighbor_field` term is the broader classification a
+paper sits under, so that is what up means here — and up carries half the weight, which is the
+whole reason for naming a direction. Live run: 7 up nodes where there had been 0.
+
+## The store was capped at what a reader sees
+
+`corpus.add()` was fed `result["papers"]`, the kept 50. A run that retrieves 963 papers taught
+the next run about 50 of them. The engine now returns every retrieved paper separately under
+`corpus_papers`; the CLI stores those and drops the key before the artifact is written, so the
+JSON on disk is unchanged in size.
+
+## Ordering now actually ends a query
+
+v0.6 ranked the providers and then called every one of them, so a held paper cost exactly what
+a fetched one did. When the local store answers a query with a full page of results, the paid
+providers are skipped for that query and `calls_saved_by_corpus` counts it. First live run
+saved 1 call against a 100-paper store — the number only means anything as the store grows,
+which is the point.
+
+## An abstract now outranks a citation count
+
+Under v0.7 a paper with no abstract cannot ground a mechanism, a measurement, a method or a
+failure mode; it can only add a subject label. Keeping it above a paper that carries text was
+ranking the artifact's least useful evidence first. Live run: the kept 50 went from 72% to 96%
+carrying an abstract.
+
+## A relation the literature never mentions is no longer chased
+
+Two full rounds with not one candidate term for a relation marks it dormant: it stops driving
+gap queries and is reported as "not in this literature" instead of an unfilled gap. 5/5 was
+being treated as universal completeness for every question ever asked.
+
+## Positive evidence memory: proposed, pre-registered, and killed by its own test
+
+The proposal was to recall previously grounded claims and use them as retrieval anchors. Its
+author's kill rule, agreed before building: median ΔGER@20 ≤ 0 over a chronological replay,
+or a lift that vanishes once repeated DOIs are removed.
+
+| Condition | Runs | Median ΔGER@20 | Wins | Losses | Ties |
+|---|---|---|---|---|---|
+| all papers | 44 | +0.0000 | 16 | 1 | 27 |
+| repeated DOIs removed | 31 | +0.0000 | 6 | 1 | 24 |
+
+Median is exactly zero in both conditions, so by the pre-registered rule it does not get built.
+Worth saying why the test could not discriminate: every saved run holds only its 50 survivors,
+so the replay reranks 50 candidates into a top 20 and most runs simply tie. That bottleneck is
+what this version removed. The test becomes meaningful once runs have been stored whole for a
+while — it is not evidence the idea is wrong, it is evidence the data cannot yet tell.
+
+What did ship is the half that needs no belief: `append_run` now records **claims** — grounded
+down-relation terms with their supporting paper ids and the sentence each was read from.
+Nothing ranks on them yet. A claim not written down when it is made cannot be measured later
+at all.
