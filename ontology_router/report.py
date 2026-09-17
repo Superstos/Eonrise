@@ -10,6 +10,10 @@ def render_compact_markdown(result: dict) -> str:
              f"**Evidence:** {len(result['papers'])} papers kept of {result.get('retrieved_papers', len(result['papers']))} retrieved"
              f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts"]
     errors = result.get("provider_errors") or []
+    if result["status"] == "failed" and not result.get("on_topic_papers") and result["papers"]:
+        lines.extend(["", "**No retrieved paper was about this question. Every term below was "
+                          "read out of a different literature — treat the map as a failed "
+                          "search, not as a finding.**"])
     if result["status"] == "failed" and errors:
         # Not a thin literature — a broken run. Without the error text the brief blames
         # the field for what a socket timeout did.

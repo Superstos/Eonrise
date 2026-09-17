@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from ontology_router.providers import (CoreProvider, DoajProvider, EuropePMCProvider,
+from ontology_router.evidence import _dedupe_papers
+from ontology_router.providers import (CoreProvider, CrossrefProvider, DoajProvider,
+                                       EuropePMCProvider, OpenAlexProvider,
                                        SemanticScholarProvider)
 
 
@@ -36,6 +38,22 @@ S2 = {"data": [{"paperId": "p1", "title": "Retrieval practice", "abstract": "A r
 
 CORE = {"results": [{"id": 7, "title": "Open access retention study", "abstract": "Full text.",
                      "doi": "10.2/xyz", "yearPublished": 2023, "subjects": ["education", "memory"]}]}
+
+
+class CrossProviderIdentityTests(unittest.TestCase):
+    def test_bare_and_url_doi_merge_into_one_enriched_paper(self):
+        crossref = CrossrefProvider(FakeHttp({"message": {"items": [{
+            "DOI": "10.1234/example", "title": ["Memory retention study"]
+        }]}})).search("memory retention")[0]
+        openalex = OpenAlexProvider(FakeHttp({"results": [{
+            "id": "W1", "doi": "https://doi.org/10.1234/example",
+            "title": "Memory retention study",
+            "abstract_inverted_index": {"Memory": [0], "retention": [1]}
+        }]})).search("memory retention")[0]
+        merged, added = _dedupe_papers([crossref], [openalex])
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(added, 0)
+        self.assertEqual(merged[0].abstract, "Memory retention")
 
 
 class EuropePMCTests(unittest.TestCase):

@@ -363,6 +363,16 @@ def run_agent(
                 status = "usable"
                 repaired = " after gap repair" if searched_gap_queries else ""
                 stop_reason = f"{len(REQUIRED_RELATIONS) - len(gaps)}/5 relations grounded{repaired}"
+        # `few` and `none` are not the same signal. MIN_TOPICAL_CORPUS exists so a small
+        # bundle with few literal matches is not starved, but at zero it was converting
+        # "no evidence of relevance" into "every paper may vote": `topic_filter` became
+        # None, and `_guard_relation` skips its on-topic check entirely when on_topic is
+        # None. Measured 2026-09-16 on a live run: 0 of 60 papers on topic, status
+        # `partial`, and the brief named quality control as the mechanism from papers
+        # about neuroimaging QC and health-system care quality.
+        if not on_topic and len(papers) >= MIN_TOPICAL_CORPUS:
+            status = "failed"
+            stop_reason = f"{len(papers)} papers retrieved, none about the question"
     # A provider that answered nothing all run changes what the map can contain, so the
     # brief says so instead of quietly reading as a Crossref-only result.
     down_providers = sorted(n for n, calls in provider_calls.items() if calls and provider_failures[n] == calls)

@@ -45,6 +45,11 @@ class TopicalGateTests(unittest.TestCase):
                   paper("p5", "Measuring the quality of automatically built ontology maps")]
         self.assertEqual(topical_papers(self.question, wanted), {"p4", "p5"})
 
+    def test_single_word_topic_keeps_matching_papers(self):
+        papers = [paper("on", "Memory consolidation during sleep"),
+                  paper("off", "Coral reef bleaching")]
+        self.assertEqual(topical_papers("memory", papers), {"on"})
+
     def test_keyword_only_evidence_still_counts(self):
         tagged = paper("p6", "A survey of concept drift", keywords=["ontology mapping"],
                        topic_path=["literature based discovery"])
@@ -540,8 +545,8 @@ class SilentFailureTests(unittest.TestCase):
               "providers_down": ["europepmc"],
               "provider_errors": ["europepmc: Request failed: https://www.ebi.ac.uk/: timed out"]}
 
-    def _run_cli(self, bundle: str, out: str) -> int:
-        argv = ["eonrise", "attention mechanisms in transformers", "--mode", "assistant",
+    def _run_cli(self, bundle: str, out: str, question: str = "attention mechanisms in transformers") -> int:
+        argv = ["eonrise", question, "--mode", "assistant",
                 "--bundle", bundle, "--out", out, "--no-memory", "--no-corpus"]
         with mock.patch("sys.argv", argv), mock.patch("builtins.print"):
             try:
@@ -559,10 +564,70 @@ class SilentFailureTests(unittest.TestCase):
     def test_healthy_run_still_exits_zero(self):
         with tempfile.TemporaryDirectory() as tmp:
             fixture = Path(__file__).parent / "fixtures" / "papers.json"
-            self.assertEqual(self._run_cli(str(fixture), str(Path(tmp) / "out")), 0)
+            # The bundle is a memory/forgetting literature, so the question has to be one
+            # it can actually answer: since the zero-topical guard landed, asking it about
+            # transformers is a failed search, and correctly exits 2.
+            self.assertEqual(self._run_cli(str(fixture), str(Path(tmp) / "out"),
+                                           "how does spaced repetition improve memory retention"), 0)
+
+    def test_failed_off_topic_run_does_not_claim_nothing_was_retrieved(self):
+        result = {**self.FAILED, "papers": [{"title": "Coral reef bleaching"}],
+                  "retrieved_papers": 20,
+                  "stop_reason": "20 papers retrieved, none about the question"}
+        text = report.render_compact_markdown(result)
+        self.assertIn("No retrieved paper was about this question", text)
+        self.assertIn("timed out", text)
+        self.assertNotIn("This run retrieved nothing", text)
+        self.assertNotIn("map below is empty", text)
 
     def test_brief_blames_the_search_not_the_literature(self):
         text = report.render_compact_markdown(self.FAILED)
         self.assertIn("the search failed, not because the literature is silent", text)
         self.assertIn("timed out", text)
         self.assertNotIn("**Degraded:**", text)  # that line reads as a usable partial run
+
+
+class ZeroTopicalCorpusTests(unittest.TestCase):
+    """`few` and `none` are different signals. Reported 2026-09-16: a live run retrieved
+    60 papers, matched 0 to the question, disabled its own topical filter because
+    0 < MIN_TOPICAL_CORPUS, and reported `partial` with a confident map."""
+
+    def _papers(self, n: int, about: str) -> list:
+        return [Paper(f"p{i}", f"{about} study {i}", f"This paper examines {about} in depth.",
+                      f"https://example.org/{i}", "", 2020, 5, "fixture", [about], [], [], "", [])
+                for i in range(n)]
+
+    def _run(self, papers: list) -> dict:
+        class Bundle:
+            name = "fixture"
+            def search(self, query, limit=20):
+                return [Paper.from_dict(p.to_dict()) for p in papers]
+        policy = AgentPolicy(name="t", max_nodes=40, max_depth=3, max_rounds=2,
+                             up_weight=0.5, down_weight=1.0, sideways_weight=1.0,
+                             support_threshold=2)
+        with tempfile.TemporaryDirectory() as tmp:
+            from ontology_router.scheduling import ProviderStates
+            return run_agent("how are transformer attention heads pruned", [Bundle()], policy,
+                             results_per_query=20, background=set(),
+                             states=ProviderStates(Path(tmp) / "p.json"))
+
+    def test_a_wholly_off_topic_corpus_fails_the_run(self):
+        result = self._run(self._papers(20, "coral reef bleaching"))
+        self.assertEqual(result["on_topic_papers"], 0)
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("none about the question", result["stop_reason"])
+
+    def test_a_small_bundle_is_still_not_starved(self):
+        # Below MIN_TOPICAL_CORPUS the old fallback stays: few literal matches is not
+        # the same failure, and three earlier tightenings died by deleting real papers.
+        result = self._run(self._papers(4, "coral reef bleaching"))
+        self.assertNotEqual(result["status"], "failed")
+
+    def test_brief_says_the_search_failed_not_the_field(self):
+        text = report.render_compact_markdown({
+            "question": "q", "root_topic": "q", "status": "failed",
+            "stop_reason": "60 papers retrieved, none about the question",
+            "papers": [{"title": "x"}], "retrieved_papers": 60, "on_topic_papers": 0,
+            "concepts": [], "coverage": {"mechanism": ["quality control"]},
+            "gaps": [], "recommended_queries": [], "limitations": []})
+        self.assertIn("No retrieved paper was about this question", text)
