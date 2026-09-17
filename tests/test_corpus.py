@@ -4,9 +4,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from ontology_router.corpus import CorpusStore
-from ontology_router.models import Paper
+from ontology_router.engine import run_agent
+from ontology_router.models import AgentPolicy, Paper
 
 
 def paper(pid, title, abstract="", doi="", keywords=(), cited=0, provider="crossref"):
@@ -40,6 +42,41 @@ class CorpusStoreTests(unittest.TestCase):
         held = store.load()["10.1/x"]
         self.assertEqual(held.abstract, "Now with an abstract.")
         self.assertEqual(held.keywords, ["retention"])
+
+    def test_metadata_enrichment_survives_reopening_the_store(self):
+        store = CorpusStore(self.path)
+        store.add([paper("p1", "Memory study", "An existing abstract.", doi="10.1/x")])
+        richer = paper("p2", "Memory study", "An existing abstract.", doi="10.1/x",
+                       keywords=["retention"], cited=12)
+        richer.fields = ["Cognitive Psychology"]
+        richer.topic_path = ["Memory consolidation"]
+        richer.venue = "Memory Journal"
+        richer.found_by = ["memory retention"]
+        store.add([richer])
+        before = store.load()["10.1/x"].to_dict()
+        after = CorpusStore(self.path).load()["10.1/x"].to_dict()
+        self.assertEqual(after, before)
+
+    def test_capacity_overflow_keeps_memory_and_disk_consistent(self):
+        store = CorpusStore(self.path, max_papers=2)
+        store.add([paper("p1", "First paper", doi="10.1/a")])
+        store.add([paper("p2", "Second paper", doi="10.1/b"),
+                   paper("p3", "Third paper", doi="10.1/c")])
+        self.assertLessEqual(store.stats()["papers"], 2)
+        self.assertEqual(store.stats(), CorpusStore(self.path, max_papers=2).stats())
+
+    def test_full_local_answer_prevents_all_network_searches(self):
+        store = CorpusStore(self.path)
+        store.add([paper(f"p{i}", f"Memory retention study {i}",
+                         "Memory retention improves.", doi=f"10.1/{i}") for i in range(8)])
+        remote = mock.Mock()
+        remote.name = "doaj"
+        remote.search.return_value = []
+        result = run_agent("memory retention", [store, remote],
+                           AgentPolicy(max_rounds=1), results_per_query=8)
+        self.assertEqual(result["retrieved_papers"], 8)
+        remote.search.assert_not_called()
+        self.assertEqual(result["calls_saved_by_corpus"], 1)
 
     def test_one_shared_common_word_is_not_a_match(self):
         store = CorpusStore(self.path)
