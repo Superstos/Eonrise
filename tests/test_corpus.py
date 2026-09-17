@@ -57,13 +57,14 @@ class CorpusStoreTests(unittest.TestCase):
         after = CorpusStore(self.path).load()["10.1/x"].to_dict()
         self.assertEqual(after, before)
 
-    def test_capacity_overflow_keeps_memory_and_disk_consistent(self):
-        store = CorpusStore(self.path, max_papers=2)
-        store.add([paper("p1", "First paper", doi="10.1/a")])
-        store.add([paper("p2", "Second paper", doi="10.1/b"),
-                   paper("p3", "Third paper", doi="10.1/c")])
-        self.assertLessEqual(store.stats()["papers"], 2)
-        self.assertEqual(store.stats(), CorpusStore(self.path, max_papers=2).stats())
+    def test_papers_beyond_old_cap_survive_reopening(self):
+        store = CorpusStore(self.path)
+        self.assertEqual(store.add([Paper(str(i), f"Paper {i}") for i in range(50000)]), 50000)
+        self.assertEqual(store.add([Paper("extra", "Memory retention")]), 1)
+        reopened = CorpusStore(self.path)
+        self.assertEqual(reopened.stats()["papers"], 50001)
+        self.assertEqual(reopened.search("memory retention")[0].paper_id, "extra")
+        self.assertEqual(store.stats(), reopened.stats())
 
     def test_full_local_answer_prevents_all_network_searches(self):
         store = CorpusStore(self.path)
@@ -77,6 +78,16 @@ class CorpusStoreTests(unittest.TestCase):
         self.assertEqual(result["retrieved_papers"], 8)
         remote.search.assert_not_called()
         self.assertEqual(result["calls_saved_by_corpus"], 1)
+
+    def test_single_word_search_returns_only_matching_papers(self):
+        store = CorpusStore(self.path)
+        store.add([paper("on", "Memory consolidation"),
+                   paper("off", "Coral reef bleaching")])
+        self.assertEqual([p.paper_id for p in store.search("memory")], ["on"])
+        self.assertEqual(store.search("volcano"), [])
+        self.assertEqual(store.search("the"), [])
+        self.assertEqual(store.search(""), [])
+        self.assertEqual(store.search("memory retention"), [])
 
     def test_one_shared_common_word_is_not_a_match(self):
         store = CorpusStore(self.path)

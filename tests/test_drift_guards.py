@@ -49,6 +49,10 @@ class TopicalGateTests(unittest.TestCase):
         papers = [paper("on", "Memory consolidation during sleep"),
                   paper("off", "Coral reef bleaching")]
         self.assertEqual(topical_papers("memory", papers), {"on"})
+        self.assertEqual(topical_papers("volcano", papers), set())
+        self.assertEqual(topical_papers("the", papers), set())
+        self.assertEqual(topical_papers("", papers), set())
+        self.assertEqual(topical_papers("memory retention", papers), set())
 
     def test_keyword_only_evidence_still_counts(self):
         tagged = paper("p6", "A survey of concept drift", keywords=["ontology mapping"],
