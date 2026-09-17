@@ -130,7 +130,7 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
     for paper in papers:
         found = paper_tokens(paper)
         hits, extra = len(root & found), len(rest & found)
-        if hits >= 2 or (hits >= 1 and extra >= 1):
+        if hits >= 2 or (hits >= 1 and (extra >= 1 or (len(root) == 1 and not rest))):
             keep.add(paper.paper_id)
     return keep
 

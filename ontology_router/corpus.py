@@ -35,10 +35,9 @@ class CorpusStore:
 
     name = "corpus"
 
-    def __init__(self, path: str | Path, max_papers: int = 50000) -> None:
+    def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.max_papers = max_papers
         self._papers: dict[str, Paper] = {}
         self._loaded = False
 
@@ -91,7 +90,7 @@ class CorpusStore:
             self._merge(key, paper)
             if was_thin:
                 fresh.append(self._papers[key])
-        if not fresh or len(self._papers) > self.max_papers:
+        if not fresh:
             return 0
         with self.path.open("a", encoding="utf-8") as handle:
             for paper in fresh:
@@ -108,8 +107,8 @@ class CorpusStore:
             found = _tokens(f"{paper.title} {paper.abstract} {' '.join(paper.keywords)} "
                            f"{' '.join(paper.fields)} {' '.join(paper.topic_path)}")
             hits = wanted & found
-            if len(hits) < 2:
-                continue  # one shared common word is not a match
+            if len(hits) < min(2, len(wanted)):
+                continue
             clone = Paper.from_dict(paper.to_dict())
             clone.found_by = list(dict.fromkeys([*clone.found_by, query]))
             ranked.append((len(hits) / len(wanted) + min(paper.cited_by_count, 200) / 2000, clone))
