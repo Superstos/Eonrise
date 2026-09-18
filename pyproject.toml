@@ -13,7 +13,6 @@ requires-python = ">=3.11"
 authors = [{name = "Mohamed Amine NAJI"}]
 keywords = ["research", "literature-review", "evidence-synthesis", "concept-mapping"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.11",
