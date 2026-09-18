@@ -1,6 +1,6 @@
 # Eonrise
 
-Experimental public alpha, built only on the Python standard library.
+Built only on the Python standard library.
 
 Eonrise maps where fields intersect, finding concepts that are fundamentally similar even when different disciplines use different names for them.
 
@@ -27,7 +27,7 @@ pip install .
 eonrise --help
 ```
 
-A PyPI release is planned, but for this alpha install from source.
+A PyPI release is planned; until then, install from source.
 
 ## Fastest working example
 
@@ -131,7 +131,7 @@ python -m ontology_router.equivalence_benchmark
 
 ## Development and testing
 
-Supported Python: `>=3.11`.
+Supported Python package versions: `>=3.11`. CI also probes source compatibility on Python 3.8–3.10 intentionally.
 
 ```bash
 python -m unittest discover -s tests -v
