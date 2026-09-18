@@ -1,37 +1,23 @@
 # Eonrise
 
-Built only on the Python standard library.
+Eonrise maps where fields intersect. It searches scholarly sources and organizes the evidence into mechanisms, measurements, failure modes, methods, and neighboring fields.
 
-Eonrise maps where fields intersect, finding concepts that are fundamentally similar even when different disciplines use different names for them.
+It can also learn when different fields use different names for the same or closely related idea, then reuse that vocabulary in later searches.
 
-It maps:
+No third-party Python packages are required at runtime.
 
-- mechanisms (how something works)
-- measurements (how it is judged)
-- failure modes (how it breaks)
-- methods (how it was tested)
-- neighboring fields (where else the idea shows up)
+## Quick start
 
-## Why it exists
-
-Most search tools stay inside one field's words. Eonrise starts from one question, builds a map of nearby ideas across fields, fills the gaps it can, and remembers wording it has seen before. The point is a clearer map, not a longer list of papers.
-
-## Installation
-
-Requires Python `>=3.11`.
-
-From a repository checkout:
+Eonrise installs on Python 3.11+.
 
 ```bash
 pip install .
-eonrise --help
+eonrise "how does spaced repetition improve memory retention" --out output
 ```
 
-A PyPI release is planned; until then, install from source.
+Live mode searches scholarly APIs and can keep a local cache so later runs reuse papers already found.
 
-## Fastest working example
-
-This offline example uses the bundled fixture and writes no local memory, corpus, or equivalence state:
+For a fully offline run:
 
 ```bash
 eonrise "how does spaced repetition improve memory retention" \
@@ -42,96 +28,64 @@ eonrise "how does spaced repetition improve memory retention" \
   --max-rounds 2 --results 10
 ```
 
-## Example output
+## What you get
 
-`report.md` leads with the grounded map:
+A run writes four files:
+
+- `report.md` is the short readable result.
+- `research_map.json` contains the full structured map.
+- `graph.json` contains nodes and typed edges for other tools or a UI.
+- `internal_report.md` shows the concept tree and supporting evidence.
+
+A map can look like this:
 
 ```text
-Status: usable — 4/5 relations grounded after gap repair
-Evidence: 14 papers kept of 14 retrieved, 38 concepts
-
-Mechanism: retrieval practice, encoding dynamics, attention mediation
-Measurement: recall accuracy, retention rate, retention robustness
-Failure Mode: accuracy degradation
-Method: evaluation protocol, randomized trial, replication baseline
-Neighbor Field: cognitive psychology, testing effect, learning science
+Mechanism: retrieval practice, encoding dynamics
+Measurement: recall accuracy, retention rate
+Failure mode: accuracy degradation
+Method: randomized trial, replication baseline
+Neighbor field: cognitive psychology, learning science
 ```
 
-The run also writes `internal_report.md`, `research_map.json`, and `graph.json`.
+If Eonrise cannot support part of the map with evidence, it leaves that part empty instead of making something up.
 
 ## How it works
 
-One question becomes one shared topic name for the whole run. The code calls it `canonical_root` (see `ontology_router/evidence.py`).
+Eonrise keeps one root question for the whole run. It searches several scholarly sources, rejects papers that drift too far from that question, extracts supported concepts, then uses later searches to repair missing parts of the map.
 
-A small policy object sets the budget: how many concepts, how deep to go, how many rounds, and how much each direction counts. The run stops when the budget runs out or when new rounds stop adding evidence (`ontology_router/engine.py`).
+Normal runs can grow a local paper store at `~/.cache/eonrise/corpus.jsonl`. Later runs search that store before spending API calls, and a paper can gain richer metadata when another source returns a better copy of the same record.
 
-- `up` = the bigger picture: parent theories and fields.
-- `down` = the details: mechanism, measurement, failure mode, method.
-- `sideways` = the same idea elsewhere: parallel names, analogies, neighbor fields.
+Cross-field terminology lives in `~/.cache/eonrise/equivalence.jsonl`. An `equivalent` link needs support from at least two independent on-topic papers before it can change retrieval. Repeated co-occurrence alone is stored as `closely_related` and does not alter searches.
 
-Three checks stop a weak run from looking better than it is:
+The detailed traversal rules, benchmarks, rejected experiments, and version history live in [`docs/SPEC.md`](docs/SPEC.md).
 
-- **Topical gate** (`topical_papers` in `ontology_router/evidence.py`): every paper must still share words with the original question. Off-topic papers cannot support a finding and do not count as progress.
-- **Relation guard**: a title containing the word "failure" is not a failure mode. Detail-level relations need a paper that is actually on topic.
-- **Gap repair**: each round spends part of its 5 searches on the missing pieces instead of repeating searches that already worked.
+## Sources
 
-Run status is `ready`, `usable`, `partial`, or `failed`. `docs/SPEC.md` keeps the full history of what was tried, measured, kept, or rejected.
+Eonrise can search:
 
-## Providers
+| Source | Access |
+| --- | --- |
+| Crossref | keyless |
+| OpenAlex | keyless, optional API key |
+| Europe PMC | keyless |
+| DOAJ | keyless |
+| Semantic Scholar | free API key |
+| CORE | free API key |
 
-Four keyless sources run by default; two more join when a free key is present. Measured on one query, 20 results each:
+Use `--providers` to choose a subset. API availability and limits belong to the providers and can change independently of Eonrise.
 
-| Source | Key | Abstracts | Keywords | Subjects |
-|---|---|---|---|---|
-| Europe PMC | none | 20/20 | 18/20 | 7/20 MeSH |
-| DOAJ | none | 8/8 | 7/8 | 8/8 LCC |
-| Crossref | none | 16% | 0% | 0% |
-| OpenAlex | none, but see below | good | good | good |
-| Semantic Scholar | free key | — | — | fields of study |
-| CORE | free key | 10/10 | — | — |
+## Current limits
 
-OpenAlex anonymous use is credit-limited; a free key raises the budget. Semantic Scholar and CORE stay out until `--s2-key` / `S2_API_KEY` or `--core-key` / `CORE_API_KEY` is supplied. Papers are merged by DOI, so a thin record can later inherit an abstract from a richer provider.
+- Topical filtering still depends partly on word overlap, so ambiguous wording can let unrelated papers through.
+- Eonrise works from the metadata and abstracts returned by its sources. It does not read full papers.
+- Plain everyday questions with no technical vocabulary tend to produce weaker maps.
+- Live runs depend on external scholarly APIs. A provider outage can make a run thinner or fail it outright.
 
-Sources are not equal, so each round asks first the source most likely to have what is still missing. Failure modes are read from abstract sentences, so an abstract-rich source goes first; neighbor fields come from subject labels, so a subject-rich source goes first (`ontology_router/scheduling.py`). Ties go to the cheaper source. A long rate-limit pause is remembered across runs in `~/.cache/eonrise/providers.json`, so the next run does not pay to learn the same limit twice.
+Eonrise reports provider failures instead of treating a broken search as evidence that the literature is empty.
 
-## Local paper store
+## Development
 
-Every normal run can read and grow a local paper store at `~/.cache/eonrise/corpus.jsonl`. A stored paper costs no API credit, and richer metadata received later is added to the earlier record. The store pays off three ways: cheaper runs, richer records over time, and literatures that accumulate across runs instead of dying with one.
-
-```bash
---corpus PATH
---no-corpus
-```
-
-## Concept equivalence
-
-Eonrise can also remember careful cross-field wording links in `~/.cache/eonrise/equivalence.jsonl`. Phrases such as "also known as" may create an `equivalent` link, but only after two separate on-topic papers back it. Words that merely appear together are stored as `closely_related` and never change a search.
-
-A strong `equivalent` link may add one extra search to a round, inside the usual limit of 5 searches per round. The original search always runs too, and ranking, concept identity, and the topical gate stay unchanged.
-
-```bash
---equivalence PATH
---no-equivalence
---query-expansion-slots N
-```
-
-Measure that integration with:
-
-```bash
-python -m ontology_router.equivalence_benchmark
-```
-
-## Known limitations
-
-- The topical gate matches words, not meaning. A paper sharing two ordinary root words can slip through.
-- A question phrased in everyday words, with no technical anchor, returns noise. Ask in a field's vocabulary.
-- Concepts are phrases lifted from titles, keywords, and abstracts, so Eonrise names subjects, never techniques. Naming a method would need a model that reads the papers.
-- `--semantic` needs an OpenAlex key; without one it falls back to keyword search.
-- Measurement numbers in this README come from the runs that produced them. Other fields may differ.
-
-## Development and testing
-
-Supported Python package versions: `>=3.11`. CI also probes source compatibility on Python 3.8–3.10 intentionally.
+The installable package targets Python 3.11+. CI also runs the source tests on Python 3.8, 3.9, and 3.10 to catch avoidable compatibility breakage.
 
 ```bash
 python -m unittest discover -s tests -v
@@ -139,19 +93,17 @@ python -m gauntlet.run --quick
 python -m gauntlet.run
 ```
 
-Verify the distributable package:
+Build the package with:
 
 ```bash
 python -m pip install build
 python -m build
 ```
 
-Experimental ideas should include measurement. Rejected experiments should be recorded in `docs/SPEC.md`, not hidden.
+Contributions should stay small and measurable. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## License and data notice
+## License and retrieved data
 
-Eonrise code is MIT-licensed; see `LICENSE`.
+Eonrise is MIT-licensed. See [`LICENSE`](LICENSE).
 
-That license covers Eonrise software. It does not relicense scholarly metadata, abstracts, API responses, or other outside scholarly material. Those stay under their original provider and source terms.
-
-Live mode contacts outside scholarly APIs and may save copies of what they return on your machine. You are responsible for following each provider's terms, especially if you share downloaded papers or abstracts with others.
+The license covers Eonrise itself. Metadata, abstracts, and other material returned by external scholarly sources keep their original licenses and terms. Live mode may save those records locally, so redistribution is subject to the source or provider terms.
