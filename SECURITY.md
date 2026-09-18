@@ -1,6 +1,6 @@
 # Security policy
 
-Eonrise is experimental software and I maintain it solo. It is provided without warranty, and I make no promise about when or whether a vulnerability gets fixed.
+I maintain Eonrise solo. It is provided without warranty, and I make no promise about when or whether a vulnerability gets fixed.
 
 ## Reporting
 
@@ -15,4 +15,4 @@ Please include:
 
 ## Supported versions
 
-Only the latest `0.9.x` alpha is supported for security review. Older experimental versions may not receive fixes.
+Only the latest released version is actively supported for security review. Older versions may not receive fixes.
