@@ -1,6 +1,6 @@
 # Contributing to Eonrise
 
-Eonrise is an experimental public alpha and I maintain it solo. Changes should stay small, measurable, and easy for one person to review.
+I maintain Eonrise solo. Changes should stay small, measurable, and easy for one person to review.
 
 ## Setup
 
