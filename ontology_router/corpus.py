@@ -60,22 +60,27 @@ class CorpusStore:
                 self._merge(key, paper)
         return self._papers
 
-    def _merge(self, key: str, paper: Paper) -> None:
+    def _merge(self, key: str, paper: Paper) -> bool:
         held = self._papers.get(key)
         if held is None:
             self._papers[key] = paper
-            return
+            return True
         # The same paper from two sources: keep whichever fields are actually filled.
+        changed = False
         if not held.abstract and paper.abstract:
             held.abstract = paper.abstract
-        held.keywords = list(dict.fromkeys([*held.keywords, *paper.keywords]))
-        held.fields = list(dict.fromkeys([*held.fields, *paper.fields]))
-        held.topic_path = list(dict.fromkeys([*held.topic_path, *paper.topic_path]))
-        held.found_by = list(dict.fromkeys([*held.found_by, *paper.found_by]))
+            changed = True
+        for name in ("keywords", "fields", "topic_path", "found_by"):
+            before = len(getattr(held, name))
+            setattr(held, name, list(dict.fromkeys([*getattr(held, name), *getattr(paper, name)])))
+            changed = changed or len(getattr(held, name)) > before
         if not held.venue and paper.venue:
             held.venue = paper.venue
+            changed = True
         if paper.cited_by_count > held.cited_by_count:
             held.cited_by_count = paper.cited_by_count
+            changed = True
+        return changed
 
     def add(self, papers: list[Paper]) -> int:
         """Append papers that are new or newly enriched. Returns how many lines were written."""
@@ -85,10 +90,7 @@ class CorpusStore:
             key = _key(paper)
             if not key:
                 continue
-            before = self._papers.get(key)
-            was_thin = before is None or (not before.abstract and bool(paper.abstract))
-            self._merge(key, paper)
-            if was_thin:
+            if self._merge(key, paper):
                 fresh.append(self._papers[key])
         if not fresh:
             return 0

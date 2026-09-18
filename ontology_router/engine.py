@@ -157,6 +157,8 @@ def run_agent(
     results_per_query: int = 20,
     background: set[str] | None = None,
     states: ProviderStates | None = None,
+    equivalence: object | None = None,
+    query_expansion_slots: int = 0,
 ) -> dict:
     """Single-root, agent-budget traversal.
 
@@ -189,6 +191,10 @@ def run_agent(
     taken_keys: set[frozenset[str]] = {concept_key(root_label)}
     on_topic: set[str] = set()
     previous_on_topic = 0
+    expansion_slots = max(0, int(query_expansion_slots or 0))
+    expansion_remaining = expansion_slots
+    expanded_queries: list[str] = []
+    expansion_rejected = 0
     status = "partial"
     stop_reason = "no additional distinct queries"
 
@@ -209,7 +215,10 @@ def run_agent(
                 if len(gap_queries) >= GAP_QUERY_SLOTS:
                     break
             gap_queries = gap_queries[:GAP_QUERY_SLOTS]
-        expandable = expandable[: max(1, query_budget - len(gap_queries))]
+        # One conservative equivalence alias may use a query slot. It never replaces the
+        # original query, so the run still searches what the question literally asked.
+        expansion_reserve = min(expansion_remaining, max(0, query_budget - len(gap_queries)))
+        expandable = expandable[: max(1, query_budget - len(gap_queries) - expansion_reserve)]
         round_queries = []
         for node in expandable:
             q = _query_for_node(node)
@@ -217,6 +226,33 @@ def run_agent(
                 round_queries.append((node, q))
         for gq in gap_queries:
             round_queries.append((root, gq))
+        round_expansions: list[tuple[ConceptNode, str]] = []
+        expand = getattr(equivalence, "expand_query", None) if equivalence is not None else None
+        if callable(expand) and expansion_remaining > 0:
+            seen_expansions = {normalize(q) for q in expanded_queries}
+            for node, query in list(round_queries):
+                if expansion_remaining <= 0:
+                    break
+                if len(round_queries) + len(round_expansions) >= query_budget:
+                    break
+                candidates = expand(query, max_aliases=1)
+                for candidate in candidates:
+                    marker = normalize(candidate)
+                    if marker in {normalize(x) for x in searched} or marker in seen_expansions:
+                        continue
+                    round_expansions.append((node, candidate))
+                    seen_expansions.add(marker)
+                    expanded_queries.append(candidate)
+                    expansion_remaining -= 1
+                    break
+            if round_expansions and len(round_queries) + len(round_expansions) > query_budget:
+                dropped = (len(round_queries) + len(round_expansions)) - query_budget
+                for _ in range(dropped):
+                    round_expansions.pop()
+                    expanded_queries.pop()
+                    expansion_remaining += 1
+                    expansion_rejected += 1
+        round_queries.extend(round_expansions)
         if not round_queries:
             status, stop_reason = "partial", "no additional distinct queries"
             break
@@ -224,7 +260,12 @@ def run_agent(
         # Ask the source that carries what this round is missing, and skip one that is
         # rate limited until its window passes -- including a window set by an earlier run.
         by_name = {p.name: p for p in providers}
-        ordered = [by_name[n] for n in order_for([p.name for p in providers], last_gaps, states)]
+        ordered_names = order_for([p.name for p in providers], last_gaps, states)
+        # The local store answers before paid providers. Ranking by metadata richness
+        # otherwise puts DOAJ/OpenAlex first and spends a call a held paper could answer.
+        if "corpus" in by_name and "corpus" in ordered_names:
+            ordered_names = ["corpus", *[name for name in ordered_names if name != "corpus"]]
+        ordered = [by_name[n] for n in ordered_names]
         for node, query in round_queries:
             searched.add(query)
             local_hits = 0
@@ -393,6 +434,14 @@ def run_agent(
             "limitations": [t.to_dict() for t in top_terms(terms, "failure_mode", 5, grounded_only=True)
                             if t.stated_limitation],
             "recommended_queries": next_queries(question, terms, gaps, set()),
+            "query_expansion": {
+                "enabled": equivalence is not None and expansion_slots > 0,
+                "max_slots": expansion_slots,
+                "slots_used": len(expanded_queries),
+                "rejected_for_budget": expansion_rejected,
+                "expanded_queries": list(expanded_queries),
+            },
+            "on_topic_paper_ids": sorted(on_topic),
             "terms": [t.to_dict() for t in top],
             "concepts": [c.to_dict() for c in concept_list],
             "policy": policy.to_dict(),

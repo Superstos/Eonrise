@@ -14,11 +14,16 @@ def render_compact_markdown(result: dict) -> str:
         lines.extend(["", "**No retrieved paper was about this question. Every term below was "
                           "read out of a different literature — treat the map as a failed "
                           "search, not as a finding.**"])
-    if result["status"] == "failed" and errors:
+    if result["status"] == "failed" and errors and not result.get("papers") and not result.get("retrieved_papers"):
         # Not a thin literature — a broken run. Without the error text the brief blames
         # the field for what a socket timeout did.
         lines.extend(["", "**This run retrieved nothing. The map below is empty because the "
                           "search failed, not because the literature is silent.**", ""])
+        lines.extend(f"- `{e}`" for e in errors[:5])
+    elif result["status"] == "failed" and errors:
+        # Retrieved papers do not make provider errors disappear; the search can be both
+        # off topic and degraded.
+        lines.extend(["", "**Provider errors:**", ""])
         lines.extend(f"- `{e}`" for e in errors[:5])
     down = result.get("providers_down") or []
     if down and result["status"] != "failed":
