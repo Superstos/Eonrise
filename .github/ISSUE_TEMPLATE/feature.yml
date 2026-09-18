@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose a small, measurable Eonrise capability.
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    id: capability
+    attributes:
+      label: Proposed capability
+    validations:
+      required: true
+  - type: textarea
+    id: fit
+    attributes:
+      label: Why it belongs in Eonrise
+    validations:
+      required: true
+  - type: textarea
+    id: measurement
+    attributes:
+      label: How success should be measured
+    validations:
+      required: true
+  - type: textarea
+    id: failure-modes
+    attributes:
+      label: Possible failure modes
