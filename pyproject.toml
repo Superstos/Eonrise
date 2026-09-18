@@ -1,14 +1,33 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "eonrise"
 dynamic = ["version"]
 description = "Single-root, agent-budget research traversal with drift guards: one topic, up/down/sideways"
-requires-python = ">=3.8"
-license = {text = "MIT"}
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE*"]
+requires-python = ">=3.11"
+authors = [{name = "Mohamed Amine NAJI"}]
+keywords = ["research", "literature-review", "evidence-synthesis", "concept-mapping"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Superstos/Eonrise"
+Repository = "https://github.com/Superstos/Eonrise"
+Issues = "https://github.com/Superstos/Eonrise/issues"
 
 [project.scripts]
 eonrise = "ontology_router.cli:main"

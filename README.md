@@ -1,31 +1,85 @@
 # Eonrise
 
-One question → one root topic → agent-owned up/down/sideways traversal.
+Experimental public alpha, built only on the Python standard library.
 
-## Use
+Eonrise maps where fields intersect, finding concepts that are fundamentally similar even when different disciplines use different names for them.
+
+It maps:
+
+- mechanisms (how something works)
+- measurements (how it is judged)
+- failure modes (how it breaks)
+- methods (how it was tested)
+- neighboring fields (where else the idea shows up)
+
+## Why it exists
+
+Most search tools stay inside one field's words. Eonrise starts from one question, builds a map of nearby ideas across fields, fills the gaps it can, and remembers wording it has seen before. The point is a clearer map, not a longer list of papers.
+
+## Installation
+
+Requires Python `>=3.11`.
+
+From a repository checkout:
 
 ```bash
-# Offline / reproducible (no network)
-python -m ontology_router "how does spaced repetition improve memory" --mode assistant --bundle tests/fixtures/papers.json --out output
-
-# Live (Crossref + OpenAlex; no API key needed)
-python -m ontology_router "your question" --mode live --email you@example.com --out output
-
-# Agent steers depth and direction
-python -m ontology_router "memory retention" --mode assistant --bundle tests/fixtures/papers.json --out output \
-  --agent-name deep-diver --max-depth 5 --max-nodes 200 --down-weight 2.0 --sideways-weight 0.5
+pip install .
+eonrise --help
 ```
 
-## Rule
+A PyPI release is planned, but for this alpha install from source.
 
-Single root topic. Each agent carries its own budget (`--max-nodes`, `--max-depth`,
-`--up/--down/--sideways-weight`) and recurses until budget, depth, or saturation.
-Two agents, same question, different policies → different maps. See `docs/SPEC.md`.
+## Fastest working example
+
+This offline example uses the bundled fixture and writes no local memory, corpus, or equivalence state:
+
+```bash
+eonrise "how does spaced repetition improve memory retention" \
+  --mode assistant \
+  --bundle tests/fixtures/papers.json \
+  --out output \
+  --no-memory --no-corpus --no-equivalence \
+  --max-rounds 2 --results 10
+```
+
+## Example output
+
+`report.md` leads with the grounded map:
+
+```text
+Status: usable — 4/5 relations grounded after gap repair
+Evidence: 14 papers kept of 14 retrieved, 38 concepts
+
+Mechanism: retrieval practice, encoding dynamics, attention mediation
+Measurement: recall accuracy, retention rate, retention robustness
+Failure Mode: accuracy degradation
+Method: evaluation protocol, randomized trial, replication baseline
+Neighbor Field: cognitive psychology, testing effect, learning science
+```
+
+The run also writes `internal_report.md`, `research_map.json`, and `graph.json`.
+
+## How it works
+
+One question becomes one shared topic name for the whole run. The code calls it `canonical_root` (see `ontology_router/evidence.py`).
+
+A small policy object sets the budget: how many concepts, how deep to go, how many rounds, and how much each direction counts. The run stops when the budget runs out or when new rounds stop adding evidence (`ontology_router/engine.py`).
+
+- `up` = the bigger picture: parent theories and fields.
+- `down` = the details: mechanism, measurement, failure mode, method.
+- `sideways` = the same idea elsewhere: parallel names, analogies, neighbor fields.
+
+Three checks stop a weak run from looking better than it is:
+
+- **Topical gate** (`topical_papers` in `ontology_router/evidence.py`): every paper must still share words with the original question. Off-topic papers cannot support a finding and do not count as progress.
+- **Relation guard**: a title containing the word "failure" is not a failure mode. Detail-level relations need a paper that is actually on topic.
+- **Gap repair**: each round spends part of its 5 searches on the missing pieces instead of repeating searches that already worked.
+
+Run status is `ready`, `usable`, `partial`, or `failed`. `docs/SPEC.md` keeps the full history of what was tried, measured, kept, or rejected.
 
 ## Providers
 
-Four keyless sources run by default; two more join when a free key is present. Measured on
-one query, 20 results each:
+Four keyless sources run by default; two more join when a free key is present. Measured on one query, 20 results each:
 
 | Source | Key | Abstracts | Keywords | Subjects |
 |---|---|---|---|---|
@@ -36,116 +90,68 @@ one query, 20 results each:
 | Semantic Scholar | free key | — | — | fields of study |
 | CORE | free key | 10/10 | — | — |
 
-OpenAlex now charges credits: anonymous is 1,000 credits a day and a search costs 10, so
-roughly 100 searches — one Eonrise run spends about 16. A free key raises the budget 10×
-(openalex.org/settings/api). Semantic Scholar and CORE answer `429` without a key, so they
-stay out of the default set until `--s2-key` / `S2_API_KEY` or `--core-key` / `CORE_API_KEY`
-is supplied. `--providers crossref,europepmc` picks any subset; `--crossref-only` still
-means Crossref alone, which carries no subjects and few abstracts.
+OpenAlex anonymous use is credit-limited; a free key raises the budget. Semantic Scholar and CORE stay out until `--s2-key` / `S2_API_KEY` or `--core-key` / `CORE_API_KEY` is supplied. Papers are merged by DOI, so a thin record can later inherit an abstract from a richer provider.
 
-Papers are merged across sources by DOI, so a Crossref record with no abstract inherits
-one from Europe PMC when both return it.
+Sources are not equal, so each round asks first the source most likely to have what is still missing. Failure modes are read from abstract sentences, so an abstract-rich source goes first; neighbor fields come from subject labels, so a subject-rich source goes first (`ontology_router/scheduling.py`). Ties go to the cheaper source. A long rate-limit pause is remembered across runs in `~/.cache/eonrise/providers.json`, so the next run does not pay to learn the same limit twice.
 
-## Source scheduling
+## Local paper store
 
-Sources are not interchangeable, and a rate limit outlives the process.
+Every normal run can read and grow a local paper store at `~/.cache/eonrise/corpus.jsonl`. A stored paper costs no API credit, and richer metadata received later is added to the earlier record. The store pays off three ways: cheaper runs, richer records over time, and literatures that accumulate across runs instead of dying with one.
 
-- The round asks the source that carries what it is missing: `failure_mode` is read out of
-  abstract sentences, so Europe PMC goes first; `neighbor_field` is read off subject labels,
-  so DOAJ does. Crossref is never asked first while a richer source is available.
-- A `429` carrying a long `Retry-After` blocks that source in `~/.cache/eonrise/providers.json`
-  until its window passes, so tomorrow's run skips it instead of spending a call to learn
-  the same thing.
-- A tie goes to the cheaper source: DOAJ before OpenAlex, which charges 10 credits a search.
-
-## The paper store
-
-Every run writes the papers it kept to `~/.cache/eonrise/corpus.jsonl` and every later run
-searches that store before it touches the network. Three things compound off it:
-
-- **Budget** — a paper already held costs no API credit, and OpenAlex now charges them.
-- **Evidence** — a thin Crossref record is enriched the day Europe PMC returns the same DOI
-  with an abstract, and the enrichment is kept.
-- **Cross-literature leads** — Swanson-style discovery needs two large literatures gathered
-  separately. One run cannot build them; a year of runs can.
-
-`--corpus PATH` picks a different store, `--no-corpus` turns it off.
+```bash
+--corpus PATH
+--no-corpus
+```
 
 ## Concept equivalence
 
-Eonrise also keeps learned cross-field terminology in `~/.cache/eonrise/equivalence.jsonl`.
-Explicit statements such as “also known as” can create an `equivalent` edge after two
-independent on-topic papers support it; repeated co-occurrence stays `closely_related`
-and never changes a search. A confident equivalent edge may supply one alternate query
-inside the normal query budget. The original query is always searched, and ranking,
-concept identity, and the topical gate are unchanged.
+Eonrise can also remember careful cross-field wording links in `~/.cache/eonrise/equivalence.jsonl`. Phrases such as "also known as" may create an `equivalent` link, but only after two separate on-topic papers back it. Words that merely appear together are stored as `closely_related` and never change a search.
 
-`--equivalence PATH` picks a different store, `--no-equivalence` turns it off, and
-`--query-expansion-slots N` controls alternate-query use. Measure the integration with:
+A strong `equivalent` link may add one extra search to a round, inside the usual limit of 5 searches per round. The original search always runs too, and ranking, concept identity, and the topical gate stay unchanged.
+
+```bash
+--equivalence PATH
+--no-equivalence
+--query-expansion-slots N
+```
+
+Measure that integration with:
 
 ```bash
 python -m ontology_router.equivalence_benchmark
 ```
 
-## What a brief contains
+## Known limitations
 
-`report.md` leads with the grounded map (mechanism / measurement / failure mode / method /
-neighbour field), then **Stated limitations** — each one quoted from the sentence in the
-abstract that made the claim, so a noisy phrase can be judged against its source.
+- The topical gate matches words, not meaning. A paper sharing two ordinary root words can slip through.
+- A question phrased in everyday words, with no technical anchor, returns noise. Ask in a field's vocabulary.
+- Concepts are phrases lifted from titles, keywords, and abstracts, so Eonrise names subjects, never techniques. Naming a method would need a model that reads the papers.
+- `--semantic` needs an OpenAlex key; without one it falls back to keyword search.
+- Measurement numbers in this README come from the runs that produced them. Other fields may differ.
 
-## Drift guards
+## Development and testing
 
-Sub-queries drift: a run about map quality ends up in gene-ontology literature, and every
-round still returns new papers, so saturation never fires. Three guards:
-
-- **Topical gate** — a retrieved paper must still share tokens with the root question.
-  Off-topic papers never ground a term and never count toward saturation.
-- **Relation guard** — `measurement` / `failure_mode` / `method` need a supporting on-topic
-  paper, and a bare gap cue (`failure mode`) cannot become the finding.
-- **Gap repair** — 2 of the 5 per-round query slots go to the recommended gap queries, which
-  were previously printed and never searched. The cue wording rotates each repair round.
-- **Label hygiene** — discipline names (`computer science`), sentence fragments
-  (`relation between`), filler (`problem very terms`) and paraphrase pairs
-  (`search algorithm` / `search algorithms`) never become concepts.
-- **Background penalty** — a label that ranked high under three or more unrelated past
-  questions scores half. Run memory makes reruns compound.
-- **Limitations** — read from abstract sentences that state one, not from keywords.
-- **Provider health** — a `429` carrying a long `Retry-After` is a quota window, not a
-  burst limit, so that host is dropped for the rest of the run instead of being asked 16
-  more times. If a provider answered nothing, the brief says **Degraded** at the top:
-  losing OpenAlex means no keywords, no topic hierarchy and few abstracts, and a map read
-  without knowing that looks like a thin literature rather than a thin run.
-
-## Status
-
-`ready` (all checks) > `usable` (4-5 of 5 relations grounded, gaps repaired where possible)
-> `partial` > `failed`.
-
-## Output
-
-- `report.md` — compact brief with direction groups
-- `internal_report.md` — concept tree + evidence
-- `research_map.json` — full evidence, concepts, policy, run history
-- `graph.json` — nodes and typed edges for a UI
-
-## Gauntlet
+Supported Python: `>=3.11`.
 
 ```bash
 python -m unittest discover -s tests -v
+python -m gauntlet.run --quick
 python -m gauntlet.run
 ```
 
-Builder → redteam loop: the unit suite + 6 offline attacks (vague, single-word,
-non-English, empty bundle, duplicates, hostile input) + artifact smoke + an offline
-drift gate. All three gauntlet gates must pass before release.
+Verify the distributable package:
 
-Standard library only. MIT.
+```bash
+python -m pip install build
+python -m build
+```
 
-## Known limits
+Experimental ideas should include measurement. Rejected experiments should be recorded in `docs/SPEC.md`, not hidden.
 
-- The topical gate is token overlap. A paper sharing two common root words survives.
-- A question phrased in ordinary words ("choose which neighbouring field is relevant")
-  has no technical anchor and returns noise — ask in the vocabulary of a field.
-- Concepts are phrases lifted from titles, keywords and abstracts, so Eonrise names a
-  subject, never a technique. Naming a method needs a model reading the papers.
-- `--semantic` needs an OpenAlex key; without one it falls back to keyword search.
+## License and data notice
+
+Eonrise code is MIT-licensed; see `LICENSE`.
+
+That license covers Eonrise software. It does not relicense scholarly metadata, abstracts, API responses, or other outside scholarly material. Those stay under their original provider and source terms.
+
+Live mode contacts outside scholarly APIs and may save copies of what they return on your machine. You are responsible for following each provider's terms, especially if you share downloaded papers or abstracts with others.

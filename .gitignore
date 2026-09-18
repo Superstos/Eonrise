@@ -10,3 +10,5 @@ build/
 .venv/
 venv/
 /output
+.env
+*.log

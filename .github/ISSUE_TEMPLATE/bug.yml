@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a reproducible Eonrise defect.
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Eonrise version
+      placeholder: "0.9.0"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.13"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Ubuntu 24.04"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command used
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: providers
+    attributes:
+      label: Provider status
+      description: Include providers_down and provider_errors when available.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproducibility
+      description: Smallest repeatable case, preferably using tests/fixtures/papers.json.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or errors
+      description: Redact API keys, tokens, emails, and other secrets.
+      render: text
