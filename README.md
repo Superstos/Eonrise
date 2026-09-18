@@ -71,6 +71,22 @@ searches that store before it touches the network. Three things compound off it:
 
 `--corpus PATH` picks a different store, `--no-corpus` turns it off.
 
+## Concept equivalence
+
+Eonrise also keeps learned cross-field terminology in `~/.cache/eonrise/equivalence.jsonl`.
+Explicit statements such as “also known as” can create an `equivalent` edge after two
+independent on-topic papers support it; repeated co-occurrence stays `closely_related`
+and never changes a search. A confident equivalent edge may supply one alternate query
+inside the normal query budget. The original query is always searched, and ranking,
+concept identity, and the topical gate are unchanged.
+
+`--equivalence PATH` picks a different store, `--no-equivalence` turns it off, and
+`--query-expansion-slots N` controls alternate-query use. Measure the integration with:
+
+```bash
+python -m ontology_router.equivalence_benchmark
+```
+
 ## What a brief contains
 
 `report.md` leads with the grounded map (mechanism / measurement / failure mode / method /

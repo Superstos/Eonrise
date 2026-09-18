@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .corpus import CorpusStore
 from .engine import canonical_root, run_agent
+from .equivalence import ConceptEquivalenceStore
 from .memory import MemoryStore
 from .models import AgentPolicy, Paper
 from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
@@ -45,6 +46,9 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--no-memory", action="store_true", help="Skip appending to local memory store")
     p.add_argument("--corpus", default="", help="Paper store to read and grow (default: <cache>/corpus.jsonl)")
     p.add_argument("--no-corpus", action="store_true", help="Do not read or write the local paper store")
+    p.add_argument("--equivalence", default="", help="Concept-equivalence store to read and grow (default: <cache>/equivalence.jsonl)")
+    p.add_argument("--no-equivalence", action="store_true", help="Do not read or write concept equivalences")
+    p.add_argument("--query-expansion-slots", type=int, default=1, help="Per-run alternate-query slots supplied by learned equivalences")
     return p
 
 
@@ -107,12 +111,42 @@ def main() -> None:
     # Availability lives longer than one process: a source rate limited for eight hours
     # should not be re-discovered by tomorrow's run.
     states = ProviderStates(cache / "providers.json")
+    equivalence_store = None
+    equivalence_graph = None
+    if not args.no_equivalence:
+        try:
+            equivalence_store = ConceptEquivalenceStore(args.equivalence or (cache / "equivalence.jsonl"))
+            equivalence_graph = equivalence_store.load()
+        except OSError:
+            equivalence_store = None
+            equivalence_graph = None
     result = run_agent(args.question, providers, policy, results_per_query=max(1, args.results),
-                       background=background, states=states)
+                       background=background, states=states, equivalence=equivalence_graph,
+                       query_expansion_slots=max(0, args.query_expansion_slots) if equivalence_graph is not None else 0)
     try:
         states.save()
     except OSError:
         pass
+    if equivalence_store is not None:
+        try:
+            equivalence_rows = result.get("corpus_papers") or result.get("papers", [])
+            equivalence_papers = []
+            for row in equivalence_rows:
+                try:
+                    equivalence_papers.append(Paper.from_dict(row))
+                except (AttributeError, TypeError, ValueError):
+                    continue
+            learned = equivalence_store.observe_run(
+                args.question,
+                result.get("terms", []),
+                equivalence_papers,
+                set(result.get("on_topic_paper_ids", [])),
+            )
+            result["equivalence_store"] = str(equivalence_store.path)
+            result["equivalence_observations"] = len(learned)
+            result["equivalence_edges"] = len(equivalence_store.load().edges())
+        except OSError:
+            pass
     result["background_terms_penalised"] = len(background)
     result["mode"] = mode
     result["input_bundle"] = str(Path(bundle_path).resolve()) if bundle_path else ""

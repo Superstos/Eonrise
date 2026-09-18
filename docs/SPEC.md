@@ -501,3 +501,70 @@ path tried, including a total provider outage. No code path exits 0 without writ
 
 Version constants aligned: `__init__.py` said `0.5.0` while `pyproject.toml` said `0.8.0`;
 both now read `0.8.1`.
+
+# v0.9 — concept equivalence graph and query expansion
+
+Added 2026-09-18. This is the first compounding terminology feature: Eonrise can learn
+that two fields use different words for nearby concepts and reuse that knowledge as an
+alternate query.
+
+## Shape
+
+`equivalence.py` stores unordered label pairs in a separate append-only JSONL,
+`~/.cache/eonrise/equivalence.jsonl`. A record is one observation or revocation; a
+half-written line is skipped like the paper store. Duplicate evidence merges by paper
+identity, and confidence grows only when independent papers support the pair.
+
+An edge carries the two labels, `equivalent` or `closely_related`, supporting paper
+ids, fields, confidence, evidence, queries, and source sentences.
+
+## Conservative evidence
+
+- Explicit terminology statements (`also known as`, `referred to as`, `equivalent to`,
+  and similar wording) can create `equivalent`.
+- Repeated co-occurrence can only create `closely_related`; it never expands a query.
+- Automatic learning needs an active topical filter (`>= 8` on-topic papers).
+- Pairs must be plausible labels, order-insensitive, non-identical, and supported by at
+  least two independent papers.
+- Components larger than eight labels do not expand: growth usually means polysemy.
+- Revocation is a tombstone, not deletion.
+
+## First integration
+
+Query expansion only. One confident equivalent alias may use a query slot inside the
+existing five-query budget. The original query is always searched first; expansion is
+one level, phrase-shaped, and never recursive. Ranking, concept identity, the topical
+gate, and `graph.json` are unchanged.
+
+CLI:
+
+```bash
+--equivalence PATH
+--no-equivalence
+--query-expansion-slots N
+```
+
+## Measured, offline synthetic benchmark
+
+`python -m ontology_router.equivalence_benchmark`
+
+| Scenario | Baseline GER@20 | Expanded GER@20 | Gain | Precision loss |
+|---|---|---|---|---|
+| concept drift / distribution shift | 0.6667 | 1.0000 | +0.3333 | 0.1000 |
+| non-stationarity / regime change | 0.6667 | 1.0000 | +0.3333 | 0.1000 |
+| feedback loop / closed-loop control | 0.6667 | 1.0000 | +0.3333 | -0.0429 |
+| fault tolerance / resilience | 0.6667 | 1.0000 | +0.3333 | 0.0000 |
+| robustness / reliability control | 0.6000 | 0.6000 | 0.0000 | 0.0000 |
+
+Totals: 4/4 true equivalences discovered, false-equivalence rate 0.0, median retrieval
+gain +0.3333, median precision loss 0.05, net median gain +0.2833. The kill rule passes.
+
+This benchmark is synthetic by design: alternate-vocabulary papers are reachable only
+through the learned alias in title/abstract text, while keywords and fields establish
+topicality. It measures the intended mechanism, not live retrieval across providers.
+
+## Deliberately not done
+
+Equivalence-aware topical gating, concept deduplication, neighbor-field discovery,
+knowledge-gap detection, and Swanson-style bridging remain future integrations. Each
+needs its own benchmark before it touches ranking or gating.

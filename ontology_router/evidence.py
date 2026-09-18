@@ -95,6 +95,20 @@ def concept_key(label: str) -> frozenset[str]:
     return frozenset(stem(t) for t in tokens(label))
 
 
+def _doi_key(value: str) -> str:
+    """Bare DOIs and DOI URLs identify the same paper."""
+    doi = re.sub(r"\s+", "", str(value or "").lower())
+    doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", doi)
+    return re.sub(r"^doi:", "", doi).strip().strip("/")
+
+
+def _paper_dedupe_key(paper: Paper) -> str:
+    doi = _doi_key(paper.doi)
+    if doi:
+        return f"doi:{doi}"
+    return normalize(paper.title or paper.paper_id)
+
+
 def is_redundant(label: str, existing: Iterable[frozenset[str]]) -> bool:
     """True when the label is a paraphrase or sub/superstring of one already taken."""
     key = concept_key(label)
@@ -332,10 +346,10 @@ def dedupe_terms(ranked: list[Term]) -> list[Term]:
     return kept
 
 def _dedupe_papers(existing: list[Paper], incoming: Iterable[Paper]) -> tuple[list[Paper], int]:
-    by_key = {normalize(p.doi or p.title or p.paper_id): p for p in existing}
+    by_key = {_paper_dedupe_key(p): p for p in existing}
     added = 0
     for paper in incoming:
-        key = normalize(paper.doi or paper.title or paper.paper_id)
+        key = _paper_dedupe_key(paper)
         if key in by_key:
             old = by_key[key]
             old.found_by = list(dict.fromkeys([*old.found_by, *paper.found_by]))
