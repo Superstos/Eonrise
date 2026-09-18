@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # Intentional: package support starts at 3.11, but source compatibility is
+      # probed back to 3.8 to catch unnecessary breakage.
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
