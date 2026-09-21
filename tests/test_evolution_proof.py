@@ -20,6 +20,9 @@ class EvolutionProofTests(unittest.TestCase):
         self.assertIn("drift diffusion", " ".join(result["before_case"]["queries"]))
         self.assertIn("distribution shift", " ".join(result["cases"][0]["queries"]))
         self.assertEqual(result["active_score"], 1.0)
+        self.assertFalse(result["second_pass"]["accepted"])
+        self.assertEqual(result["second_pass"]["active_version"], 1)
+        self.assertEqual(result["second_pass"]["active_score"], 1.0)
 
 
 if __name__ == "__main__":
