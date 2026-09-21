@@ -227,11 +227,13 @@ def proof_fixture() -> dict:
         case = ReplayCase("concept drift", papers, relevant)
         parent_graph = store.load()
         before_recall, before_queries = _run_case(case, parent_graph)
-        result = evolve_once(seed, [case], root / "state")
+        state_root = root / "state"
+        result = evolve_once(seed, [case], state_root)
         result["before_case"] = {
             "recall": round(before_recall, 4),
             "queries": before_queries,
         }
+        result["second_pass"] = evolve_once(seed, [case], state_root)
         return result
 
 
