@@ -12,3 +12,7 @@ jobs:
           python-version: "3.14"
       - name: Baseline equivalence benchmark
         run: python -m ontology_router.equivalence_benchmark
+      - name: Evolution proof
+        run: python -m ontology_router.evolution_proof
+      - name: Focused proof test
+        run: python -m unittest tests.test_evolution_proof -v
