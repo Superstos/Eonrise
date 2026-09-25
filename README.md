@@ -2,6 +2,8 @@
 
 Eonrise maps where fields intersect. It searches scholarly sources and organizes the evidence into mechanisms, measurements, failure modes, methods, and neighboring fields.
 
+The goal is a shortcut to ideas: a problem that is new or half solved in your field is often already solved, more maturely, in another one. Results from distant fields are the point, not noise.
+
 It can also learn when different fields use different names for the same or closely related idea, then reuse that vocabulary in later searches.
 
 No third-party Python packages are required at runtime.

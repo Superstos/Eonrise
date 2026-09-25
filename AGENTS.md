@@ -2,6 +2,12 @@
 
 Eonrise is a private deep-research router and memory base.
 
+**Its point is a shortcut to ideas.** A problem that is new or half solved in one field is
+often mature in another. Eonrise finds those fields so their solutions can be ported.
+Papers from distant fields are the product: before calling any result off-topic or a run
+"noise", ask of each distant paper what problem it solved that has the same shape as yours.
+The on-topic count measures shared words, not usefulness.
+
 ## Default use
 
 Use Eonrise as the default depth layer for broad work: education design, invention, architecture, strategy, multi-field questions, and complaints about broad-answer quality. Do not wait for the user to say “use Eonrise.”
