@@ -103,3 +103,19 @@ class ConceptGateTests(unittest.TestCase):
     def test_empty_gate_is_not_bootstrapped(self):
         from ontology_router.harvest import concept_gate
         self.assertEqual(concept_gate("volcano", EvidenceBundleProvider(GOLD).papers, set()), set())
+
+
+class HeldOutBatteryTests(unittest.TestCase):
+    """Built after v0.16 and never tuned on. Floors are the first measurement."""
+
+    def test_heldout_run(self):
+        path = Path(__file__).parent / "fixtures" / "heldout_battery.json"
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        provider = EvidenceBundleProvider(path)
+        label = {p.paper_id: raw["labels"].get(p.title) for p in provider.papers}
+        result = run_agent(raw["question"], [provider], AgentPolicy(max_rounds=6, max_nodes=160), results_per_query=25)
+        kept = [label.get(pid) for pid in result["on_topic_paper_ids"]]
+        self.assertGreaterEqual(kept.count("on"), 23)
+        self.assertLessEqual(kept.count("off"), 1)
+        self.assertEqual(result["status"], "usable")
+        self.assertTrue(all(label.get(h["paper_id"]) != "off" for h in result["harvest"]))

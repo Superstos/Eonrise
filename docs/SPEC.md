@@ -816,3 +816,29 @@ retrieved 60 -> 103, measurement grounded (`recall target`, `chao estimator`). T
 other-field list now names Chao's estimator, capture-recapture population estimation
 (ecology, 1979) and active-learning stopping criteria, and offers
 `capture recapture chao estimator` as a search — the port v0.12 made by hand.
+
+# v0.17 — held-out validation
+
+Eighth pass. Every number since v0.10 was measured on two questions the loop itself chose,
+so the gains could be fitted to them. A third set was built afterwards and never tuned on:
+"why do lithium-ion batteries lose capacity over repeated charging cycles", 72 papers from
+three agents (battery home field, same-shape distant fields such as fatigue, corrosion and
+remaining-useful-life prognostics, and lexical traps such as business cycles, lithium
+therapy, cognitive capacity), labelled blind: 23 on, 25 near, 24 off.
+`tests/fixtures/heldout_battery.json`.
+
+| | v0.9 (`main`) | v0.16 |
+|---|---|---|
+| status | partial | usable, 4/5 relations |
+| on-topic kept | 16/23 | 23/23 |
+| off kept | 1/24 | 1/24 (same paper) |
+| measurement | empty | `soh estimation`, `mode estimation` |
+| harvest | none shown | 2, both distant (Wiener-process degradation, RUL inference), 0 traps |
+
+The gains hold off the tuning set. Two honest limits: the harvest found 2 of 25 same-shape
+papers, because the only concept they shared was `degradation models`; and
+`machine learning` and `home storage` are grounded as mechanisms, which they are not.
+
+Tried and reverted: making `over` and other prepositions stopwords. Linguistically right,
+but the cleaner root produced queries that retrieved more business-cycle papers, which pass
+the word gate on `capacity` + `cycles`: off kept rose 1 -> 3.
