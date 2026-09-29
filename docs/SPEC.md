@@ -730,3 +730,31 @@ nothing when it is silent. `research_map.json` carries the estimate as `unseen`.
 
 A closed evidence bundle is the whole reachable population, so there the estimate reads
 1.0 (v0.10 self-run: 18 on-topic papers, no singleton across 24 queries) — correctly.
+
+# v0.13 — limitation sentences: find more of them, stop gluing their words together
+
+Added 2026-09-29, fourth pass. The v0.10 brief listed `spontaneously retrieved relevant` and
+`situ studies biologically` as failure modes. Gold: `tests/fixtures/limitation_gold.json`,
+364 sentences from the self-run bundles, 75 labelled as limitations with a verbatim label by
+an annotator agent that never saw the code.
+
+| | v0.12 | v0.13 |
+|---|---|---|
+| limitation sentences found (cue present) | 25/75, precision 0.89 | 36/75, precision 0.88 |
+| phrase matches the gold label (token F1 >= 0.5) | 5/75, precision 0.17 | 7/75, precision 0.23 |
+
+- Cues added: `miss`, `biased`, `exaggerates`, `underestimates`, `inaccurate`,
+  `misrepresents`, `lacks`, `vulnerable`, `overlooks`, `ignores`, ... chosen before scoring;
+  `poorly` and `difficult` were chosen from the labelled misses, so those two are fitted.
+  `however` would add one more and stays out, as before.
+- A phrase is one unbroken run of content words. The old rule gathered the next three
+  content words across stopwords: "prone to stop a trial at a random high" gave
+  `stop trial random`. The run after the cue is taken; when it is one word, the subject run
+  before the cue. One phrase per sentence.
+- Announcing words (`stated`, `noted`, `showing`, a leading "Limitation stated:" header, as
+  in structured abstracts) never become the phrase.
+
+The phrase stays weak: 23% agree with a human's label. The sentence is the evidence, and the
+brief already quotes it beside the phrase. Choosing which of two complaints in one sentence
+matters is beyond a stdlib heuristic; it is recorded here rather than tuned further on 75
+examples.

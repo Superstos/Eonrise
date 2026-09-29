@@ -64,3 +64,27 @@ class CrossFieldGoldTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LimitationGoldTests(unittest.TestCase):
+    """364 labelled sentences, 75 limitations. Floors are the v0.13 measurements."""
+
+    @classmethod
+    def setUpClass(cls):
+        from ontology_router.evidence import LIMITATION_CUES, limitation_phrases
+        path = Path(__file__).parent / "fixtures" / "limitation_gold.json"
+        cls.rows = json.loads(path.read_text(encoding="utf-8"))["sentences"]
+        cls.cues, cls.extract = set(LIMITATION_CUES), staticmethod(limitation_phrases)
+
+    def test_sentence_detection(self):
+        import re
+        hits = [r for r in self.rows if set(re.findall(r"[a-z][a-z0-9-]+", r["sentence"].lower())) & self.cues]
+        tp = sum(1 for r in hits if r["label"])
+        self.assertGreaterEqual(tp, 36)
+        self.assertGreaterEqual(tp / len(hits), 0.85)
+
+    def test_phrase_is_an_unbroken_run_and_never_a_header(self):
+        for r in self.rows:
+            for phrase, _ in self.extract(r["sentence"]):
+                self.assertNotIn(phrase.split()[0], {"stated", "noted", "limitation"})
+                self.assertIn(phrase, r["sentence"].lower())

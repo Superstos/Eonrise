@@ -231,23 +231,56 @@ LIMITATION_CUES = ("limitation", "limitations", "limited", "fails", "fail",
                    "cannot", "suffers", "suffer", "degrades", "degrade", "brittle",
                    "struggles", "struggle", "unable", "drawback", "drawbacks", "shortcoming",
                    "shortcomings", "bottleneck", "prone", "sensitive", "expensive",
-                   "intractable", "overfits", "overfitting", "underperforms")
+                   "intractable", "overfits", "overfitting", "underperforms",
+                   # v0.13: on 364 labelled abstract sentences the list above found 25 of 75
+                   # limitations (precision 0.89); with these, 36 of 75 at 0.88.
+                   "miss", "misses", "biased", "exaggerate", "exaggerates", "overestimate",
+                   "overestimates", "underestimate", "underestimates", "inaccurate",
+                   "misrepresent", "misrepresents", "lack", "lacks", "lacking", "vulnerable",
+                   "fragile", "hampered", "hinder", "hinders", "overlook", "overlooks",
+                   "ignore", "ignores", "omitting", "poorly", "difficult")
+# Words that announce a limitation rather than name one. "Limitation stated: ..." and
+# structured-abstract headings made `stated one designer` a failure mode.
+LIMITATION_META = {"limitation", "limitations", "stated", "noted", "note", "notes", "motivation",
+                   "drawback", "drawbacks", "weakness", "weaknesses", "shortcoming", "shortcomings",
+                   "states", "highlights", "reports", "finds", "shows", "showing", "suggesting",
+                   "indicating", "revealing"}
+_HEADER = re.compile(r"^[^:]{0,48}:\s+")
 
 
 def _sentences(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"(?<=[.!?])\s+|;\s+", text or "") if part.strip()]
 
 
+def _phrase_edge(run: list[str]) -> list[str]:
+    run = [w for w in run if w not in LIMITATION_CUES and w not in LIMITATION_META]
+    while run and (run[0] in WEAK_EDGE or run[0] in FILLER or run[0].endswith("ly")):
+        run = run[1:]
+    while run and (run[-1] in WEAK_EDGE or run[-1] in FILLER or run[-1].endswith("ly")):
+        run = run[:-1]
+    return run
+
+
 def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> list[tuple[str, str]]:
     """(phrase, sentence) pairs naming what a paper says goes wrong.
 
     `failure_mode` grounded on 0 of 4 self-test questions because limitations are written
-    as sentences ("however, the method fails on rare senses"), never as keywords. This
-    reads the words that follow the cue, which is where the object of the complaint sits.
+    as sentences ("however, the method fails on rare senses"), never as keywords.
+
+    v0.13: the phrase is one unbroken run of content words, never words gathered across
+    stopwords ("prone to stop a trial at a random high" gave `stop trial random`). The run
+    after the cue names the condition ("struggle with far analogies"); when it is a single
+    word the run before names the subject ("past cases that cannot be retrieved"). A leading
+    "Limitation stated:" header is dropped. One phrase per sentence, the first complaint.
     """
     found: list[tuple[str, str]] = []
     for sentence in _sentences(abstract):
-        words = re.findall(r"[a-z][a-z0-9-]+", sentence.lower())
+        body = sentence
+        head = sentence.split(":", 1)[0].lower()
+        if _HEADER.match(sentence) and set(re.findall(r"[a-z]+", head)) & LIMITATION_META:
+            body = _HEADER.sub("", sentence)
+        # Single letters kept: dropping "a" joined "stop a trial" into `stop trial`.
+        words = re.findall(r"[a-z][a-z0-9-]*|[.,;:()!?]", body.lower())
         # The sentence has to be talking about the question. `current chemical libraries`
         # was a real grounded limitation for a question about stopping criteria.
         if root_tokens and not ({family(w) for w in words} & root_tokens):
@@ -255,11 +288,22 @@ def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> li
         for index, word in enumerate(words):
             if word not in LIMITATION_CUES:
                 continue
-            tail = [w for w in words[index + 1:index + 8]
-                    if w not in STOPWORDS and w not in LIMITATION_CUES
-                    and w not in FILLER and len(w) > 2]
-            if len(tail) >= 2:
-                found.append((" ".join(tail[:3]), sentence[:200]))
+            after, j = [], index + 1
+            while j < min(len(words), index + 5) and (words[j] in STOPWORDS or words[j] in LIMITATION_CUES
+                                                      or words[j].endswith("ly")):
+                j += 1
+            while j < len(words) and words[j][0].isalpha() and words[j] not in STOPWORDS and len(after) < 4:
+                after.append(words[j]); j += 1
+            before, k = [], index - 1
+            while k > index - 3 and k >= 0 and words[k] in STOPWORDS:
+                k -= 1
+            while k >= 0 and words[k][0].isalpha() and words[k] not in STOPWORDS and len(before) < 4:
+                before.insert(0, words[k]); k -= 1
+            after, before = _phrase_edge(after), _phrase_edge(before)
+            pick = after if len(after) >= 2 else before if len(before) >= 2 else after or before
+            if pick and len(" ".join(pick)) >= 5:
+                found.append((" ".join(pick), sentence[:200]))
+                break
     return found
 
 
