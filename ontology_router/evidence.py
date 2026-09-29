@@ -90,6 +90,33 @@ def stem(token: str) -> str:
     return token
 
 
+# Derivational endings, longest first. `stem` only folds plurals, so a question asking for
+# "analogous" solutions shared no word with papers titled "analogy" or "analogical", and
+# "retrieve" missed "retrieval": 67 papers on exactly the question scored 0 on topic.
+_FAMILY_ENDINGS = ("ically", "ical", "ation", "ition", "ously", "ous", "ive", "ness", "ment",
+                   "ity", "ing", "ed", "al", "ic", "y", "e")
+
+
+def family(token: str) -> str:
+    """Word family for topical matching: `analogy`, `analogous` and `analogical` -> `analog`.
+
+    One ending is removed and at least four letters must remain. `-er` is never stripped
+    (`discover`/`discovery` must meet), and `-al` is kept after `er` so that `general`
+    does not join `generation`.
+    """
+    # `stem` would read the s of -ous as a plural: `analogous` -> `analogou`.
+    token = token if token.endswith("ous") else stem(token)
+    for ending in _FAMILY_ENDINGS:
+        if token.endswith(ending) and len(token) - len(ending) >= 4:
+            base = token[:-len(ending)]
+            if ending == "al" and base.endswith("er"):
+                return token
+            if ending in ("ing", "ed") and base[-1] == base[-2] and base[-1] not in "lsz":
+                base = base[:-1]  # stopping -> stop
+            return base
+    return token
+
+
 def concept_key(label: str) -> frozenset[str]:
     """Order- and plural-insensitive identity for a concept label."""
     return frozenset(stem(t) for t in tokens(label))
@@ -124,7 +151,7 @@ def canonical_root(question: str, max_tokens: int = 6) -> str:
 
 def paper_tokens(paper: Paper) -> set[str]:
     text = " ".join([paper.title, " ".join(paper.keywords), " ".join(paper.topic_path), " ".join(paper.fields)])
-    return {stem(t) for t in tokens(text)}
+    return {family(t) for t in tokens(text)}
 
 
 def topical_papers(question: str, papers: list[Paper]) -> set[str]:
@@ -138,8 +165,8 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
     root words ("search", "process") survives. Corpus-frequency weighting was tried and
     could not separate those cases without starving on-topic papers too.
     """
-    root = {stem(t) for t in tokens(canonical_root(question))}
-    rest = {stem(t) for t in tokens(question)} - root
+    root = {family(t) for t in tokens(canonical_root(question))}
+    rest = {family(t) for t in tokens(question)} - root
     keep: set[str] = set()
     for paper in papers:
         found = paper_tokens(paper)
@@ -196,7 +223,7 @@ def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> li
         words = re.findall(r"[a-z][a-z0-9-]+", sentence.lower())
         # The sentence has to be talking about the question. `current chemical libraries`
         # was a real grounded limitation for a question about stopping criteria.
-        if root_tokens and not ({stem(w) for w in words} & root_tokens):
+        if root_tokens and not ({family(w) for w in words} & root_tokens):
             continue
         for index, word in enumerate(words):
             if word not in LIMITATION_CUES:
@@ -285,7 +312,7 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
     """`background` holds labels that ranked highly on unrelated past questions. They are
     the field's wallpaper, not this question's answer, so their score is halved."""
     q_tokens = set(tokens(question))
-    root_tokens = {stem(t) for t in tokens(canonical_root(question))}
+    root_tokens = {family(t) for t in tokens(canonical_root(question))}
     candidates: dict[str, CandidateEvidence] = {}
     for paper in papers:
         context = f"{paper.title}. {paper.abstract}"

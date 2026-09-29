@@ -1,0 +1,2560 @@
+{
+ "question": "how can a system retrieve analogous solutions to a problem from distant research fields",
+ "note": "Gathered 2026-09-29 by five web-search agents (records are search-snippet summaries, provider=websearch). Labels by an independent annotator agent: on = the question itself, near = supporting technique, off = unrelated.",
+ "labels": {
+  "10.1145/3097983.3098038": "on",
+  "10.1073/pnas.1807185116": "on",
+  "10.1145/3274300": "on",
+  "10.1145/3491102.3517434": "on",
+  "web:kang2022": "on",
+  "web:jiang2022": "on",
+  "web:chan2011": "on",
+  "web:fu2013": "on",
+  "web:functional-vector": "on",
+  "web:patent-analogy-tool": "on",
+  "10.1504/IJPD.2014.060036": "on",
+  "10.1007/978-3-642-39056-2_25": "on",
+  "web:sbf-bid": "on",
+  "10.1207/s15516709cog0702_3": "near",
+  "10.1207/s15516709cog1902_1": "on",
+  "web:gick1983": "near",
+  "10.3758/BF03197035": "near",
+  "10.1111/j.1551-6709.2009.01070.x": "near",
+  "10.1162/tacl_a_00688": "on",
+  "web:samefield2026": "on",
+  "web:eng-to-bio-thesaurus": "on",
+  "web:biologically-meaningful-keywords": "on",
+  "web:function-based-bio-concept-gen": "on",
+  "web:where2020": "on",
+  "doi:10.1007/978-1-4471-5248-4_2": "on",
+  "doi:10.3390/designs2040047": "on",
+  "web:asknaturenet:2024": "on",
+  "web:rag-biomimicry-stage": "on",
+  "doi:10.1145/3706598.3714053": "on",
+  "doi:10.1145/2556288.2557378": "on",
+  "doi:10.1111/cogs.12127": "on",
+  "doi:10.1080/21650349.2019.1618736": "on",
+  "web:kg-design-by-analogy": "on",
+  "web:dba-patent-fbs": "on",
+  "web:us6523026": "on",
+  "doi:10.1093/bib/bbae461": "near",
+  "doi:10.1016/j.compbiomed.2025.110873": "near",
+  "doi:10.1038/nrd.2018.168": "off",
+  "doi:10.1002/asi.1104": "on",
+  "web:cross-industry-framework": "on",
+  "doi:10.1142/S0219877018500438": "on",
+  "web:swanson-fish-oil": "on",
+  "web:gordon-1996-replication": "on",
+  "web:cole-bruza-bare-bones": "on",
+  "10.1093/bioinformatics/btad090": "on",
+  "web:lbd-models-trends": "on",
+  "10.1371/journal.pone.0232891": "on",
+  "web:recent-advances-lbd": "on",
+  "web:kg-link-pred-hypothesis-temporal": "near",
+  "web:drug-repurposing-covid-kg": "near",
+  "web:linkexplorer": "near",
+  "10.1073/pnas.1914370116": "near",
+  "web:nmi-future-of-ai": "near",
+  "web:analogical-search-engine": "on",
+  "web:koestler-bisociation-info-exploration": "on",
+  "web:topic-bisociative-networks": "on",
+  "10.48550/arXiv.2409.04109": "near",
+  "web:ideation-execution-gap": "near",
+  "web:llm-judge-novelty-limits": "near",
+  "web:sci-hypothesis-gen-survey": "near",
+  "web:kotkov-serendipity-survey": "near",
+  "10.1145/2926720": "near",
+  "web:user-validation-of-recommendation": "near",
+  "10.1145/3605145": "near",
+  "10.1007/s11390-020-0135-9": "near",
+  "web:topic-level-bayesian-surprise-and": "near",
+  "web:interdisciplinarity-as-diversity-in": "near",
+  "10.1371/journal.pone.0170296": "near",
+  "web:diversity-and-interdisciplinarity:-how": "near",
+  "web:echoes-in-filter-bubble:": "off",
+  "web:filter-bubbles-in-recommender": "off",
+  "web:taming-recommendation-bias-with": "off",
+  "10.1145/3121050.3121108": "off",
+  "web:balancing-exploration-and-exploitation": "off",
+  "web:learning-diverse-rankings-with": "off",
+  "10.1126/science.1240474": "near",
+  "10.1145/3530013": "on",
+  "10.1145/2872518.2890515": "near",
+  "10.1162/qss.a.9": "near",
+  "10.1145/2766462.2767710": "near",
+  "web:swanson-linking-/-literature-based": "on",
+  "web:furnas-vocab-1987": "near",
+  "web:lsa-deerwester-1990": "near",
+  "web:ostendorff-aspect-2020": "near",
+  "web:ostendorff-specialized-2022": "near",
+  "web:csfcube-2021": "near",
+  "web:specter-2020": "near",
+  "web:scirepeval-2022": "off",
+  "web:beir-2021": "off",
+  "web:entityquestions-2021": "off",
+  "web:hyde-2022": "near",
+  "web:leakage-hyde-2025": "near",
+  "web:qe-plm-survey-2025": "near",
+  "web:query-drift-2008": "near",
+  "web:llm-prf-2026": "near",
+  "web:swanson-upk-1996": "on",
+  "web:oaei-llm-2024": "near",
+  "web:llms4om-2024": "near",
+  "web:agent-om-2023": "near"
+ },
+ "papers": [
+  {
+   "paper_id": "10.1145/3097983.3098038",
+   "title": "Accelerating Innovation Through Analogy Mining",
+   "abstract": "Explores learning simpler structural representations called problem schemas, which specify the purpose of solutions, to find analogies in large idea repositories such as patents. Stated motivation: hand-created databases do not scale, and machine-learning similarity metrics struggle to account for structural similarity, which is central to analogy.",
+   "url": "https://arxiv.org/abs/1706.05585",
+   "doi": "10.1145/3097983.3098038",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogy mining",
+    "problem schemas",
+    "purpose and mechanism",
+    "idea repositories",
+    "innovation",
+    "purpose-mechanism",
+    "recurrent neural network",
+    "crowdsourcing",
+    "analogical retrieval"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Human-Computer Interaction",
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "purpose-mechanism analogy mining",
+    "purpose/mechanism embeddings for analogy retrieval",
+    "Analogical retrieval"
+   ],
+   "venue": "KDD 2017",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1073/pnas.1807185116",
+   "title": "Scaling up analogical innovation with crowds and AI",
+   "abstract": "Perspective on moving analogy out of one person's mind and distributing it across human and machine processors. Aims to overcome cognitive fixation, scale to large idea repositories and support problems with multiple constraints; reports first steps with crowds and AI and names core challenges still critical to realizing the vision.",
+   "url": "https://www.pnas.org/doi/abs/10.1073/pnas.1807185116",
+   "doi": "10.1073/pnas.1807185116",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical innovation",
+    "crowdsourcing",
+    "cognitive fixation",
+    "idea repositories",
+    "purpose",
+    "mechanism"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Innovation Studies",
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "crowd and AI analogy at scale",
+    "analogy at scale"
+   ],
+   "venue": "PNAS",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/3274300",
+   "title": "SOLVENT: A Mixed Initiative System for Finding Analogies between Research Papers",
+   "abstract": "Humans annotate aspects of research papers (background, purpose, mechanism, findings) and a computational model builds a semantic representation from these annotations to find analogies among papers. Finds more analogies than baseline information-retrieval approaches, annotations generalize beyond domain, and found analogies are useful to experts.",
+   "url": "https://dl.acm.org/doi/10.1145/3274300",
+   "doi": "10.1145/3274300",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogy finding",
+    "research papers",
+    "mixed-initiative",
+    "purpose mechanism annotation",
+    "analogical search",
+    "mechanism purpose",
+    "crowd annotation"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Scientometrics",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "cross-domain paper analogy annotation",
+    "analogy finding between papers"
+   ],
+   "venue": "Proc. ACM HCI (CSCW)",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/3491102.3517434",
+   "title": "Scaling Creative Inspiration with Fine-Grained Functional Aspects of Ideas",
+   "abstract": "Presents a representation that automatically breaks products into fine-grained functional aspects capturing the purposes and mechanisms of ideas, built from large repositories of products, patents and scientific papers. Used to support functional search for ideas and exploration of the design space around a focal problem.",
+   "url": "https://arxiv.org/abs/2102.09761",
+   "doi": "10.1145/3491102.3517434",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "functional aspects",
+    "purpose mechanism",
+    "creative inspiration",
+    "functional search"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Natural Language Processing"
+   ],
+   "topic_path": [
+    "fine-grained functional idea representation"
+   ],
+   "venue": "CHI 2022",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:kang2022",
+   "title": "Augmenting Scientific Creativity with Retrieval across Knowledge Domains",
+   "abstract": "Exploratory search system where users select a portion of text core to their interest from a paper abstract and retrieve papers highly similar to that aspect but differing in domain. Motivation: improved scholarly search helps in familiar domains but may fall short of helping scientists explore diverse ideas outside them.",
+   "url": "https://arxiv.org/abs/2206.01328",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "cross-domain retrieval",
+    "aspect-based similarity",
+    "exploratory search",
+    "scientific creativity"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Human-Computer Interaction"
+   ],
+   "topic_path": [
+    "cross-domain aspect retrieval"
+   ],
+   "venue": "NAACL 2022 Workshop on Bridging HCI and NLP",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:jiang2022",
+   "title": "Data-Driven Design-By-Analogy: State-of-the-Art and Future Directions",
+   "abstract": "Surveys data-driven design-by-analogy studies and categorizes them by data, methods and applications into four categories: analogy encoding, retrieval, mapping, and evaluation. Benchmarks the field against frontier data science and AI research to identify opportunities.",
+   "url": "https://arxiv.org/abs/2106.01592",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "design-by-analogy",
+    "analogy retrieval",
+    "design fixation",
+    "data-driven design"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "data-driven design-by-analogy survey"
+   ],
+   "venue": "Journal of Mechanical Design",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:chan2011",
+   "title": "On the Benefits and Pitfalls of Analogies for Innovative Design: Ideation Performance Based on Analogical Distance, Commonness, and Modality of Examples",
+   "abstract": "Examines how analogical distance (near vs far), commonness and modality of examples affect ideation. Stated limitation: 'Drawing inspiration from examples by analogy can be a powerful tool for innovative design during conceptual ideation but also carries the risk of negative design outcomes (e.g., design fixation), depending on key properties of examples.'",
+   "url": "https://www.lrdc.pitt.edu/schunn/papers/Chanetal2011.pdf",
+   "doi": "",
+   "year": 2011,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical distance",
+    "design fixation",
+    "ideation",
+    "design examples",
+    "commonness",
+    "far-field analogy"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Cognitive Science"
+   ],
+   "topic_path": [
+    "analogical distance effects on ideation",
+    "near vs far analogy effects"
+   ],
+   "venue": "Journal of Mechanical Design",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:fu2013",
+   "title": "The Meaning of Near and Far: The Impact of Structuring Design Databases and the Effect of Distance of Analogy on Design Output",
+   "abstract": "Cognitive engineering design study of how analogical distance of stimuli affects generated solutions, using the U.S. patent database as repository. Near and far stimuli were chosen from patent structure built with latent semantic analysis and a Bayesian algorithm for discovering structural form.",
+   "url": "https://asmedigitalcollection.asme.org/mechanicaldesign/article-abstract/135/2/021007/375727/The-Meaning-of-Near-and-Far-The-Impact-of",
+   "doi": "",
+   "year": 2013,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical distance",
+    "patent database",
+    "latent semantic analysis",
+    "design output"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "near vs far patent analogies"
+   ],
+   "venue": "Journal of Mechanical Design",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:functional-vector",
+   "title": "Function Based Design-by-Analogy: A Functional Vector Approach to Analogical Search",
+   "abstract": "Transforms a design problem into a functional representation and searches patent databases using a mapped functional basis to find near- and far-field analogies for ideation. Uses a vector space model to score functional similarity between design problems and patent descriptions; the case study shows analogies ranging from literal near-field to far-field cross-domain solutions.",
+   "url": "https://dspace.mit.edu/entities/publication/fb9994e2-5cc1-4045-81f4-b4f65105950a",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "functional basis",
+    "vector space model",
+    "patent search",
+    "far-field analogy"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "function-based patent analogy search"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:patent-analogy-tool",
+   "title": "Patent-based analogy search tool for innovative concept generation",
+   "abstract": "Patent-based search tool for concept generation that maps functions using a functional patent vocabulary (about 2,100 functions extracted from 65,000 patents). Related work notes novice designers lacking far-field retrieval skill are constrained to patents with surface similarities, and retrieving domain-similar patents led to ideas that directly copied the patent designs.",
+   "url": "https://repositories.lib.utexas.edu/items/937e9c69-a217-445e-9253-8d9f266319a8",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "patent search",
+    "functional vocabulary",
+    "concept generation",
+    "analogy tool"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "patent analogy search tool"
+   ],
+   "venue": "UT Austin repository",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1504/IJPD.2014.060036",
+   "title": "Function-based patent search: achievements and open problems",
+   "abstract": "Reviews function-based patent search, a TRIZ-inspired direction that theorizes invention from patent observation. Patents can help designers find technologies providing desired functionality, find applications of specific structures, and resolve engineering conflicts; the title flags open problems remaining.",
+   "url": "https://www.inderscienceonline.com/doi/abs/10.1504/IJPD.2014.060036",
+   "doi": "10.1504/IJPD.2014.060036",
+   "year": 2014,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "function-based search",
+    "patents",
+    "TRIZ",
+    "engineering conflicts"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "TRIZ function-based patent retrieval"
+   ],
+   "venue": "International Journal of Product Development",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1007/978-3-642-39056-2_25",
+   "title": "Biological Solutions for Engineering Problems: A Study in Cross-Domain Textual Case-Based Reasoning",
+   "abstract": "Studies retrieval of biology articles for engineering design problems. Stated limitation: in situ studies of biologically inspired design retrieval identified findability and recognizability of relevant biology articles on the Web as major challenges.",
+   "url": "https://link.springer.com/chapter/10.1007/978-3-642-39056-2_25",
+   "doi": "10.1007/978-3-642-39056-2_25",
+   "year": 2013,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "biologically inspired design",
+    "cross-domain case-based reasoning",
+    "textual retrieval",
+    "biology to engineering"
+   ],
+   "fields": [
+    "Artificial Intelligence",
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "biology-to-engineering analogy retrieval"
+   ],
+   "venue": "ICCBR",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:sbf-bid",
+   "title": "A computational approach to biologically inspired design",
+   "abstract": "Biologically inspired design invents technology by analogy to biological systems. Describes semantic tagging of biology articles using Structure-Behavior-Function models, and an engineering-to-biology thesaurus that maps functional-basis terms to biological terms to make biology accessible to engineers with limited biological knowledge.",
+   "url": "https://www.cambridge.org/core/journals/ai-edam/article/abs/computational-approach-to-biologically-inspired-design/96D9F189FD36BE5F0AA58FF15E03DD03",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "biologically inspired design",
+    "structure-behavior-function",
+    "thesaurus",
+    "functional basis",
+    "analogical reasoning",
+    "novice designers",
+    "computational support"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Artificial Intelligence"
+   ],
+   "topic_path": [
+    "SBF models for biology retrieval",
+    "computational support for bio-inspired analogy"
+   ],
+   "venue": "AI EDAM",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1207/s15516709cog0702_3",
+   "title": "Structure-Mapping: A Theoretical Framework for Analogy",
+   "abstract": "Theoretical framework in which analogy maps relational structure between a base and target representation, favoring systems of interconnected relations over object attributes. Foundation for later computational models of analogy.",
+   "url": "https://onlinelibrary.wiley.com/doi/abs/10.1207/s15516709cog0702_3",
+   "doi": "10.1207/s15516709cog0702_3",
+   "year": 1983,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "structure-mapping",
+    "analogy",
+    "relational similarity",
+    "systematicity"
+   ],
+   "fields": [
+    "Cognitive Science"
+   ],
+   "topic_path": [
+    "structure-mapping theory"
+   ],
+   "venue": "Cognitive Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1207/s15516709cog1902_1",
+   "title": "MAC/FAC: A Model of Similarity-Based Retrieval",
+   "abstract": "Model reconciling that structure outweighs surface in similarity judgments of items in working memory, yet in retrieval superficial similarity is more important than structural similarity, while purely structural remindings sometimes occur. Uses a two-stage process: a computationally cheap non-structural matcher filters long-term memory, then structural alignment (SME) selects among candidates.",
+   "url": "https://onlinelibrary.wiley.com/doi/abs/10.1207/s15516709cog1902_1",
+   "doi": "10.1207/s15516709cog1902_1",
+   "year": 1995,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "similarity-based retrieval",
+    "MAC/FAC",
+    "structure mapping engine",
+    "surface similarity"
+   ],
+   "fields": [
+    "Cognitive Science",
+    "Artificial Intelligence"
+   ],
+   "topic_path": [
+    "two-stage analogical retrieval"
+   ],
+   "venue": "Cognitive Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:gick1983",
+   "title": "Schema induction and analogical transfer",
+   "abstract": "Shows comparing two analogous examples facilitates deriving a schema that supports transfer to a structurally similar problem. Reported effect: 45% of participants in the comparison condition spontaneously generated the convergence solution to the tumor problem versus 21% in the single-analog condition.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/0010028583900026",
+   "doi": "",
+   "year": 1983,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "schema induction",
+    "analogical transfer",
+    "tumor problem",
+    "comparison"
+   ],
+   "fields": [
+    "Cognitive Psychology"
+   ],
+   "topic_path": [
+    "schema induction for transfer"
+   ],
+   "venue": "Cognitive Psychology",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.3758/BF03197035",
+   "title": "Surface and structural similarity in analogical transfer",
+   "abstract": "Both structural features, which play a causal role in determining possible solutions, and salient surface features, which do not, influence spontaneous selection of an analogue. Structural features have greater impact on the ability to use an analogue once its relevance is pointed out; spontaneous retrieval remains influenced by surface features.",
+   "url": "https://link.springer.com/article/10.3758/BF03197035",
+   "doi": "10.3758/BF03197035",
+   "year": 1987,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical transfer",
+    "surface similarity",
+    "structural similarity",
+    "analog retrieval"
+   ],
+   "fields": [
+    "Cognitive Psychology"
+   ],
+   "topic_path": [
+    "surface bias in analog selection"
+   ],
+   "venue": "Memory & Cognition",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1111/j.1551-6709.2009.01070.x",
+   "title": "Reviving Inert Knowledge: Analogical Abstraction Supports Relational Retrieval of Past Events",
+   "abstract": "Addresses inert knowledge, past cases that cannot be spontaneously retrieved when relevant. Analogical abstraction, i.e. comparing and abstracting across cases, supports relational retrieval of past events. Retrieval otherwise tends to be driven by surface similarity such as similar characters and settings.",
+   "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.1551-6709.2009.01070.x",
+   "doi": "10.1111/j.1551-6709.2009.01070.x",
+   "year": 2009,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "inert knowledge",
+    "analogical abstraction",
+    "relational retrieval",
+    "comparison"
+   ],
+   "fields": [
+    "Cognitive Science"
+   ],
+   "topic_path": [
+    "abstraction revives relational retrieval"
+   ],
+   "venue": "Cognitive Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1162/tacl_a_00688",
+   "title": "ARN: Analogical Reasoning on Narratives",
+   "abstract": "Operationalizes theories of analogy with surface and system mappings to build a benchmark covering far (cross-domain) and near (within-domain) analogies and disanalogies. Stated limitation: while LLMs largely recognize near analogies, even the largest struggle with far analogies zero-shot, with GPT-4 scoring below random; solved examples and chain-of-thought help.",
+   "url": "https://arxiv.org/abs/2310.00996",
+   "doi": "10.1162/tacl_a_00688",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical reasoning",
+    "narratives",
+    "far analogy",
+    "LLM evaluation"
+   ],
+   "fields": [
+    "Natural Language Processing"
+   ],
+   "topic_path": [
+    "LLM far-analogy failure"
+   ],
+   "venue": "TACL",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:samefield2026",
+   "title": "Same Problem, Different Field: Cross-Domain Solution Import via Domain-Stripped Computational Fingerprints",
+   "abstract": "Distills each paper into a domain- and method-name-stripped faceted computational fingerprint (free-text mechanism skeleton plus controlled facets) to find cross-field pairs solving the same problem, e.g. Kalman filter, Bayesian forecasting and data assimilation. On 109 papers in 18 method families, the skeleton raises cross-domain retrieval average precision over the abstract from 0.222 to 0.513 (whole fingerprint 0.557), showing raw abstracts retrieve poorly across fields.",
+   "url": "https://arxiv.org/abs/2609.07595",
+   "doi": "",
+   "year": 2026,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "cross-domain retrieval",
+    "computational fingerprint",
+    "solution import",
+    "mechanism skeleton"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Digital Libraries"
+   ],
+   "topic_path": [
+    "domain-stripped mechanism fingerprints"
+   ],
+   "venue": "JCDL 2026",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:eng-to-bio-thesaurus",
+   "title": "An Engineering-to-Biology Thesaurus for Engineering Design",
+   "abstract": "The thesaurus acts as a set of correspondent terms to the functions and flows of the functional basis, providing term mapping between engineering and biological domains for engineers with limited biological background. It increases retrieval of relevant biological information, with a reported 33% improvement in relevant solutions for specific functions like detection.",
+   "url": "https://www.academia.edu/20640079/An_Engineering_to_Biology_Thesaurus_for_Engineering_Design",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "engineering-to-biology thesaurus",
+    "functional basis",
+    "bio-inspired design",
+    "keyword mapping"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "function vocabulary bridging between engineering and biology"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:biologically-meaningful-keywords",
+   "title": "Biologically Meaningful Keywords for Functional Terms of the Functional Basis",
+   "abstract": "Provides biologically meaningful keywords for the functional terms of the engineering Functional Basis so that engineers can search biological text for solutions to a functional need. The keyword set supports bio-inspired concept generation from function statements.",
+   "url": "https://asmedigitalcollection.asme.org/mechanicaldesign/article-abstract/133/2/021007/409738/Biologically-Meaningful-Keywords-for-Functional?redirectedFrom=fulltext",
+   "doi": "",
+   "year": 2011,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "functional basis",
+    "biological keywords",
+    "biomimetic design",
+    "function-based search"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "function-keyword translation for bio search"
+   ],
+   "venue": "J. Mech. Des.",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:function-based-bio-concept-gen",
+   "title": "Function-based, biologically inspired concept generation",
+   "abstract": "A general method for functionally representing biological systems uses functional representation and abstraction techniques to translate biological systems into an engineering context. The method takes the essential function the design must fulfill as input.",
+   "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/6E50183041999F5297622A482AB818BD/S0890060410000375a.pdf/function-based-biologically-inspired-concept-generation.pdf",
+   "doi": "",
+   "year": 2010,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "function-based design",
+    "biologically inspired concept generation",
+    "functional representation",
+    "abstraction"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "function abstraction of biological systems"
+   ],
+   "venue": "AI EDAM",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:where2020",
+   "title": "Where and how to find bio-inspiration? A comparison of search approaches for bio-inspired design",
+   "abstract": "Compares three ways to find bio-inspiration: the AskNature database, a natural language processing approach over a large corpus of biological publications, and consultation of an expert biologist. The NLP approach retrieves relevant publications with good recall without an expert; however, extracting the working principles from the retrieved biological articles is error-prone and time consuming.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S1755581720301188",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "bio-inspired design",
+    "search approaches",
+    "NLP",
+    "AskNature",
+    "expert consultation"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "comparison of bio-inspiration search methods"
+   ],
+   "venue": "CIRP Journal of Manufacturing Science and Technology",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1007/978-1-4471-5248-4_2",
+   "title": "The AskNature Database: Enabling Solutions in Biomimetic Design",
+   "abstract": "AskNature.org is a biomimetic database that includes a Biomimicry Taxonomy, biological strategy pages organized by function, search and tri-browse features, and bio-inspired product pages as examples of design successes.",
+   "url": "https://link.springer.com/chapter/10.1007/978-1-4471-5248-4_2",
+   "doi": "10.1007/978-1-4471-5248-4_2",
+   "year": 2014,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "AskNature",
+    "biomimicry taxonomy",
+    "function-organised strategies",
+    "biomimetic design"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Biomimetics"
+   ],
+   "topic_path": [
+    "function-indexed biological strategy database"
+   ],
+   "venue": "Biologically Inspired Design (Springer)",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.3390/designs2040047",
+   "title": "Establishing Analogy Categories for Bio-Inspired Design",
+   "abstract": "Analyses bio-inspired products in AskNature to categorise analogical transfer. In 71% of the products multiple categories of analogical transfer were present, so transfer is complex, and the majority of commercialised bio-inspired products did not rely on physical characteristic-based analogies alone.",
+   "url": "https://dx.doi.org/10.3390/designs2040047",
+   "doi": "10.3390/designs2040047",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogy categories",
+    "bio-inspired design",
+    "AskNature",
+    "analogical transfer"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Biomimetics"
+   ],
+   "topic_path": [
+    "taxonomy of analogy types"
+   ],
+   "venue": "Designs",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:asknaturenet:2024",
+   "title": "AskNatureNet: A divergent thinking tool based on bio-inspired design knowledge",
+   "abstract": "A divergent thinking tool built on bio-inspired design knowledge from AskNature, aimed at the difficulty designers face extracting design knowledge from biological information; keyword-centric search and fragmented knowledge frameworks may hamper efficiency.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S1474034624002416",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "AskNatureNet",
+    "divergent thinking",
+    "knowledge network",
+    "bio-inspired design"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Artificial Intelligence"
+   ],
+   "topic_path": [
+    "network-structured biological knowledge for ideation"
+   ],
+   "venue": "Advanced Engineering Informatics",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:rag-biomimicry-stage",
+   "title": "An Innovative Retrieval-Augmented Generation Framework for Stage-Specific Knowledge Translation in Biomimicry Design",
+   "abstract": "Uses retrieval-augmented generation, merging semantic retrieval with generative reasoning, to translate biological knowledge for stages of biomimicry design and mitigate hallucinations in LLM outputs.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12467817/",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "retrieval-augmented generation",
+    "biomimicry design",
+    "knowledge translation",
+    "LLM"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "RAG for biology-to-engineering translation"
+   ],
+   "venue": "PMC",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1145/3706598.3714053",
+   "title": "BioSpark: Beyond Analogical Inspiration to LLM-augmented Transfer",
+   "abstract": "LLMs in a Pinterest-like interface support identifying key solution mechanisms, transferring them to the problem domain and considering tradeoffs, using a tree-of-life approach for diverse inspirations. Users generated more ideas, rated higher in creative quality and more diverse. Limitation: BioSpark was limited in conveying active ingredients, the core abstraction underpinning how mechanisms work, and generative hallucination is a concern.",
+   "url": "https://doi.org/10.1145/3706598.3714053",
+   "doi": "10.1145/3706598.3714053",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical innovation",
+    "LLM",
+    "biological inspiration",
+    "tree of life",
+    "creativity support"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "LLM-augmented analogical transfer"
+   ],
+   "venue": "CHI 2025",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1145/2556288.2557378",
+   "title": "Searching for analogical ideas with crowds",
+   "abstract": "Re-presents a problem in terms of its abstract structure and lets people use this structural representation to find analogies; a crowdsourcing process helps people navigate a large dataset. Crowds find the most useful inspirations when the problem domain is represented abstractly and constraints more concretely.",
+   "url": "https://dl.acm.org/doi/10.1145/2556288.2557378",
+   "doi": "10.1145/2556288.2557378",
+   "year": 2014,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical search",
+    "crowdsourcing",
+    "problem schema",
+    "abstraction"
+   ],
+   "fields": [
+    "Human-Computer Interaction"
+   ],
+   "topic_path": [
+    "structural abstraction for analogy search"
+   ],
+   "venue": "CHI 2014",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1111/cogs.12127",
+   "title": "The Impact of Analogies on Creative Concept Generation: Lessons From an In Vivo Study in Engineering Design",
+   "abstract": "In vivo study of analogy use in engineering design teams. Concepts were more similar to their preceding concepts after far analogy use compared to baseline, yet far analogies increased the team's concept generation rate.",
+   "url": "https://onlinelibrary.wiley.com/doi/10.1111/cogs.12127",
+   "doi": "10.1111/cogs.12127",
+   "year": 2015,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogy",
+    "concept generation",
+    "in vivo study",
+    "far analogy"
+   ],
+   "fields": [
+    "Cognitive Science",
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "analogical distance and fixation"
+   ],
+   "venue": "Cognitive Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1080/21650349.2019.1618736",
+   "title": "Testing ideation performance on a large set of designers: effects of analogical distance",
+   "abstract": "Aims to provide evidence on the effect of analogical distance on ideation; the effect on design outcomes is controversial. Designers not trained in design-by-analogy benefit from sources sharing sub-functions and context with the target, producing ideas of higher novelty and quality than those exposed to more distant analogies.",
+   "url": "https://www.tandfonline.com/doi/abs/10.1080/21650349.2019.1618736",
+   "doi": "10.1080/21650349.2019.1618736",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical distance",
+    "ideation performance",
+    "near analogies",
+    "design creativity"
+   ],
+   "fields": [
+    "Engineering Design"
+   ],
+   "topic_path": [
+    "near analogies can beat far for untrained designers"
+   ],
+   "venue": "Int. J. Design Creativity and Innovation",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:kg-design-by-analogy",
+   "title": "Knowledge graph-assisted design-by-analogy: promoting product innovation through structured analogical knowledge retrieval",
+   "abstract": "Notes that automatically extracting analogical knowledge and constructing semantic relations between knowledge levels is a key problem for design-by-analogy; a knowledge graph mines semantic relationships between levels to enable structured retrieval.",
+   "url": "https://www.cambridge.org/core/journals/ai-edam/article/knowledge-graphassisted-designbyanalogy-promoting-product-innovation-through-structured-analogical-knowledge-retrieval/9A6F1AFD04B956722EAFB62DEDC9ECFD",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "knowledge graph",
+    "design-by-analogy",
+    "analogical retrieval",
+    "product innovation"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "KG-structured analogy retrieval"
+   ],
+   "venue": "AI EDAM",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:dba-patent-fbs",
+   "title": "Design-by-Analogy: Exploring for Analogical Inspiration With Behavior, Material, and Component-Based Structural Representation of Patent Databases",
+   "abstract": "Applies non-negative matrix factorization iteratively to build hierarchical repositories of design solutions from patents processed into component-, behavior- or material-based content, so designers can explore clusters of analogical stimuli.",
+   "url": "https://asmedigitalcollection.asme.org/computingengineering/article-abstract/19/2/021014/726231/Design-by-Analogy-Exploring-for-Analogical?redirectedFrom=fulltext",
+   "doi": "",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "design-by-analogy",
+    "patent database",
+    "non-negative matrix factorization",
+    "behavior representation"
+   ],
+   "fields": [
+    "Engineering Design",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "patent clustering for analogical stimuli"
+   ],
+   "venue": "J. Comput. Inf. Sci. Eng.",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:us6523026",
+   "title": "Method for retrieving semantically distant analogies (US 6,523,026 B1)",
+   "abstract": "Automatically generates abstract representations of source-domain content and applies them to discover analogous objects in semantically distant target domains. It can find deep functional analogies even where there is a misleading superficial matching of terms between query and target domains.",
+   "url": "https://patents.google.com/patent/US6523026",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "semantically distant analogies",
+    "abstract representation",
+    "functional analogy",
+    "retrieval"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "abstraction-based distant analogy retrieval"
+   ],
+   "venue": "Patent",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1093/bib/bbae461",
+   "title": "Knowledge Graphs for drug repurposing: a review of databases and methods",
+   "abstract": "Reviews knowledge graph databases and methods for modelling and predicting drug-disease relationships. Drug repurposing is framed as link prediction between drug and disease nodes, using KGs that integrate multiple sources.",
+   "url": "https://academic.oup.com/bib/article/25/6/bbae461/7774899",
+   "doi": "10.1093/bib/bbae461",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "drug repurposing",
+    "knowledge graph",
+    "link prediction",
+    "databases"
+   ],
+   "fields": [
+    "Bioinformatics",
+    "Pharmacology"
+   ],
+   "topic_path": [
+    "KG link prediction as solution transfer"
+   ],
+   "venue": "Briefings in Bioinformatics",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1016/j.compbiomed.2025.110873",
+   "title": "The use of knowledge graphs for drug repurposing: From classical machine learning algorithms to graph neural networks",
+   "abstract": "Gives an overview of KG-based repurposing methods from classical ML to graph neural networks, covering tools, construction and link prediction, and discusses their inherent advantages and limitations.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S0010482525012247",
+   "doi": "10.1016/j.compbiomed.2025.110873",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "drug repurposing",
+    "knowledge graph",
+    "graph neural network",
+    "link prediction"
+   ],
+   "fields": [
+    "Bioinformatics",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "KG methods for repurposing"
+   ],
+   "venue": "Computers in Biology and Medicine",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1038/nrd.2018.168",
+   "title": "Drug repurposing: progress, challenges and recommendations",
+   "abstract": "Repurposing old drugs uses de-risked compounds with potentially lower cost and shorter timelines. Limitation: the potential of this strategy has not been as widely realized as hoped, in part owing to legal and regulatory barriers.",
+   "url": "https://www.nature.com/articles/nrd.2018.168",
+   "doi": "10.1038/nrd.2018.168",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "drug repurposing",
+    "drug repositioning",
+    "regulatory barriers",
+    "rare diseases"
+   ],
+   "fields": [
+    "Pharmacology",
+    "Drug Discovery"
+   ],
+   "topic_path": [
+    "institutionalised solution transfer across indications"
+   ],
+   "venue": "Nature Reviews Drug Discovery",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1002/asi.1104",
+   "title": "Using concepts in literature-based discovery: Simulating Swanson's Raynaud-fish oil and migraine-magnesium discoveries",
+   "abstract": "Simulates Swanson's discoveries: two disjoint literature sets that do not cite or co-cite each other are linked through intermediate terms such as blood viscosity, platelet aggregation and vascular reactivity, a link later verified in clinical trials.",
+   "url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/asi.1104",
+   "doi": "10.1002/asi.1104",
+   "year": 2001,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "literature-based discovery",
+    "Swanson linking",
+    "disjoint literatures",
+    "hypothesis generation",
+    "concept-based LBD",
+    "simulation",
+    "Swanson discoveries"
+   ],
+   "fields": [
+    "Information Science",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "bridging disjoint literatures",
+    "Concept-based LBD"
+   ],
+   "venue": "JASIST",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:cross-industry-framework",
+   "title": "A Framework for Cross-Industry Innovation: Transferring Technologies between Industries",
+   "abstract": "Proposes a framework for transferring technologies between industries as cross-industry innovation.",
+   "url": "https://www.worldscientific.com/doi/10.1142/S0219877021500115",
+   "doi": "10.1142/S0219877021500115",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "cross-industry innovation",
+    "technology transfer",
+    "analogical transfer"
+   ],
+   "fields": [
+    "Innovation Management"
+   ],
+   "topic_path": [
+    "technology transfer between industries"
+   ],
+   "venue": "Int. J. Innovation and Technology Management",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1142/S0219877018500438",
+   "title": "Knowledge Transition: A Conceptual Model of Knowledge Transfer for Cross-Industry Innovation",
+   "abstract": "Conceptual model of knowledge transfer for cross-industry innovation, where novel ideas emerge from combining distant knowledge and interaction with idea suppliers from distant domains.",
+   "url": "https://www.worldscientific.com/doi/abs/10.1142/S0219877018500438",
+   "doi": "10.1142/S0219877018500438",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "knowledge transfer",
+    "cross-industry innovation",
+    "distant knowledge"
+   ],
+   "fields": [
+    "Innovation Management"
+   ],
+   "topic_path": [
+    "knowledge transfer across industries"
+   ],
+   "venue": "Int. J. Innovation and Technology Management",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:swanson-fish-oil",
+   "title": "Fish Oil, Raynaud's Syndrome, and Undiscovered Public Knowledge",
+   "abstract": "Swanson linked Raynaud's disease to reduced blood viscosity in one set of articles and fish oil to lowered blood viscosity in another. No study connected Raynaud's and fish oil directly, yet the hypothesis suggested a new therapeutic use later confirmed by clinical research. Knowledge is public yet undiscovered when independently created fragments are logically related but never retrieved and brought together.",
+   "url": "https://www.semanticscholar.org/paper/Fish-Oil,-Raynaud's-Syndrome,-and-Undiscovered-Swanson/43f4674bded8f35df66c3a6db9ca388735718872",
+   "doi": "",
+   "year": 1986,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "undiscovered public knowledge",
+    "ABC model",
+    "literature-based discovery",
+    "Raynaud's syndrome"
+   ],
+   "fields": [
+    "Information Science",
+    "Medicine"
+   ],
+   "topic_path": [
+    "Swanson ABC model"
+   ],
+   "venue": "Perspectives in Biology and Medicine",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:gordon-1996-replication",
+   "title": "Toward discovery support systems: A replication, re-examination, and extension of Swanson's work on literature-based discovery of a connection between Raynaud's and fish oil",
+   "abstract": "Replicates and re-examines Swanson's Raynaud-fish oil discovery to assess how far it can be supported by a computational discovery support system.",
+   "url": "https://asistdl.onlinelibrary.wiley.com/doi/abs/10.1002/(SICI)1097-4571(199602)47:2%3C116::AID-ASI3%3E3.0.CO;2-1",
+   "doi": "",
+   "year": 1996,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "discovery support systems",
+    "replication",
+    "Swanson",
+    "literature-based discovery"
+   ],
+   "fields": [
+    "Information Science"
+   ],
+   "topic_path": [
+    "LBD replication"
+   ],
+   "venue": "Journal of the American Society for Information Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:cole-bruza-bare-bones",
+   "title": "A Bare Bones Approach to Literature-Based Discovery: An Analysis of the Raynaud's/Fish-Oil and Migraine-Magnesium Discoveries in Semantic Space",
+   "abstract": "Analyses Swanson's Raynaud-fish oil and migraine-magnesium discoveries in a semantic vector space, as a minimal computational account of LBD.",
+   "url": "https://link.springer.com/chapter/10.1007/11563983_9",
+   "doi": "",
+   "year": 2005,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "semantic space",
+    "literature-based discovery",
+    "migraine-magnesium",
+    "Raynaud"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Cognitive Science"
+   ],
+   "topic_path": [
+    "Semantic-space LBD"
+   ],
+   "venue": "Discovery Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1093/bioinformatics/btad090",
+   "title": "Literature-based discovery: addressing the issue of the subpar evaluation methodology",
+   "abstract": "Reviews evaluation of LBD systems: domain-expert vetting, discovery replication and time-slicing. Replication is cheap but systems are usually tested only against a small set of confirmed discoveries, often Swanson's own. Time-slicing treats co-occurrences appearing after a cutoff year as gold discoveries; however, using co-occurrences as a proxy for discoveries is a dramatic simplification, with very few co-occurrences representing a true discovery and the vast majority being meaningless or poorly informative.",
+   "url": "https://academic.oup.com/bioinformatics/article/39/2/btad090/7036333",
+   "doi": "10.1093/bioinformatics/btad090",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "LBD evaluation",
+    "time-slicing",
+    "discovery replication",
+    "gold standard"
+   ],
+   "fields": [
+    "Bioinformatics",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "LBD evaluation methodology"
+   ],
+   "venue": "Bioinformatics",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:lbd-models-trends",
+   "title": "Literature Based Discovery: Models, methods, and trends",
+   "abstract": "Survey of literature-based discovery models and methods, including open and closed discovery and how such systems are evaluated.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S1532046417301909",
+   "doi": "",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "literature-based discovery",
+    "survey",
+    "open discovery",
+    "closed discovery"
+   ],
+   "fields": [
+    "Biomedical Informatics"
+   ],
+   "topic_path": [
+    "LBD survey"
+   ],
+   "venue": "Journal of Biomedical Informatics",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1371/journal.pone.0232891",
+   "title": "Neural networks for open and closed Literature-based Discovery",
+   "abstract": "Applies neural networks to both open and closed LBD, evaluated against replication of known discoveries and time-sliced data.",
+   "url": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0232891",
+   "doi": "10.1371/journal.pone.0232891",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "neural networks",
+    "open discovery",
+    "closed discovery",
+    "literature-based discovery"
+   ],
+   "fields": [
+    "Machine Learning",
+    "Biomedical Informatics"
+   ],
+   "topic_path": [
+    "Neural LBD"
+   ],
+   "venue": "PLOS ONE",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:recent-advances-lbd",
+   "title": "Recent Advances and Future Directions in Literature-Based Discovery",
+   "abstract": "Survey of LBD under the ABC model, in which A-B is known in one area and B-C in another and an A-C relationship is proposed. Notes that most approaches rely on PubMed and often only article abstracts, omitting contextual relationships valuable for complex hypothesis generation.",
+   "url": "https://arxiv.org/pdf/2506.12385",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "literature-based discovery",
+    "ABC model",
+    "abstracts vs full text",
+    "hypothesis generation"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Biomedical Informatics"
+   ],
+   "topic_path": [
+    "LBD survey"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:kg-link-pred-hypothesis-temporal",
+   "title": "Link prediction for hypothesis generation: an active curriculum learning infused temporal graph-based approach",
+   "abstract": "Formulates hypothesis generation as link prediction over a temporally evolving knowledge graph, using active curriculum learning; temporal interactions between entities inform prediction of future relationships.",
+   "url": "https://link.springer.com/article/10.1007/s10462-024-10885-1",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "link prediction",
+    "hypothesis generation",
+    "temporal graph",
+    "curriculum learning"
+   ],
+   "fields": [
+    "Machine Learning",
+    "Biomedical Informatics"
+   ],
+   "topic_path": [
+    "KG link prediction"
+   ],
+   "venue": "Artificial Intelligence Review",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:drug-repurposing-covid-kg",
+   "title": "Drug Repurposing for COVID-19 via Knowledge Graph Completion",
+   "abstract": "Uses knowledge graph completion over literature-derived relations to propose drug repurposing candidates for COVID-19, an LBD-style ABC inference.",
+   "url": "https://arxiv.org/pdf/2010.09600",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "knowledge graph completion",
+    "drug repurposing",
+    "COVID-19"
+   ],
+   "fields": [
+    "Biomedical Informatics"
+   ],
+   "topic_path": [
+    "KG drug repurposing"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:linkexplorer",
+   "title": "LinkExplorer: Predicting, explaining and exploring links in large biomedical knowledge graphs",
+   "abstract": "Link prediction in biomedical knowledge graphs. Most link prediction algorithms are black boxes such as embedding or deep-learning methods where the rationale is difficult or impossible to explain, which hampers scientific insight and user acceptance; the paper adds explanation and exploration.",
+   "url": "https://www.biorxiv.org/content/10.1101/2022.01.09.475537.full.pdf",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "link prediction",
+    "explainability",
+    "biomedical knowledge graph"
+   ],
+   "fields": [
+    "Bioinformatics"
+   ],
+   "topic_path": [
+    "Explainable link prediction"
+   ],
+   "venue": "bioRxiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1073/pnas.1914370116",
+   "title": "Predicting research trends with semantic and neural networks with an application in quantum physics",
+   "abstract": "Builds a semantic network where physical concepts are nodes and links join concepts studied together, then uses neural networks to predict which links will form; basis of the Science4Cast link-prediction benchmark.",
+   "url": "https://www.pnas.org/doi/10.1073/pnas.1914370116",
+   "doi": "10.1073/pnas.1914370116",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "semantic network",
+    "link prediction",
+    "research trends",
+    "quantum physics"
+   ],
+   "fields": [
+    "Physics",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "Semantic network forecasting"
+   ],
+   "venue": "PNAS",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:nmi-future-of-ai",
+   "title": "Forecasting the future of artificial intelligence with machine learning-based link prediction in an exponentially growing knowledge network",
+   "abstract": "Predicts future links in a knowledge network of AI concepts (Science4Cast) so as to suggest concept pairs that will be studied jointly.",
+   "url": "https://www.nature.com/articles/s42256-023-00735-0",
+   "doi": "",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "link prediction",
+    "knowledge network",
+    "Science4Cast",
+    "forecasting"
+   ],
+   "fields": [
+    "Machine Learning",
+    "Scientometrics"
+   ],
+   "topic_path": [
+    "Knowledge-network forecasting"
+   ],
+   "venue": "Nature Machine Intelligence",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:analogical-search-engine",
+   "title": "Augmenting Scientific Creativity with an Analogical Search Engine",
+   "abstract": "Analogical search engine for scientists that finds structurally similar problems across knowledge domains; explores distributing analogy, finding deep structural patterns across domains, over many information processors.",
+   "url": "https://arxiv.org/pdf/2205.15476",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical search",
+    "scientific creativity",
+    "cross-domain retrieval"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "Analogical search"
+   ],
+   "venue": "ACM TOCHI",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:koestler-bisociation-info-exploration",
+   "title": "Towards Creative Information Exploration Based on Koestler's Concept of Bisociation",
+   "abstract": "Frames creative information exploration as finding new, surprising, valuable relationships that conventional retrieval and data mining would not reveal, via bisociation: perceiving a situation in two unrelated matrices of thought.",
+   "url": "https://link.springer.com/chapter/10.1007/978-3-642-31830-6_2",
+   "doi": "",
+   "year": 2012,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "bisociation",
+    "Koestler",
+    "creative information exploration",
+    "data mining"
+   ],
+   "fields": [
+    "Data Mining",
+    "Computational Creativity"
+   ],
+   "topic_path": [
+    "Bisociative discovery"
+   ],
+   "venue": "Bisociative Knowledge Discovery",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:topic-bisociative-networks",
+   "title": "Creative Exploration Using Topic Based Bisociative Networks",
+   "abstract": "Builds topic-based bisociative networks to explore links between otherwise disconnected domains of text.",
+   "url": "https://arxiv.org/pdf/1801.10084",
+   "doi": "",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "bisociative networks",
+    "topic models",
+    "creative exploration"
+   ],
+   "fields": [
+    "Computational Creativity",
+    "Text Mining"
+   ],
+   "topic_path": [
+    "Bisociative networks"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.48550/arXiv.2409.04109",
+   "title": "Can LLMs Generate Novel Research Ideas?",
+   "abstract": "Large-scale human study with 100+ NLP researchers comparing LLM and expert ideas; LLM ideas were judged more novel than human-expert ideas.",
+   "url": "https://arxiv.org/pdf/2409.04109",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "research ideation",
+    "LLM",
+    "novelty",
+    "human study"
+   ],
+   "fields": [
+    "Natural Language Processing"
+   ],
+   "topic_path": [
+    "LLM ideation"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ideation-execution-gap",
+   "title": "The Ideation-Execution Gap: Execution Outcomes of LLM-Generated versus Human Research Ideas",
+   "abstract": "43 expert researchers each spent over 100 hours executing randomly assigned LLM or expert ideas. Scores of LLM ideas decrease significantly more than expert ideas after execution on novelty, excitement, effectiveness and overall (p<0.05), flipping rankings on many metrics. Highlights the limitation of LLMs in generating effective ideas and of evaluating ideas without execution.",
+   "url": "https://arxiv.org/abs/2506.20803",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "ideation-execution gap",
+    "LLM research ideas",
+    "execution study"
+   ],
+   "fields": [
+    "Natural Language Processing",
+    "Metascience"
+   ],
+   "topic_path": [
+    "LLM hypothesis failure modes"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:llm-judge-novelty-limits",
+   "title": "On the Limits of LLM-as-Judge for Scientific Novelty Assessment",
+   "abstract": "LLM judges consistently rate model-generated research questions as highly novel, a 'novelty mirage', stronger in comparative evaluation, while domain experts reach the opposite conclusion. Many generated questions are narrow or source-bound, which LLM judges miss unless explicitly tested.",
+   "url": "https://arxiv.org/abs/2606.12071",
+   "doi": "",
+   "year": 2026,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "LLM-as-judge",
+    "novelty assessment",
+    "novelty mirage"
+   ],
+   "fields": [
+    "Natural Language Processing",
+    "Metascience"
+   ],
+   "topic_path": [
+    "Novelty evaluation failure"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:sci-hypothesis-gen-survey",
+   "title": "Scientific Hypothesis Generation and Validation: Methods, Datasets, and Future Directions",
+   "abstract": "Survey of hypothesis generation and validation. LLMs are often constrained by reliance on established knowledge bases and historical data, which can limit transformative or genuinely novel hypotheses and restricts exploration of counterintuitive or uncharted areas.",
+   "url": "https://arxiv.org/pdf/2505.04651",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "hypothesis generation",
+    "LLM",
+    "survey",
+    "validation"
+   ],
+   "fields": [
+    "Natural Language Processing"
+   ],
+   "topic_path": [
+    "Hypothesis generation survey"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:kotkov-serendipity-survey",
+   "title": "A survey of serendipity in recommender systems",
+   "abstract": "Provides definitions of serendipity and related concepts, reviews serendipity-oriented recommendation algorithms, and describes strategies to assess serendipity in recommender systems. Serendipity has three components (relevance, novelty, unexpectedness), each with multiple variations.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0950705116302763",
+   "doi": "",
+   "year": 2016,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "serendipity",
+    "unexpectedness",
+    "novelty",
+    "recommender systems",
+    "evaluation"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "serendipity definitions and metrics"
+   ],
+   "venue": "Knowledge-Based Systems",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/2926720",
+   "title": "Diversity, Serendipity, Novelty, and Coverage: A Survey and Empirical Analysis of Beyond-Accuracy Objectives in Recommender Systems",
+   "abstract": "Survey and empirical analysis of beyond-accuracy objectives (diversity, serendipity, novelty, coverage) in recommender systems.",
+   "url": "https://dl.acm.org/doi/10.1145/2926720",
+   "doi": "10.1145/2926720",
+   "year": 2016,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "beyond-accuracy",
+    "diversity",
+    "serendipity",
+    "novelty",
+    "coverage"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "beyond-accuracy objectives"
+   ],
+   "venue": "ACM Transactions on Interactive Intelligent Systems",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:user-validation-of-recommendation",
+   "title": "User Validation of Recommendation Serendipity Metrics",
+   "abstract": "Examines serendipity metrics for recommendations and validates them against users' perceived serendipity. Serendipity metrics are divided into component metrics (e.g. novelty) and full metrics; one common form is unexpectedness multiplied by relevance, where relevance is 1 if the item was interacted with and 0 otherwise.",
+   "url": "https://arxiv.org/pdf/1906.11431v1",
+   "doi": "",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "serendipity metrics",
+    "user validation",
+    "unexpectedness",
+    "relevance"
+   ],
+   "fields": [
+    "Recommender Systems",
+    "Human-Computer Interaction"
+   ],
+   "topic_path": [
+    "metric validation"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/3605145",
+   "title": "Deep Learning Models for Serendipity Recommendations: A Survey and New Perspectives",
+   "abstract": "Survey of deep learning approaches designed to produce serendipitous recommendations.",
+   "url": "https://dl.acm.org/doi/full/10.1145/3605145",
+   "doi": "10.1145/3605145",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "serendipity",
+    "deep learning",
+    "recommendation",
+    "survey"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "serendipity models"
+   ],
+   "venue": "ACM Computing Surveys",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1007/s11390-020-0135-9",
+   "title": "Serendipity in Recommender Systems: A Systematic Literature Review",
+   "abstract": "Systematic literature review of serendipity in recommender systems; serendipity is treated as a criterion whose usefulness is the main advantage over novelty and diversity.",
+   "url": "https://link.springer.com/article/10.1007/s11390-020-0135-9",
+   "doi": "10.1007/s11390-020-0135-9",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "serendipity",
+    "systematic review",
+    "recommender systems"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "serendipity review"
+   ],
+   "venue": "Journal of Computer Science and Technology",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:topic-level-bayesian-surprise-and",
+   "title": "Topic-Level Bayesian Surprise and Serendipity for Recommender Systems",
+   "abstract": "Proposes a topic-level Bayesian surprise measure to capture serendipity in recommendations, comparing what a user is expected to like against what is recommended.",
+   "url": "https://arxiv.org/pdf/2308.06368",
+   "doi": "",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Bayesian surprise",
+    "serendipity",
+    "topic model",
+    "recommender systems"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "surprise-based serendipity"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:interdisciplinarity-as-diversity-in",
+   "title": "Interdisciplinarity as Diversity in Citation Patterns among Journals: Rao-Stirling Diversity, Relative Variety, and the Gini coefficient",
+   "abstract": "Addresses anomalous results from using Rao-Stirling diversity, relating them to how variety and balance are combined in its definition, and proposes a modified indicator (DIV) that operationalizes variety, balance, and disparity independently.",
+   "url": "https://arxiv.org/abs/1807.04115",
+   "doi": "",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Rao-Stirling diversity",
+    "interdisciplinarity",
+    "variety",
+    "balance",
+    "disparity"
+   ],
+   "fields": [
+    "Scientometrics"
+   ],
+   "topic_path": [
+    "interdisciplinarity indicators"
+   ],
+   "venue": "Journal of Informetrics",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1371/journal.pone.0170296",
+   "title": "Analysing Institutions Interdisciplinarity by Extensive Use of Rao-Stirling Diversity Index",
+   "abstract": "Shows how the Rao-Stirling diversity index can compare institutions' interdisciplinary practices, with decompositions exploring different components of diversity in cited references.",
+   "url": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0170296",
+   "doi": "10.1371/journal.pone.0170296",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Rao-Stirling",
+    "interdisciplinarity",
+    "citation diversity"
+   ],
+   "fields": [
+    "Scientometrics"
+   ],
+   "topic_path": [
+    "interdisciplinarity indicators"
+   ],
+   "venue": "PLOS ONE",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:diversity-and-interdisciplinarity:-how",
+   "title": "Diversity and interdisciplinarity: how can one distinguish and recombine disparity, variety, and balance?",
+   "abstract": "Discusses how disparity, variety, and balance can be distinguished and recombined in measures of diversity and interdisciplinarity.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6096662/",
+   "doi": "",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "diversity",
+    "disparity",
+    "variety",
+    "balance",
+    "interdisciplinarity"
+   ],
+   "fields": [
+    "Scientometrics"
+   ],
+   "topic_path": [
+    "diversity decomposition"
+   ],
+   "venue": "Scientometrics",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:echoes-in-filter-bubble:",
+   "title": "Echoes in Filter Bubble: Diagnosing and Curing Popularity Bias in Generative Recommenders",
+   "abstract": "Examines popularity bias in generative recommenders, a long-standing issue. Identifies that severe popularity bias emerges from token-level optimization flaws and undifferentiated item tokenization, and proposes Ghost with asymmetric unlikelihood optimization and skeleton-founded tokenization.",
+   "url": "https://arxiv.org/abs/2605.16825",
+   "doi": "",
+   "year": 2026,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "popularity bias",
+    "generative recommendation",
+    "filter bubble",
+    "tokenization"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "popularity bias failure mode"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:filter-bubbles-in-recommender",
+   "title": "Filter Bubbles in Recommender Systems: Fact or Fallacy - A Systematic Review",
+   "abstract": "Systematic review that concludes filter bubbles exist in recommender systems, examining forms of bias that contribute to personalization problems arising in system design, implementation, evaluation, and user interaction.",
+   "url": "https://arxiv.org/html/2307.01221",
+   "doi": "",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "filter bubble",
+    "personalization",
+    "bias",
+    "systematic review"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "filter bubble failure mode"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:taming-recommendation-bias-with",
+   "title": "Taming Recommendation Bias with Causal Intervention on Evolving Personal Popularity",
+   "abstract": "Notes that recommender systems often amplify bias by over-recommending popular items, which can lead to filter bubbles where users' interests become overly skewed and self-reinforcing; applies causal intervention on personal popularity.",
+   "url": "https://arxiv.org/pdf/2505.14310",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "popularity bias",
+    "causal intervention",
+    "filter bubble"
+   ],
+   "fields": [
+    "Recommender Systems"
+   ],
+   "topic_path": [
+    "popularity bias mitigation"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/3121050.3121108",
+   "title": "Bandit Algorithms in Interactive Information Retrieval",
+   "abstract": "Multi-armed bandits model an agent that both acquires new knowledge (exploration) and optimizes decisions from existing knowledge (exploitation); reviews bandit use for diverse document ranking, news recommendation, and ranker evaluation.",
+   "url": "https://dl.acm.org/doi/10.1145/3121050.3121108",
+   "doi": "10.1145/3121050.3121108",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "multi-armed bandits",
+    "exploration-exploitation",
+    "interactive IR",
+    "diverse ranking"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "exploration vs exploitation in search"
+   ],
+   "venue": "ICTIR",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:balancing-exploration-and-exploitation",
+   "title": "Balancing Exploration and Exploitation in Learning to Rank Online",
+   "abstract": "Shows that balancing exploration and exploitation can substantially improve online performance of learning to rank, via the first online learning to rank method that balances the two when learning from noisy, relative feedback.",
+   "url": "https://www.cs.ox.ac.uk/people/shimon.whiteson/pubs/hofmannecir11.pdf",
+   "doi": "",
+   "year": 2011,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "online learning to rank",
+    "exploration",
+    "exploitation",
+    "interleaving"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "online exploration in ranking"
+   ],
+   "venue": "ECIR",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:learning-diverse-rankings-with",
+   "title": "Learning diverse rankings with multi-armed bandits",
+   "abstract": "Addresses learning rankings from search engine logs with an active exploration strategy that yields faster learning, using a Bayesian approach to choose rankings whose user interactions give more informative training data.",
+   "url": "https://www.researchgate.net/publication/221345372_Learning_diverse_rankings_with_multi-armed_bandits",
+   "doi": "",
+   "year": 2008,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "ranked bandits",
+    "diverse ranking",
+    "exploration"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "diversity via bandits"
+   ],
+   "venue": "ICML",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1126/science.1240474",
+   "title": "Atypical Combinations and Scientific Impact",
+   "abstract": "Analysis of 17.9 million papers finds the highest-impact science is grounded in exceptionally conventional combinations of prior work while also featuring an intrusion of unusual combinations; a journal pair is atypical if less likely than random to be co-cited. Papers of this type were twice as likely to be highly cited. Novelty alone was not the driver of impact.",
+   "url": "https://www.science.org/doi/10.1126/science.1240474",
+   "doi": "10.1126/science.1240474",
+   "year": 2013,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "atypical combinations",
+    "novelty",
+    "conventionality",
+    "scientific impact",
+    "co-citation"
+   ],
+   "fields": [
+    "Science of Science"
+   ],
+   "topic_path": [
+    "novelty vs conventionality"
+   ],
+   "venue": "Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/3530013",
+   "title": "Augmenting Scientific Creativity with an Analogical Search Engine",
+   "abstract": "Simplifies analogical relations to purpose (what problem does it solve) and mechanism (how); SOLVENT is a mixed-initiative system where humans annotate background, purpose, mechanism and findings of papers and a model builds a semantic representation to find cross-domain analogies. It finds more analogies than baseline IR approaches and results are useful to experts. Depends on human annotation.",
+   "url": "https://dl.acm.org/doi/full/10.1145/3530013",
+   "doi": "10.1145/3530013",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "analogical search",
+    "purpose-mechanism",
+    "cross-domain retrieval",
+    "mixed-initiative",
+    "scientific creativity",
+    "distant inspiration"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "analogical retrieval",
+    "analogical search engine"
+   ],
+   "venue": "ACM Transactions on Computer-Human Interaction",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/2872518.2890515",
+   "title": "Citation Distance: Measuring Changes in Scientific Search Strategies",
+   "abstract": "Uses latent semantic analysis on full text to measure distance between citing and cited articles; the mean distance has steadily increased since 1990, so scholars cite more distantly related work than 20 years earlier.",
+   "url": "https://dl.acm.org/doi/10.1145/2872518.2890515",
+   "doi": "10.1145/2872518.2890515",
+   "year": 2016,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "citation distance",
+    "latent semantic analysis",
+    "knowledge distance"
+   ],
+   "fields": [
+    "Scientometrics"
+   ],
+   "topic_path": [
+    "knowledge distance measure"
+   ],
+   "venue": "WWW Companion",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1162/qss.a.9",
+   "title": "Facilitating Interdisciplinary Knowledge Transfer with Research Paper Recommender Systems",
+   "abstract": "Argues diverse and novel recommendations in paper recommendation expose researchers to ideas from other fields, removing barriers to interdisciplinary research; assesses disciplinary diversity of recommended papers.",
+   "url": "https://arxiv.org/pdf/2309.14984",
+   "doi": "10.1162/qss.a.9",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "paper recommendation",
+    "interdisciplinary",
+    "knowledge transfer",
+    "diversity"
+   ],
+   "fields": [
+    "Recommender Systems",
+    "Scientometrics"
+   ],
+   "topic_path": [
+    "cross-field paper recommendation"
+   ],
+   "venue": "Quantitative Science Studies",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1145/2766462.2767710",
+   "title": "Learning Maximal Marginal Relevance Model via Directly Optimizing Diversity Evaluation Measures",
+   "abstract": "Learns an MMR model, which re-ranks by query relevance while penalizing similarity to already selected documents, by directly optimizing diversity evaluation measures.",
+   "url": "https://dl.acm.org/doi/10.1145/2766462.2767710",
+   "doi": "10.1145/2766462.2767710",
+   "year": 2015,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "maximal marginal relevance",
+    "search result diversification",
+    "alpha-nDCG"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "relevance-diversity reranking"
+   ],
+   "venue": "SIGIR",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:swanson-linking-/-literature-based",
+   "title": "Swanson linking / literature-based discovery: Rediscovering Don Swanson: The Past, Present and Future of Literature-based Discovery",
+   "abstract": "Reviews literature-based discovery, which uncovers undiscovered public knowledge by linking topics across disconnected literatures, exemplified by the fish oil and Raynaud's syndrome link.",
+   "url": "https://www.researchgate.net/publication/322493731_Rediscovering_Don_SwansonThe_Past_Present_and_Future_of_Literature-based_Discovery",
+   "doi": "",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "literature-based discovery",
+    "undiscovered public knowledge",
+    "Swanson linking"
+   ],
+   "fields": [
+    "Information Science"
+   ],
+   "topic_path": [
+    "cross-literature discovery"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:furnas-vocab-1987",
+   "title": "The vocabulary problem in human-system communication",
+   "abstract": "Studies spontaneous word choice for objects in five application-related domains and finds surprisingly large variability: two people favor the same term with probability less than 0.20. Limitation stated: using one designer's favorite single word results in 80-90 percent failure rates in many common situations. Derives an optimal 'unlimited aliasing' strategy shown to give several-fold improvements; three access terms improve success by 50-100% over a single term.",
+   "url": "https://dl.acm.org/doi/10.1145/32206.32212",
+   "doi": "10.1145/32206.32212",
+   "year": 1987,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "vocabulary problem",
+    "unlimited aliasing",
+    "word choice variability",
+    "human-computer interaction"
+   ],
+   "fields": [
+    "Human-Computer Interaction",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "vocabulary problem"
+   ],
+   "venue": "Communications of the ACM",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:lsa-deerwester-1990",
+   "title": "Indexing by Latent Semantic Analysis",
+   "abstract": "Argues a fundamental deficiency of information retrieval is that the words searchers use often are not the words by which the information has been indexed (synonymy and polysemy). Uses truncated singular value decomposition to estimate latent structure in word usage across documents. Limitation noted in secondary description: LSI is designed primarily to handle synonymy (recall) and is less successful with polysemy (precision).",
+   "url": "http://wordvec.colorado.edu/papers/Deerwester_1990.pdf",
+   "doi": "",
+   "year": 1990,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "latent semantic indexing",
+    "SVD",
+    "synonymy",
+    "polysemy"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Computational Linguistics"
+   ],
+   "topic_path": [
+    "latent semantic indexing"
+   ],
+   "venue": "JASIS",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ostendorff-aspect-2020",
+   "title": "Aspect-based Document Similarity for Research Papers",
+   "abstract": "Argues that coarse-grained similar/not-similar judgments neglect the facets (e.g., method, findings) that make research papers similar. Treats aspect-based similarity as pairwise sequence-pair classification with Transformer models over titles and abstracts, so one can obtain tailored recommendations such as similar methods but different findings.",
+   "url": "https://aclanthology.org/2020.coling-main.545.pdf",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "aspect-based similarity",
+    "research paper recommendation",
+    "pairwise classification",
+    "Transformers"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Natural Language Processing"
+   ],
+   "topic_path": [
+    "aspect-based paper similarity"
+   ],
+   "venue": "COLING 2020",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ostendorff-specialized-2022",
+   "title": "Specialized Document Embeddings for Aspect-based Similarity of Research Papers",
+   "abstract": "Proposes specialized document embeddings for aspect-based similarity of research papers, following the pairwise-classification approach of earlier work, motivated by tailored recommendations along research aspects.",
+   "url": "https://arxiv.org/pdf/2203.14541",
+   "doi": "10.1145/3529372.3530912",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "aspect-based similarity",
+    "document embeddings",
+    "research papers",
+    "recommendation"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Digital Libraries"
+   ],
+   "topic_path": [
+    "aspect-based paper similarity"
+   ],
+   "venue": "ACM/IEEE JCDL 2022",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:csfcube-2021",
+   "title": "CSFCube - A Test Collection of Computer Science Research Articles for Faceted Query by Example",
+   "abstract": "A test collection for faceted query-by-example over computer science papers, where the facets of a paper (e.g., background, method, result) define what similar means. Recognizes that research paper similarity is concerned with multiple facets of the presented research.",
+   "url": "https://arxiv.org/html/2103.12906v3",
+   "doi": "",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "faceted query by example",
+    "test collection",
+    "scientific papers",
+    "facets"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "faceted query by example"
+   ],
+   "venue": "arXiv / NeurIPS Datasets",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:specter-2020",
+   "title": "SPECTER: Document-level Representation Learning using Citation-informed Transformers",
+   "abstract": "Pretrains a Transformer on the citation graph as an inter-document relatedness signal using a triplet loss. Needs no citation information at inference, so new uncited papers can be embedded. Introduces the SCIDOCS benchmark of seven document-level tasks. Motivation: token/sentence-level language models lack document-level relatedness signal.",
+   "url": "https://aclanthology.org/2020.acl-main.207/",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "scientific document embeddings",
+    "citation graph",
+    "triplet loss",
+    "SCIDOCS"
+   ],
+   "fields": [
+    "Natural Language Processing",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "scientific document embedding"
+   ],
+   "venue": "ACL 2020",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:scirepeval-2022",
+   "title": "SciRepEval: A Multi-Format Benchmark for Scientific Document Representations",
+   "abstract": "Benchmark of 24 tasks across classification, regression, ranking and search formats. Limitation stated: state-of-the-art models like SPECTER and SciNCL struggle to generalize across task formats, and simple multi-task training fails to improve them. Learning multiple embeddings per document tailored to each format (SPECTER2) improves performance by over 2 points absolute.",
+   "url": "https://aclanthology.org/2023.emnlp-main.338/",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "SciRepEval",
+    "SPECTER2",
+    "scientific document representation",
+    "multi-task"
+   ],
+   "fields": [
+    "Natural Language Processing",
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "scientific document representation benchmark"
+   ],
+   "venue": "EMNLP 2023 (arXiv 2022)",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:beir-2021",
+   "title": "BEIR: A Heterogenous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+   "abstract": "Benchmark of 18 datasets including SciFact (fact checking) and SCIDOCS (citation prediction) for zero-shot evaluation. Finds BM25 a robust baseline, with re-ranking and late-interaction models best on average at high compute cost. Limitation: dense-retrieval models are computationally efficient but often underperform, showing room for improvement in generalization.",
+   "url": "https://arxiv.org/abs/2104.08663",
+   "doi": "",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "BEIR",
+    "zero-shot retrieval",
+    "BM25",
+    "dense retrieval",
+    "generalization"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "zero-shot retrieval benchmark"
+   ],
+   "venue": "NeurIPS Datasets and Benchmarks 2021",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:entityquestions-2021",
+   "title": "Simple Entity-Centric Questions Challenge Dense Retrievers",
+   "abstract": "Builds EntityQuestions from Wikidata facts and finds dense retrievers drastically underperform sparse methods. Limitation: dense retrievers only generalize to common entities unless the question pattern was seen in training; data augmentation does not fix the generalization problem. Argues a more robust passage encoder helps.",
+   "url": "https://arxiv.org/abs/2109.08535",
+   "doi": "",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "dense retrieval",
+    "entity questions",
+    "sparse vs dense",
+    "generalization"
+   ],
+   "fields": [
+    "Information Retrieval",
+    "Natural Language Processing"
+   ],
+   "topic_path": [
+    "dense retrieval failure on rare terms"
+   ],
+   "venue": "EMNLP 2021",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:hyde-2022",
+   "title": "Precise Zero-Shot Dense Retrieval without Relevance Labels",
+   "abstract": "HyDE prompts an instruction-following LLM to write a hypothetical document that captures relevance patterns but may contain hallucinations, then embeds it with an unsupervised contrastive encoder (Contriever) to find a neighborhood of real documents in the corpus embedding space. Bridges query and document vocabulary without relevance labels.",
+   "url": "https://aclanthology.org/2023.acl-long.99/",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "HyDE",
+    "hypothetical documents",
+    "zero-shot dense retrieval",
+    "query expansion"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "LLM query expansion"
+   ],
+   "venue": "ACL 2023 (arXiv 2212.10496)",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:leakage-hyde-2025",
+   "title": "Hypothetical Documents or Knowledge Leakage? Rethinking LLM-based Query Expansion",
+   "abstract": "Examines LLM-based query expansion methods such as HyDE and Query2doc that use generated pseudo-documents to enhance retrieval, questioning whether gains reflect real vocabulary bridging or leakage of knowledge memorized by the LLM.",
+   "url": "https://arxiv.org/html/2504.14175v1",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "LLM query expansion",
+    "knowledge leakage",
+    "HyDE",
+    "Query2doc"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "LLM query expansion validity"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:qe-plm-survey-2025",
+   "title": "Query Expansion in the Age of Pre-trained and Large Language Models: A Comprehensive Survey",
+   "abstract": "Survey stating query expansion remains a core technique for mitigating vocabulary mismatch, with its design space reshaped by pre-trained and large language models. Distinguishes embedding-level methods that strengthen the query vector without emitting terms from selection-based explicit methods that keep vocabulary corpus-grounded.",
+   "url": "https://arxiv.org/pdf/2509.07794",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "query expansion",
+    "vocabulary mismatch",
+    "LLM",
+    "survey"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "query expansion survey"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:query-drift-2008",
+   "title": "Query-drift prevention for robust query expansion",
+   "abstract": "Addresses query drift in pseudo-relevance-feedback query expansion, where the expanded query moves away from the user's original intent because of irrelevant feedback information, proposing a method to prevent it.",
+   "url": "https://dl.acm.org/doi/10.1145/1390334.1390524",
+   "doi": "10.1145/1390334.1390524",
+   "year": 2008,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "query drift",
+    "pseudo-relevance feedback",
+    "query expansion",
+    "robustness"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "query drift"
+   ],
+   "venue": "ACM SIGIR 2008",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:llm-prf-2026",
+   "title": "LLM-Assisted Pseudo-Relevance Feedback",
+   "abstract": "Uses large language models to filter pseudo-relevance feedback documents to reduce query drift, where irrelevant information in the feedback set pulls the reformulated query toward an unintended topic, while keeping retrieval effectiveness.",
+   "url": "https://arxiv.org/html/2601.11238v1",
+   "doi": "",
+   "year": 2026,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "pseudo-relevance feedback",
+    "LLM filtering",
+    "query drift"
+   ],
+   "fields": [
+    "Information Retrieval"
+   ],
+   "topic_path": [
+    "query drift mitigation"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:swanson-upk-1996",
+   "title": "Undiscovered Public Knowledge: a Ten-Year Update",
+   "abstract": "Reviews Swanson's literature-based discovery: connecting literatures that are logically related but bibliographically noninteractive, exemplified by magnesium deprivation and migraine, two literatures never jointly cited that yielded a hypothesis later supported by clinical trials.",
+   "url": "https://cdn.aaai.org/KDD/1996/KDD96-051.pdf",
+   "doi": "",
+   "year": 1996,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "literature-based discovery",
+    "undiscovered public knowledge",
+    "disconnected literatures",
+    "hypothesis generation"
+   ],
+   "fields": [
+    "Information Science",
+    "Biomedical Informatics"
+   ],
+   "topic_path": [
+    "literature-based discovery"
+   ],
+   "venue": "KDD 1996",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:oaei-llm-2024",
+   "title": "OAEI-LLM: A Benchmark Dataset for Understanding Large Language Model Hallucinations in Ontology Matching",
+   "abstract": "Extends OAEI datasets to study hallucinations of LLMs in ontology matching. Limitation: although LLMs bring strong background knowledge, they may miss true mappings and generate false mappings, and hallucination is common in domain-specific downstream tasks.",
+   "url": "https://arxiv.org/abs/2409.14038",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "ontology matching",
+    "LLM hallucination",
+    "OAEI",
+    "benchmark"
+   ],
+   "fields": [
+    "Semantic Web",
+    "Knowledge Engineering"
+   ],
+   "topic_path": [
+    "ontology matching with LLMs"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:llms4om-2024",
+   "title": "LLMs4OM: Matching Ontologies with Large Language Models",
+   "abstract": "Applies large language models to ontology matching across OAEI tracks; evaluation reports LLM-based systems achieve results close to state-of-the-art on simple matching tasks and improve on complex and few-shot tasks.",
+   "url": "https://arxiv.org/html/2404.10317v1",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "ontology matching",
+    "LLM",
+    "OAEI",
+    "retrieval-augmented"
+   ],
+   "fields": [
+    "Semantic Web",
+    "Knowledge Engineering"
+   ],
+   "topic_path": [
+    "ontology matching with LLMs"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:agent-om-2023",
+   "title": "Agent-OM: Leveraging LLM Agents for Ontology Matching",
+   "abstract": "Uses LLM agents for ontology matching, evaluated on OAEI tracks; matches ontologies whose concept labels differ in wording, a form of cross-vocabulary alignment.",
+   "url": "https://arxiv.org/html/2312.00326v27",
+   "doi": "",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "ontology matching",
+    "LLM agents",
+    "OAEI"
+   ],
+   "fields": [
+    "Semantic Web",
+    "Knowledge Engineering"
+   ],
+   "topic_path": [
+    "ontology matching with LLMs"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  }
+ ]
+}

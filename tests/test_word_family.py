@@ -1,0 +1,66 @@
+from __future__ import annotations
+
+import json
+import unittest
+from pathlib import Path
+
+from ontology_router.engine import run_agent
+from ontology_router.evidence import family, topical_papers
+from ontology_router.models import AgentPolicy, Paper
+from ontology_router.providers import EvidenceBundleProvider
+
+GOLD = Path(__file__).parent / "fixtures" / "crossfield_gold.json"
+
+
+class WordFamilyTests(unittest.TestCase):
+    def test_derivations_meet(self):
+        for group in (("analogy", "analogous", "analogical", "analogies"),
+                      ("retrieve", "retrieval", "retrieving", "retrieved"),
+                      ("discover", "discovery", "discoveries"),
+                      ("stop", "stopping"), ("structure", "structural")):
+            self.assertEqual(len({family(w) for w in group}), 1, group)
+
+    def test_distinct_words_stay_apart(self):
+        self.assertNotEqual(family("general"), family("generation"))
+        self.assertNotEqual(family("memory"), family("memo"))
+        self.assertEqual(family("gene"), "gene")  # too short to lose an ending
+
+    def test_adjective_question_finds_noun_papers(self):
+        papers = [Paper("a", "Accelerating innovation through analogy mining",
+                        keywords=["analogical retrieval"])]
+        self.assertEqual(topical_papers("retrieve analogous solutions", papers), {"a"})
+
+
+class CrossFieldGoldTests(unittest.TestCase):
+    """99 web-gathered papers, independently labelled on / near / off for one question.
+
+    Before word families the gate kept 2 of 47 on-topic papers and the run was declared
+    failed ("none about the question"). The floor below is the measured value, and the
+    ceiling on `off` is the reason pseudo-relevance feedback was rejected (it let 7/10 in).
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        raw = json.loads(GOLD.read_text(encoding="utf-8"))
+        cls.question, cls.labels = raw["question"], raw["labels"]
+        cls.papers = EvidenceBundleProvider(GOLD).papers
+
+    def _kept(self, label):
+        keep = topical_papers(self.question, self.papers)
+        return sum(1 for pid, lab in self.labels.items() if lab == label and pid in keep)
+
+    def test_gate_recall_floor(self):
+        self.assertGreaterEqual(self._kept("on"), 14)
+
+    def test_gate_lets_no_unrelated_paper_in(self):
+        self.assertEqual(self._kept("off"), 0)
+
+    def test_run_on_its_own_literature_is_not_failed(self):
+        result = run_agent(self.question, [EvidenceBundleProvider(GOLD)],
+                           AgentPolicy(max_rounds=3, max_nodes=80), results_per_query=25)
+        self.assertNotEqual(result["status"], "failed")
+        self.assertGreater(result["on_topic_papers"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

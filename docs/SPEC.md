@@ -568,3 +568,68 @@ topicality. It measures the intended mechanism, not live retrieval across provid
 Equivalence-aware topical gating, concept deduplication, neighbor-field discovery,
 knowledge-gap detection, and Swanson-style bridging remain future integrations. Each
 needs its own benchmark before it touches ranking or gating.
+
+# v0.10 — word families: the tool failed on its own question
+
+Added 2026-09-29. First pass of a self-improvement loop: Eonrise was run on the question it
+exists to answer, "how can a system retrieve analogous solutions to a problem from distant
+research fields", in assistant mode against 99 papers gathered by five web-search agents
+(analogy mining, literature-based discovery, bio-inspired design, serendipity metrics, the
+vocabulary problem). The network policy of that sandbox blocked every scholarly API, so the
+bundle path was the only one open; `--bundle` now repeats and accepts a folder.
+
+## The failure
+
+`failed — 67 papers retrieved, none about the question`, exit 2. The corpus held "Accelerating
+Innovation Through Analogy Mining" and "Augmenting Scientific Creativity with an Analogical
+Search Engine". `stem` folds plurals only, so `analogous` never met `analogy` or `analogical`
+and `retrieve` never met `retrieval`. Any question worded with adjectives or verbs, against
+literature that names things with nouns, was one word short of the two-hit gate.
+
+## The rule
+
+`family()` removes one derivational ending (`-ical`, `-ation`, `-ous`, `-ive`, `-ity`, `-ing`,
+`-ed`, `-al`, `-y`, ...) with at least four letters left, and is used by the topical gate and
+the limitation-sentence filter only. Concept identity (`concept_key`) is unchanged. Two
+guards come from inspecting every merge on a 3,000-word vocabulary: `-er` is never stripped
+(`discover` must meet `discovery`), and `-al` is kept after `er` so `general` does not join
+`generation`. `-ous` is removed before `stem`, which otherwise read its s as a plural.
+
+## Measured
+
+Gold set: `tests/fixtures/crossfield_gold.json`, the 99 papers labelled `on` (47), `near` (42)
+or `off` (10) by an annotator agent that never saw the code.
+
+| Gate | on kept | near kept | off kept | Self-run status |
+|---|---|---|---|---|
+| plural `stem` (v0.9) | 2/47 | 0/42 | 0/10 | failed |
+| word families (v0.10) | 14/47 | 4/42 | 0/10 | partial, 3/5 relations |
+
+Cross-corpus leakage (four questions against the 14-paper spaced-repetition fixture and
+against the 99) is unchanged; the equivalence benchmark is unchanged (net median gain
+0.2833, false-equivalence rate 0.0).
+
+## Tried and not shipped: pseudo-relevance feedback in the gate
+
+Rocchio-style feedback, the IR answer to vocabulary mismatch: treat the gated papers as
+seeds, learn the word families concentrated in them, re-gate. Most on-topic papers here share
+no word with the question at all ("literature-based discovery", "bisociation", "biomimetic").
+
+| Variant | on | near | off |
+|---|---|---|---|
+| 8 learned families, abstracts included | 35/47 | 13/42 | 6/10 |
+| 12 learned families, abstracts included | 37/47 | 14/42 | 6/10 |
+| 4 learned families, author words only | 19/47 | 5/42 | 0/10 |
+
+The first two are query drift, the documented failure of feedback: learned words were
+`find`, `search`, `represent`. The third is clean on this set, but what it learned was a
+field label (`human-computer interaction`) that would admit every HCI paper, and ten `off`
+papers cannot show it is safe. It waits for a second gold set with more negatives.
+
+## Seen in the self-run, not fixed here
+
+- `failure_mode` phrases are the three words after a cue: "cannot be spontaneously
+  retrieved when relevant" yields `spontaneously retrieved relevant`, while the thing that
+  fails ("past cases") sits before the cue.
+- The brief never shows the distant papers the tool exists to find: off-gate papers are
+  dropped from the map, and the harness needs an external script to list them.
