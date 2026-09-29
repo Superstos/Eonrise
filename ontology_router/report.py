@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .unseen import WARN_BELOW
+
 
 def render_compact_markdown(result: dict) -> str:
     lines = ["# Eonrise brief", "", f"**Question:** {result['question']}",
@@ -31,6 +33,14 @@ def render_compact_markdown(result: dict) -> str:
         # without knowing that is how a degraded run passes for a thin literature.
         lines.append(f"**Degraded:** {', '.join(down)} answered nothing this run — "
                      "expect fewer abstracts, no keywords and no topic hierarchy.")
+    unseen = result.get("unseen") or {}
+    if unseen and unseen.get("found_share", 1) < WARN_BELOW:
+        # Chao2 is a lower bound on what is out there, so this share is an upper bound on
+        # what was found. When it is low, the true figure is lower still.
+        lines.append(f"**Unfinished:** {unseen['singletons']} of {unseen['observed']} on-topic papers turned up "
+                     f"for one query only, so this run saw at most ~{round(100 * unseen['found_share'])}% of what "
+                     f"its queries can reach (Chao2 ≈ {round(unseen['estimated_total'])}). Treat an empty "
+                     "relation as unsearched, not absent.")
     lines.extend(["", "## Grounded map", ""])
     for relation, terms in result["coverage"].items():
         label = relation.replace("_", " ").title(); shown = ", ".join(terms[:3]) if terms else "not grounded yet"; lines.append(f"- **{label}:** {shown}")

@@ -687,3 +687,46 @@ enough, as before. After: the signature was `technology assisted reviews`, `stop
   `capture mark` and `mark recapture`. A skip-pair would match it; not yet measured.
 - Removing question scaffolding (`problem`, `solutions`, `found`) from the root was tried on
   both gold sets and lowered recall on both (14 -> 12 on v0.10's). Not shipped.
+
+# v0.12 — capture histories: a stop rule killed, a warning kept
+
+Added 2026-09-29, third pass, built from the v0.11 evidence. Every paper records the queries
+that found it, which is a capture history: ecology estimates unseen species from how many
+were caught once (Q1) or twice (Q2). Chao's estimator is already a stopping rule for
+technology-assisted review, and STADS treats software testing as species discovery.
+`unseen.py` computes incidence Chao2 and Chao-Jost sample coverage per run, with each
+distinct query as one sampling unit.
+
+## The stop rule it was meant to replace, and the test that kept it
+
+`python -m ontology_router.unseen_benchmark`: six simulated literatures of known size with
+log-normal findability, 40 seeds each, five queries a round. Median queries at the stop and
+the share of runs stopping with true recall >= 0.8:
+
+| Scenario | Size | saturation (engine) | coverage >= 0.9 | Chao2 share >= 0.8 |
+|---|---|---|---|---|
+| small, easy | 40 | 20 q, 0.75 | 20 q, 0.55 | 15 q, 0.28 |
+| small, hard | 40 | 15 q, 0.00 | 30 q, 0.10 | 20 q, 0.07 |
+| mid, even | 150 | 50 q, 0.97 | 40 q, 0.88 | 30 q, 0.23 |
+| mid, skewed | 150 | 45 q, 0.03 | 30 q, 0.00 | 30 q, 0.00 |
+| large, skewed | 400 | 60 q, 0.00 | 55 q, 0.00 | 60 q, 0.00 |
+| large, very skewed | 400 | 60 q, 0.00 | 50 q, 0.00 | 60 q, 0.00 |
+
+Pooled: saturation 0.292, coverage 0.254, Chao2 share 0.096. Both estimator rules stop
+earlier with less found and fail the kill rule. The engine's check stays. Requiring both
+(saturation and share >= 0.8) reached 0.308 at the same cost — inside the noise.
+
+The same literature predicted why: under heterogeneous findability Chao2 is a lower bound.
+Measured: observed / Chao2 overstated true recall at 90% of stops, median by 0.15.
+
+## What shipped
+
+That bias makes the share an upper bound on recall, which is useful in one direction only.
+When the engine's own rule stops and the share is below 0.70, the brief says the run saw
+"at most ~N%" of what its queries can reach and that an empty relation is unsearched, not
+absent. Fired at 19 of 240 simulated stops and was right at 17 (0.89). It stayed silent at
+18 stops that had found under half, so its silence is not reassurance, and the brief says
+nothing when it is silent. `research_map.json` carries the estimate as `unseen`.
+
+A closed evidence bundle is the whole reachable population, so there the estimate reads
+1.0 (v0.10 self-run: 18 on-topic papers, no singleton across 24 queries) — correctly.

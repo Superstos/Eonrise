@@ -9,6 +9,7 @@ from typing import Iterable
 
 from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
 from .harvest import harvest
+from .unseen import estimate as estimate_unseen
 from .providers import ProviderError, ProviderUnavailable, SearchProvider
 from .scheduling import ProviderStates, order_for
 
@@ -445,6 +446,8 @@ def run_agent(
                 "expanded_queries": list(expanded_queries),
             },
             "on_topic_paper_ids": sorted(on_topic),
+            # Capture histories of the on-topic papers: how much these queries can still reach.
+            "unseen": estimate_unseen(papers, on_topic),
             # Off-gate papers carrying the question's grounded shape: the distant fields.
             "harvest": harvest(terms, papers, on_topic | (topic_filter or set()) if papers else on_topic),
             "terms": [t.to_dict() for t in top],
