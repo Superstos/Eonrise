@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
-from .harvest import harvest
+from .harvest import distant_queries, harvest
 from .unseen import estimate as estimate_unseen
 from .providers import ProviderError, ProviderUnavailable, SearchProvider
 from .scheduling import ProviderStates, order_for
@@ -422,6 +422,7 @@ def run_agent(
     # brief says so instead of quietly reading as a Crossref-only result.
     down_providers = sorted(n for n, calls in provider_calls.items() if calls and provider_failures[n] == calls)
     top = terms[:30]
+    harvested = harvest(terms, papers, on_topic | (topic_filter or set()), home_ids=on_topic) if papers else []
     concept_list = sorted(concepts.values(), key=lambda c: (c.depth, -c.weight))
     kept_papers = sorted(papers, key=lambda p: _keep_score(p, on_topic), reverse=True)[:50]
     return {"version": 5, "question": question, "root_topic": root_label,
@@ -449,7 +450,8 @@ def run_agent(
             # Capture histories of the on-topic papers: how much these queries can still reach.
             "unseen": estimate_unseen(papers, on_topic),
             # Off-gate papers carrying the question's grounded shape: the distant fields.
-            "harvest": harvest(terms, papers, on_topic | (topic_filter or set()) if papers else on_topic),
+            "harvest": harvested,
+            "distant_queries": distant_queries(harvested),
             "terms": [t.to_dict() for t in top],
             "concepts": [c.to_dict() for c in concept_list],
             "policy": policy.to_dict(),

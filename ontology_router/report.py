@@ -78,6 +78,9 @@ def render_compact_markdown(result: dict) -> str:
                         "spending queries on it rather than calling it an unfilled gap."])
     if result["recommended_queries"]:
         lines.extend(["", "## Next searches", ""]); lines.extend(f"- `{q}`" for q in result["recommended_queries"][:3])
+    if result.get("distant_queries"):
+        lines.extend(["", "## Searches toward other fields", ""])
+        lines.extend(f"- `{q}`" for q in result["distant_queries"])
     return "\n".join(lines) + "\n"
 
 

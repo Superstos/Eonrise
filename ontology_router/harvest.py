@@ -73,8 +73,14 @@ def _has(windows: set[frozenset[str]], fams: frozenset[str]) -> bool:
     return fams in windows
 
 
-def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: int = HARVEST_SIZE) -> list[dict]:
-    """Off-gate papers ranked by how much of the question's grounded shape they carry."""
+def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: int = HARVEST_SIZE,
+            home_ids: set[str] | None = None) -> list[dict]:
+    """Off-gate papers ranked by how much of the question's grounded shape they carry.
+
+    `on_topic` is excluded from the ranking (it grounded the signature); `home_ids`, the
+    gate's own papers, decide which fields count as home. A paper topped up into the voting
+    core is not evidence that its field is the question's: a biostatistics trial paper was
+    labelled "same field" for a question about literature search."""
     sig = signature(terms)
     if not sig:
         return []
@@ -86,7 +92,8 @@ def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: i
         return {label: rel for label, fams, rel in sig if _has(texts[pid], fams)}
     found = {pid: matches(pid) for pid in texts}
     df = Counter(label for hits in found.values() for label in hits)
-    home = {_field(p) for p in papers if p.paper_id in on_topic}
+    home_ids = on_topic if home_ids is None else home_ids
+    home = {_field(p) for p in papers if p.paper_id in home_ids}
     ranked = []
     for paper in papers:
         if paper.paper_id in on_topic:
@@ -114,3 +121,18 @@ def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: i
         if len(picked) == limit:
             break
     return picked
+
+
+def distant_queries(hits: list[dict], limit: int = 3) -> list[str]:
+    """Searches that follow the harvest out of the home field: the concepts an other-field
+    paper shares with the question, without the question's own domain words. On the v0.11
+    stop-rule corpus these found 4 new other-field papers and no distractor, against 2 for
+    the gap-cue searches; one scenario, so they are offered, not run."""
+    out: list[str] = []
+    for hit in sorted(hits, key=lambda h: not h.get("distant")):
+        query = " ".join(dict.fromkeys(" ".join(hit["shares"][:2]).split()))
+        if query and query not in out:
+            out.append(query)
+        if len(out) == limit:
+            break
+    return out

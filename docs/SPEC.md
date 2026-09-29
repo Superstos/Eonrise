@@ -770,3 +770,25 @@ with `estimate`, `coverage`, `completeness`; ambiguous markers (`error`, `test`,
 `target recall`; the analogy run stays empty because `average precision` occurs in one
 abstract, and single-paper phrases are dropped by design. The spaced-repetition fixture
 is unchanged. `either`, `neither` and `both` are stopwords (`existing work either`).
+
+# v0.15 — searches that follow the harvest out of the home field
+
+Sixth pass. The v0.11 harvest was limited by retrieval, and the brief's "Next searches" are
+gap-cue strings (`technology assisted reviews ablation experiment`). Three sources of next
+queries were run against the stop-rule world (74 papers + 99 distractors), counting papers
+the run had not retrieved:
+
+| Source | New other-field papers | New distractors |
+|---|---|---|
+| gap-cue recommended queries (unchanged) | 2 | 0 |
+| concepts an other-field harvest hit shares | 4 | 0 |
+| that hit's own keywords (pearl growing) | 3 | 1 |
+
+`distant_queries` (the second row) ships in `research_map.json` and as "Searches toward
+other fields" in the brief. One scenario and small counts, so they are offered to the agent
+running Eonrise, not run inside the loop; running them in-loop needs its own benchmark.
+
+Fixed on the way: "other field" was judged against the voting core, so a biostatistics
+paper topped up into the core made trial-stopping papers read as "same field". Home fields
+now come from the gate's own papers only. Field labels are free text, so near-synonyms
+(Evidence Synthesis beside Information Retrieval) still count as different fields.

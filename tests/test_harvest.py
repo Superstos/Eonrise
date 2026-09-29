@@ -90,3 +90,13 @@ class VotingCoreTests(unittest.TestCase):
     def test_no_question_word_anywhere_means_no_core(self):
         from ontology_router.evidence import voting_core
         self.assertIsNone(voting_core("volcano eruptions", [Paper("x", "Analogy mining")], set()))
+
+
+class DistantQueryTests(unittest.TestCase):
+    def test_other_fields_first_no_duplicates(self):
+        from ontology_router.harvest import distant_queries
+        hits = [{"distant": False, "shares": ["target recall", "systematic reviews"]},
+                {"distant": True, "shares": ["stopping criteria", "active learning"]},
+                {"distant": True, "shares": ["stopping criteria", "active learning"]}]
+        self.assertEqual(distant_queries(hits), ["stopping criteria active learning",
+                                                 "target recall systematic reviews"])
