@@ -842,3 +842,19 @@ papers, because the only concept they shared was `degradation models`; and
 Tried and reverted: making `over` and other prepositions stopwords. Linguistically right,
 but the cleaner root produced queries that retrieved more business-cycle papers, which pass
 the word gate on `capacity` + `cycles`: off kept rose 1 -> 3.
+
+## v0.17 follow-up: two held-out ideas measured and not shipped
+
+The battery harvest found 2 of 25 same-shape papers. Diagnosis: retrieval, not ranking. The
+run retrieved only 6 of the 25, since every follow-up query is anchored on the question's
+own words (`lithium ion batteries experiment`).
+
+- Multi-word field labels in the harvest signature (`cycle life prediction` would share
+  `life prediction` with fatigue papers): battery harvest unchanged, stop-rule harvest
+  6 -> 4. Not shipped.
+- One query slot per round for the strongest grounded concept containing none of the
+  question's words (a "mechanism skeleton"): battery same-shape papers retrieved 6 -> 8,
+  harvest unchanged; stop-rule distractors retrieved 47 -> 38, harvest +1; analogy
+  unchanged. It also chose `machine learning` as a skeleton. Too small for a slot every
+  round. Not shipped; the next attempt should pick skeletons from down-relation concepts
+  only, once relation typing stops calling `machine learning` a mechanism.
