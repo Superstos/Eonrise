@@ -88,3 +88,18 @@ class LimitationGoldTests(unittest.TestCase):
             for phrase, _ in self.extract(r["sentence"]):
                 self.assertNotIn(phrase.split()[0], {"stated", "noted", "limitation"})
                 self.assertIn(phrase, r["sentence"].lower())
+
+
+class ConceptGateTests(unittest.TestCase):
+    def test_second_stage_on_gold(self):
+        from ontology_router.harvest import concept_gate
+        raw = json.loads(GOLD.read_text(encoding="utf-8"))
+        papers = EvidenceBundleProvider(GOLD).papers
+        keep = concept_gate(raw["question"], papers, topical_papers(raw["question"], papers))
+        kept = lambda label: sum(1 for pid, lab in raw["labels"].items() if lab == label and pid in keep)
+        self.assertGreaterEqual(kept("on"), 31)
+        self.assertEqual(kept("off"), 0)
+
+    def test_empty_gate_is_not_bootstrapped(self):
+        from ontology_router.harvest import concept_gate
+        self.assertEqual(concept_gate("volcano", EvidenceBundleProvider(GOLD).papers, set()), set())

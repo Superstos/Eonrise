@@ -792,3 +792,27 @@ Fixed on the way: "other field" was judged against the voting core, so a biostat
 paper topped up into the core made trial-stopping papers read as "same field". Home fields
 now come from the gate's own papers only. Field labels are free text, so near-synonyms
 (Evidence Synthesis beside Information Retrieval) still count as different fields.
+
+# v0.16 — a two-stage gate: words propose, grounded concepts decide
+
+Seventh pass, suggested by the tool's own output: the v0.11 brief's "Same field, missed by
+the word gate" list was a second-stage gate waiting to be used. `concept_gate` admits a
+paper that carries two of the concepts the gate's own papers ground, each as adjacent words,
+and repeats once with the enlarged set. It never bootstraps from an empty gate.
+
+| Gate | analogy gold `on` | `off` + distractors admitted | stop-rule TAR papers |
+|---|---|---|---|
+| words only (v0.15) | 14/47 | 0 | 2/17 |
+| + concepts, 1 round | 24/47 | 0 | 8/17 |
+| + concepts, 2 rounds (shipped) | 31/47 | 0 of 109 | 14/17 |
+| 3 shared concepts, 2 rounds | 20/47 | 0 | 4/17 |
+
+`near` papers admitted rose 4 -> 10 of 42; they are supporting techniques, not drift.
+v0.10's token-level feedback admitted 6 of 10 `off` papers; whole grounded concepts in
+adjacent words are what the drift could not survive.
+
+End to end, stop-rule question on its 74 papers plus the 99 distractors: on topic 4 -> 16,
+retrieved 60 -> 103, measurement grounded (`recall target`, `chao estimator`). The brief's
+other-field list now names Chao's estimator, capture-recapture population estimation
+(ecology, 1979) and active-learning stopping criteria, and offers
+`capture recapture chao estimator` as a search — the port v0.12 made by hand.

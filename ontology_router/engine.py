@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
-from .harvest import distant_queries, harvest
+from .harvest import concept_gate, distant_queries, harvest
 from .unseen import estimate as estimate_unseen
 from .providers import ProviderError, ProviderUnavailable, SearchProvider
 from .scheduling import ProviderStates, order_for
@@ -303,7 +303,7 @@ def run_agent(
                 if query in p.found_by and p.paper_id not in node.paper_ids:
                     node.paper_ids.append(p.paper_id)
             node.support = len(node.paper_ids)
-        on_topic = topical_papers(question, papers)
+        on_topic = concept_gate(question, papers, topical_papers(question, papers))
         # A small bundle can legitimately have few literal matches; do not starve it, but
         # top it up with the closest papers rather than letting the whole corpus vote.
         topic_filter = voting_core(question, papers, on_topic)
@@ -395,7 +395,7 @@ def run_agent(
         covered, gaps = {r: [] for r in REQUIRED_RELATIONS}, list(REQUIRED_RELATIONS)
         status, stop_reason = "failed", "no papers could be retrieved"
     else:
-        on_topic = topical_papers(question, papers)
+        on_topic = concept_gate(question, papers, topical_papers(question, papers))
         topic_filter = voting_core(question, papers, on_topic)
         corpus = [p for p in papers if p.paper_id in topic_filter] if topic_filter is not None else papers
         terms = extract_terms(question, corpus, topic_filter, background)

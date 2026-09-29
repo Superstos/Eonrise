@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 from collections import Counter
 
-from .evidence import DOWN_RELATIONS, GENERIC_FIELDS, family, normalize, tokens
+from .evidence import DOWN_RELATIONS, GENERIC_FIELDS, extract_terms, family, normalize, tokens
 from .models import Paper, Term
 
 HARVEST_SIZE = 8
@@ -136,3 +136,35 @@ def distant_queries(hits: list[dict], limit: int = 3) -> list[str]:
         if len(out) == limit:
             break
     return out
+
+
+def concept_gate(question: str, papers: list[Paper], on_topic: set[str], rounds: int = 2,
+                 min_shared: int = 2) -> set[str]:
+    """Second stage of the topical gate: admit a paper that carries two of the concepts the
+    gate's own papers ground, each as adjacent words (MAC/FAC: the word gate proposes, the
+    concepts decide). Most on-topic papers never use the question's words: "literature-based
+    discovery" and "bisociation" answer a question about analogous solutions.
+
+    Token-level feedback was tried in v0.10 and drifted (6 of 10 unrelated papers admitted
+    via `find`, `search`). Whole grounded concepts do not: on both gold sets, 2 rounds took
+    on-topic recall 14 -> 31 of 47 and 2 -> 14 of 17, with 0 of 109 negatives admitted.
+    Never bootstraps from nothing: an empty gate stays empty."""
+    keep = set(on_topic)
+    for _ in range(rounds):
+        if not keep:
+            break
+        sig = signature(extract_terms(question, [p for p in papers if p.paper_id in keep], keep))
+        widths = {len(fams) for _, fams, _ in sig}
+        if not widths:
+            break
+        added = set()
+        for paper in papers:
+            if paper.paper_id in keep:
+                continue
+            windows = set().union(*(_windows(part, widths) for part in (paper.title, paper.abstract, *paper.keywords)))
+            if len({label for label, fams, _ in sig if _has(windows, fams)}) >= min_shared:
+                added.add(paper.paper_id)
+        if not added:
+            break
+        keep |= added
+    return keep
