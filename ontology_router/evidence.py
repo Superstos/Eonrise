@@ -17,7 +17,10 @@ from .models import Paper, Term
 DOWN_RELATIONS = ("mechanism", "measurement", "failure_mode", "method")
 
 REQUIRED_RELATIONS = ("mechanism", "measurement", "failure_mode", "method", "neighbor_field")
-STOPWORDS = {"a","an","and","are","as","at","be","been","being","but","by","can","could","did","do","does","for","from","had","has","have","how","if","in","into","is","it","its","may","might","more","most","of","on","or","our","should","so","than","that","the","their","them","then","there","these","they","this","to","under","using","was","we","were","what","when","where","which","who","why","will","with","within","without","would","across","reliably","change","effect","effects","impact","study","paper","papers","research","results","new","based","approach","using","used","large","system"}
+STOPWORDS = {"a","an","and","are","as","at","be","been","being","but","by","can","could","did","do","does","for","from","had","has","have","how","if","in","into","is","it","its","may","might","more","most","of","on","or","our","should","so","than","that","the","their","them","then","there","these","they","this","to","under","using","was","we","were","what","when","where","which","who","why","will","with","within","without","would","across","reliably","change","effect","effects","impact","study","paper","papers","research","results","new","based","approach","using","used","large","system",
+             # Conjunctions and quantifiers: `because` took one of six root slots in "when should a
+             # search stop because it has found enough relevant papers".
+             "because","since","while","whether","although","though","unless","until","also","just","only","enough","very","much","any","some","all","each","every","such","not","no","nor","yet","still","even"}
 RELATION_MARKERS = {
     "mechanism": {"mechanism","process","pathway","architecture","dynamics","feedback","retrieval","storage","encoding","consolidation","adaptation","mediation","causal","intervention","memory","attention","learning","policy","control","update","resolution","propagation","interaction","inference"},
     "measurement": {"metric","measure","measurement","accuracy","score","index","scale","benchmark","evaluation","reliability","validity","robustness","performance","recall","precision","rate","assessment","test","testing","fidelity","consistency","generalization","sensitivity","specificity","error","outcome"},
@@ -174,6 +177,30 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
         if hits >= 2 or (hits >= 1 and (extra >= 1 or (len(root) == 1 and not rest))):
             keep.add(paper.paper_id)
     return keep
+
+
+def voting_core(question: str, papers: list[Paper], on_topic: set[str]) -> set[str] | None:
+    """Papers allowed to ground concepts. The gate's set when it is big enough.
+
+    Below MIN_TOPICAL_CORPUS every retrieved paper used to vote, so one gate miss handed
+    the map to whatever else was in the corpus: 99 analogy papers set beside 74 stopping-rule
+    papers put `literature based discovery` and `link prediction` in the concepts of a
+    question about when a search should stop. Now the best-matching papers top the gate up
+    to the minimum instead: gate first, then question words in title and labels, then in the
+    abstract. A paper with no question word at all never votes. None only when nothing does.
+    """
+    if len(on_topic) >= MIN_TOPICAL_CORPUS:
+        return on_topic
+    words = {family(t) for t in tokens(question)}
+    scored = []
+    for paper in papers:
+        own = len(words & paper_tokens(paper))
+        body = len(words & {family(t) for t in tokens(paper.abstract)})
+        if paper.paper_id in on_topic or own or body:
+            scored.append(((paper.paper_id in on_topic, own, body), paper.paper_id))
+    scored.sort(reverse=True)
+    core = {pid for _, pid in scored[:MIN_TOPICAL_CORPUS]}
+    return core or None
 
 
 def _content_runs(text: str) -> list[list[str]]:

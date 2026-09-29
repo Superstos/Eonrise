@@ -40,6 +40,16 @@ def render_compact_markdown(result: dict) -> str:
         lines.extend(["", "## Stated limitations", ""])
         for term in quotes[:3]:
             lines.append(f'- **{term["text"]}** — "{term["examples"][0][:180]}"')
+    harvested = result.get("harvest") or []
+    if harvested:
+        # The papers the gate set aside that carry the same shape. Distant fields are the
+        # product; a brief that only showed the on-topic map hid them.
+        for heading, group in (("Same shape, other fields", [h for h in harvested if h.get("distant")]),
+                               ("Same field, missed by the word gate", [h for h in harvested if not h.get("distant")])):
+            if group:
+                lines.extend(["", f"## {heading}", ""])
+                lines.extend(f"- **{h['title']}** ({h.get('year') or 'n.d.'}, {h['field']}) — shares "
+                             + ", ".join(h["shares"][:3]) for h in group[:5])
     concepts = result.get("concepts", [])
     if concepts:
         by_dir: dict[str, list[str]] = {}

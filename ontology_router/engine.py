@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
+from .harvest import harvest
 from .providers import ProviderError, ProviderUnavailable, SearchProvider
 from .scheduling import ProviderStates, order_for
 
@@ -47,6 +48,7 @@ from .evidence import (
     tokens,
     top_terms,
     topical_papers,
+    voting_core,
 )
 
 
@@ -301,14 +303,15 @@ def run_agent(
                     node.paper_ids.append(p.paper_id)
             node.support = len(node.paper_ids)
         on_topic = topical_papers(question, papers)
-        # A small bundle can legitimately have few literal matches; do not starve it.
-        topic_filter = on_topic if len(on_topic) >= MIN_TOPICAL_CORPUS else None
+        # A small bundle can legitimately have few literal matches; do not starve it, but
+        # top it up with the closest papers rather than letting the whole corpus vote.
+        topic_filter = voting_core(question, papers, on_topic)
         new_on_topic = max(0, len(on_topic) - previous_on_topic)
         previous_on_topic = len(on_topic)
         # Concepts are read from the on-topic corpus only. Letting drifted papers vote
         # produced `protein structure and dynamics` as a mechanism for a question about
         # stopping criteria: one on-topic supporter was enough to launder the rest.
-        corpus = [p for p in papers if p.paper_id in on_topic] if topic_filter is not None else papers
+        corpus = [p for p in papers if p.paper_id in topic_filter] if topic_filter is not None else papers
         terms = extract_terms(question, corpus, topic_filter, background)
         covered, gaps = coverage(terms)
         for relation in REQUIRED_RELATIONS:
@@ -363,7 +366,7 @@ def run_agent(
         checks = _stop_checks(round_number, corpus, terms, gaps,
                               new_papers=added,
                               new_grounded_terms=len(grounded_now - previous_grounded),
-                              new_on_topic=new_on_topic if topic_filter is not None else None)
+                              new_on_topic=new_on_topic if len(on_topic) >= MIN_TOPICAL_CORPUS else None)
         checks["node_budget"] = len(concepts) < policy.max_nodes
         checks["has_frontier"] = bool(new_frontier)
         rounds.append(RoundStats(round_number, [q for _, q in round_queries], added,
@@ -392,8 +395,8 @@ def run_agent(
         status, stop_reason = "failed", "no papers could be retrieved"
     else:
         on_topic = topical_papers(question, papers)
-        topic_filter = on_topic if len(on_topic) >= MIN_TOPICAL_CORPUS else None
-        corpus = [p for p in papers if p.paper_id in on_topic] if topic_filter is not None else papers
+        topic_filter = voting_core(question, papers, on_topic)
+        corpus = [p for p in papers if p.paper_id in topic_filter] if topic_filter is not None else papers
         terms = extract_terms(question, corpus, topic_filter, background)
         covered, gaps = coverage(terms)
         # `ready` demands all five relations; a run that repaired every gap it could and
@@ -442,6 +445,8 @@ def run_agent(
                 "expanded_queries": list(expanded_queries),
             },
             "on_topic_paper_ids": sorted(on_topic),
+            # Off-gate papers carrying the question's grounded shape: the distant fields.
+            "harvest": harvest(terms, papers, on_topic | (topic_filter or set()) if papers else on_topic),
             "terms": [t.to_dict() for t in top],
             "concepts": [c.to_dict() for c in concept_list],
             "policy": policy.to_dict(),

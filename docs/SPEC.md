@@ -633,3 +633,57 @@ papers cannot show it is safe. It waits for a second gold set with more negative
   fails ("past cases") sits before the cue.
 - The brief never shows the distant papers the tool exists to find: off-gate papers are
   dropped from the map, and the harness needs an external script to list them.
+
+# v0.11 — the harvest reaches the brief, and a small gate no longer hands the map to everyone
+
+Added 2026-09-29, second self-improvement pass. Question: "when should an iterative
+literature search stop because it has found enough relevant papers" — Eonrise's own stop
+rule. Four web-search agents gathered 74 papers from four fields that solved that shape:
+TAR/e-discovery stopping rules (home field), ecology's unseen-species estimators, qualitative
+and software-testing saturation, and sequential/optimal stopping. The 99 analogy papers from
+v0.10 were added as distractors.
+
+## Harvest
+
+`harvest.py` ranks the papers the gate set aside by how much of the run's grounded shape
+they carry, and the brief now prints them under "Same shape, other fields" and "Same field,
+missed by the word gate". Borrowed from the v0.10 corpus: MAC/FAC (surface proposes,
+structure decides), purpose/mechanism analogy mining, and mechanism skeletons.
+
+- The signature is every grounded concept except field labels; one-word concepts are out.
+- A concept is shared only when its words are adjacent in the paper (bag-of-words matched
+  `accumulation curve` in "Curve fitting for accumulation of snow"). Hyphens split; a
+  concept of three words also travels as its adjacent pairs.
+- Rarer concepts weigh more; down-relations weigh 1.5; two kinds of concept earn 1.25.
+- One shared topic label alone is surface similarity and is dropped.
+- At most two papers per field, so one field cannot fill the list.
+
+Measured with the v0.11 signature over all 173 papers, top 9: 5 from other fields
+(group-sequential trials, active-learning stopping in NLP and ML), 4 home-field TAR papers,
+0 of 99 distractors. The v0.10 brief showed no paper from another field at all.
+
+## Voting core
+
+Below `MIN_TOPICAL_CORPUS` every retrieved paper used to vote, to avoid starving small
+bundles. On the mixed corpus the gate kept 6, so the analogy distractors voted and the
+stop-rule map read `literature based discovery`, `link prediction`, `analogical search`.
+`voting_core` now tops the gate up to the minimum with the closest papers (gate, then
+question words in title and labels, then in the abstract); a paper with no question word
+never votes. Saturation still counts on-topic arrivals only when the real gate is big
+enough, as before. After: the signature was `technology assisted reviews`, `stopping rule`,
+`capture mark recapture`, `stochastic curtailment`, `group sequential`, `target recall`.
+
+## Stopwords
+
+`because` held one of the six root slots in that question. Conjunctions and quantifiers
+(`because`, `since`, `whether`, `enough`, `only`, `all`, ...) are now stopwords.
+
+## Measured and not fixed
+
+- Retrieval, not ranking, now limits the harvest in a full run: the cleaner concepts made
+  narrower follow-up queries, and the run retrieved 60 of 173 papers with no ecology paper
+  among them, so its brief listed three harvest hits.
+- Ecology writes "capture-recapture"; the signature's pairs of "capture mark recapture" are
+  `capture mark` and `mark recapture`. A skip-pair would match it; not yet measured.
+- Removing question scaffolding (`problem`, `solutions`, `found`) from the root was tried on
+  both gold sets and lowered recall on both (14 -> 12 on v0.10's). Not shipped.
