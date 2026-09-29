@@ -126,12 +126,21 @@ class OpenAlexProvider:
         return papers
 
 class EvidenceBundleProvider:
+    """One or more agent-gathered bundles. Evidence arrives from several searchers at once,
+    so a path may be a file, a folder of `*.json` files, or a list of either. The same DOI
+    or title from two bundles is merged on load, keeping the richer record."""
     name = "assistant_bundle"
     def __init__(self, path):
-        self.path = Path(path); raw = json.loads(self.path.read_text(encoding="utf-8"))
-        rows = raw if isinstance(raw, list) else raw.get("papers", []) if isinstance(raw, dict) else None
-        if not isinstance(rows, list): raise ProviderError("Evidence bundle must contain a paper list")
-        self.papers = [Paper.from_dict(x) for x in rows if isinstance(x, dict)]
+        from .evidence import _dedupe_papers
+        self.paths = _bundle_files(path); merged = []
+        if not self.paths: raise ProviderError(f"No evidence bundle found at {path}")
+        for file in self.paths:
+            try: raw = json.loads(file.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc: raise ProviderError(f"Evidence bundle {file} is not valid JSON: {exc}") from exc
+            rows = raw if isinstance(raw, list) else raw.get("papers", []) if isinstance(raw, dict) else None
+            if not isinstance(rows, list): raise ProviderError(f"Evidence bundle {file} must contain a paper list")
+            merged, _ = _dedupe_papers(merged, [Paper.from_dict(x) for x in rows if isinstance(x, dict) and x.get("title")])
+        self.path, self.papers = self.paths[0], merged
     def search(self, query, limit=20):
         query_tokens = set(re.findall(r"[a-z0-9]+", query.lower())); ranked = []
         for paper in self.papers:
@@ -140,6 +149,13 @@ class EvidenceBundleProvider:
             if score > 0:
                 clone = Paper.from_dict(paper.to_dict()); clone.provider = clone.provider or self.name; clone.found_by = list(dict.fromkeys([*clone.found_by, query])); ranked.append((score, clone))
         ranked.sort(key=lambda x: x[0], reverse=True); return [p for _, p in ranked[:limit]]
+
+def _bundle_files(path) -> list[Path]:
+    items = path if isinstance(path, (list, tuple)) else [path]; files = []
+    for item in items:
+        item = Path(item)
+        files.extend(sorted(item.glob("*.json")) if item.is_dir() else [item] if item.exists() else [])
+    return list(dict.fromkeys(files))
 
 FixtureProvider = EvidenceBundleProvider
 
