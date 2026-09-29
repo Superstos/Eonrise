@@ -20,10 +20,10 @@ REQUIRED_RELATIONS = ("mechanism", "measurement", "failure_mode", "method", "nei
 STOPWORDS = {"a","an","and","are","as","at","be","been","being","but","by","can","could","did","do","does","for","from","had","has","have","how","if","in","into","is","it","its","may","might","more","most","of","on","or","our","should","so","than","that","the","their","them","then","there","these","they","this","to","under","using","was","we","were","what","when","where","which","who","why","will","with","within","without","would","across","reliably","change","effect","effects","impact","study","paper","papers","research","results","new","based","approach","using","used","large","system",
              # Conjunctions and quantifiers: `because` took one of six root slots in "when should a
              # search stop because it has found enough relevant papers".
-             "because","since","while","whether","although","though","unless","until","also","just","only","enough","very","much","any","some","all","each","every","such","not","no","nor","yet","still","even"}
+             "because","since","while","whether","although","though","unless","until","also","just","only","enough","very","much","any","some","all","each","every","such","not","no","nor","yet","still","even","either","neither","both"}
 RELATION_MARKERS = {
     "mechanism": {"mechanism","process","pathway","architecture","dynamics","feedback","retrieval","storage","encoding","consolidation","adaptation","mediation","causal","intervention","memory","attention","learning","policy","control","update","resolution","propagation","interaction","inference"},
-    "measurement": {"metric","measure","measurement","accuracy","score","index","scale","benchmark","evaluation","reliability","validity","robustness","performance","recall","precision","rate","assessment","test","testing","fidelity","consistency","generalization","sensitivity","specificity","error","outcome"},
+    "measurement": {"estimate","estimator","estimation","coverage","completeness","metric","measure","measurement","accuracy","score","index","scale","benchmark","evaluation","reliability","validity","robustness","performance","recall","precision","rate","assessment","test","testing","fidelity","consistency","generalization","sensitivity","specificity","error","outcome"},
     "failure_mode": {"failure","failures","limitation","limitations","bias","confound","confounding","artifact","error","errors","weakness","risk","vulnerability","interference","hallucination","stale","obsolete","invalid","fragility","degradation","drift","collapse","forgetting","injection","noise","misalignment"},
     "method": {"experiment","experimental","randomized","controlled","trial","ablation","longitudinal","cross-sectional","simulation","survey","interview","cohort","case-control","meta-analysis","systematic review","protocol","replication","baseline","comparison","comparative","observational","ethnography","factorial","blinded","sampling","evaluation protocol","controlled evaluation","controlled experiment","comparative testing","component assessment","component-level assessment","human annotation","prediction-powered inference","reproducible workflow","metric validation"},
 }
@@ -307,6 +307,18 @@ def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> li
     return found
 
 
+# One list for both jobs. A phrase used to enter the candidates because it held a
+# measurement marker (`recall`, `precision`, `measure`) and was then classified from a
+# shorter list as a plain topic: `average precision` and `target recall` never grounded, and
+# both v0.10 self-runs reported measurement as empty.
+MEASUREMENT_WORDS = {"accuracy", "accurate", "metric", "metrics", "score", "scores", "rate", "rates",
+                     "benchmark", "evaluation", "reliability", "validity", "robustness", "performance",
+                     "fidelity", "consistency", "generalization", "sensitivity", "assessment",
+                     "precision", "recall", "specificity", "measure", "measures", "measurement",
+                     "measurements", "estimate", "estimates", "estimator", "estimation",
+                     "coverage", "completeness", "index"}
+
+
 def _relation_for(term: str, context: str, source_kind: str, question_tokens: set[str]) -> str:
     key = normalize(term)
     term_tokens = set(tokens(term))
@@ -314,7 +326,7 @@ def _relation_for(term: str, context: str, source_kind: str, question_tokens: se
         return "method"
     if term_tokens & {"failure", "failures", "stale", "obsolete", "invalid", "fragility", "bias", "confound", "vulnerability", "degradation", "interference", "hallucination"}:
         return "failure_mode"
-    if term_tokens & {"accuracy", "accurate", "metric", "metrics", "score", "rate", "benchmark", "evaluation", "reliability", "validity", "robustness", "performance", "fidelity", "consistency", "generalization", "sensitivity", "assessment"}:
+    if term_tokens & MEASUREMENT_WORDS:
         return "measurement"
     if term_tokens & {"experiment", "experimental", "randomized", "controlled", "trial", "ablation", "longitudinal", "simulation", "survey", "cohort", "replication", "baseline", "sampling", "comparative", "annotation", "validation", "protocol"}:
         return "method"

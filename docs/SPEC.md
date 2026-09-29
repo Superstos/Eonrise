@@ -758,3 +758,15 @@ The phrase stays weak: 23% agree with a human's label. The sentence is the evide
 brief already quotes it beside the phrase. Choosing which of two complaints in one sentence
 matters is beyond a stdlib heuristic; it is recorded here rather than tuned further on 75
 examples.
+
+# v0.14 — one measurement vocabulary
+
+Fifth pass. Both v0.10 self-runs reported measurement as empty. A phrase entered the
+candidates because it held a measurement marker (`recall`, `precision`, `measure`), and
+`_relation_for` then classified it from a shorter, separate list, so `target recall` and
+`average precision` became plain topics. `MEASUREMENT_WORDS` is now the one list, extended
+with `estimate`, `coverage`, `completeness`; ambiguous markers (`error`, `test`, `scale`,
+`outcome`) keep their other readings. Measured: the stop-rule run now grounds
+`target recall`; the analogy run stays empty because `average precision` occurs in one
+abstract, and single-paper phrases are dropped by design. The spaced-repetition fixture
+is unchanged. `either`, `neither` and `both` are stopwords (`existing work either`).
