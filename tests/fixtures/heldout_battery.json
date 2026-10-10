@@ -1,0 +1,1856 @@
+{
+ "question": "why do lithium-ion batteries lose capacity over repeated charging cycles",
+ "note": "Held-out set, never tuned on. Three web-search agents: home field (battery), same-shape distant fields, lexical traps. Labels by title from a blind annotator: on / near (same shape, other field) / off.",
+ "labels": {
+  "Review of State-of-the-Art Degradation Models for Lithium-Ion Batteries": "on",
+  "Degradation in Li-ion batteries and capacity decline under different cycling conditions: A comprehensive review": "on",
+  "State-of-the-art review of degradation mechanisms of commercial lithium-ion batteries": "on",
+  "A Single Particle Model with Electrolyte and Side Reactions for degradation of lithium-ion batteries": "on",
+  "The importance of degradation mode analysis in parameterising lifetime prediction models of lithium-ion battery degradation": "on",
+  "Lithium-ion battery degradation: using degradation mode analysis to validate lifetime prediction modelling": "on",
+  "Peak-tracking method to quantify degradation modes in lithium-ion batteries via differential voltage and incremental capacity": "on",
+  "Degradation mechanisms and differential curve modeling for non-invasive diagnostics of lithium cells: An overview": "on",
+  "Rate dependency of incremental capacity analysis (dQ/dV) as a diagnostic tool for lithium-ion batteries": "on",
+  "Degradation mode estimation using reconstructed open circuit voltage curves from multi-year home storage field data": "on",
+  "Identifiability Study of Lithium-Ion Battery Capacity Fade Using Degradation Mode Sensitivity for a Minimally and Intuitively Parametrized Electrode-Specific Cell Open-Circuit Voltage Model": "on",
+  "Phantom LAM and LLI: Resistance and Hysteresis Bias in Voltage-Curve Degradation Mode Analysis": "on",
+  "Critical review of non-invasive diagnosis techniques for quantification of degradation modes in lithium-ion batteries": "on",
+  "Data-driven prediction of battery cycle life before capacity degradation": "on",
+  "Closed-loop optimization of fast-charging protocols for batteries with machine learning": "on",
+  "\"Knees\" in lithium-ion battery aging trajectories": "on",
+  "State-of-Health Estimation for Li-Ion Batteries of Real-World Electric Vehicles: Progress, Challenges, and Prospects": "on",
+  "Reviewing Practical Challenges in Estimating the State-of-Health of Lithium-Ion Batteries from Field Battery Data": "on",
+  "State of Health Estimation and Battery Management: A Review of Health Indicators, Models and Machine Learning": "on",
+  "An accelerated aging test procedure for lithium-ion battery based on a dual-temperature approach": "on",
+  "Accelerated aging protocols design for Li-ion batteries based on equivalence of the degradation mechanisms": "on",
+  "Chemistry-aware battery degradation prediction under simulated real-world cyclic protocols": "on",
+  "Lithium-ion battery degradation: Introducing the concept of reservoirs to design for lifetime": "on",
+  "A generalized Paris' law for fatigue crack growth": "near",
+  "Unusual Fatigue Crack Growth Behavior of Long Cracks at Low Stress Intensity Factor Ranges": "near",
+  "Corrosion-Fatigue Crack Growth in Plates: A Model Based on the Paris Law": "near",
+  "Bayesian Updating of Fatigue Crack Growth Parameters for Failure Prognosis of Miter Gates": "near",
+  "Bayesian model updating and prognosis of fatigue crack growth": "near",
+  "Dual crack growth prognosis by using a mixture proposal particle filter and on-line crack monitoring": "near",
+  "Non-Linear Probabilistic Modification of Miner's Rule for Damage Accumulation": "near",
+  "Fatigue damage assessment of bogie frame based on an improved nonlinear cumulative damage model": "near",
+  "Bayesian and likelihood inferences on remaining useful life in two-phase degradation models under gamma process": "near",
+  "Remaining useful lifetime estimation and noisy gamma deterioration process": "near",
+  "A common random effect induced bivariate gamma degradation process with application to remaining useful life prediction": "near",
+  "Online Bayesian prediction of remaining useful life for gamma degradation process": "near",
+  "Degradation data analysis and remaining useful life estimation: A review on Wiener-process-based methods": "near",
+  "A Wiener-process-based degradation model with a recursive filter algorithm for remaining useful life estimation": "near",
+  "Three-Stage Wiener-Process-Based Model for Remaining Useful Life Prediction of a Cutting Tool in High-Speed Milling": "near",
+  "Photovoltaic Degradation Rates - an Analytical Review": "near",
+  "Determinants of the long-term degradation rate of photovoltaic modules: A meta-analysis": "near",
+  "A Deep Learning Model for Remaining Useful Life Prediction of Aircraft Turbofan Engine on C-MAPSS Dataset": "near",
+  "Advancements in bearing remaining useful life prediction methods: a comprehensive review": "near",
+  "Lifetime Prediction Methods for Degradable Polymeric Materials - A Short Review": "near",
+  "Machine Learning-Driven Paradigm for Polymer Aging Lifetime Prediction: Integrating Multi-Mechanism Coupling and Cross-Scale Modeling": "near",
+  "Atmospheric corrosion prediction: a review": "near",
+  "Long-term prediction of metal corrosion losses in atmosphere using a power-linear function": "near",
+  "Service life prediction models for chloride-laden concrete": "near",
+  "Essential structure of S-N curve: Prediction of fatigue life and fatigue limit of defective materials and nature of scatter": "near",
+  "Working memory assessment using cambridge neuropsychological test automated battery can help in the diagnosis of mild cognitive impairment: a systematic review and meta-analysis": "off",
+  "Psychometric Evaluation of the Neuropsychological Test Battery in Individuals with Normal Cognition, Mild Cognitive Impairment, or Mild to Moderate Alzheimer's Disease: Results from a Longitudinal Study": "off",
+  "Examining the Consequences of Neuropsychological Test Battery Changes on Measuring Cognitive Decline": "off",
+  "Working memory test battery for young adults: Computerized working memory assessment": "off",
+  "Long-term lithium therapy and risk of chronic kidney disease, hyperparathyroidism and hypercalcemia: a cohort study": "off",
+  "Lithium nephrotoxicity": "off",
+  "Lithium in Bipolar Disorder: Renal Mechanisms, Nephrotoxicity Phenotypes, and a Shared-Care Pathway for Clinical Practice": "off",
+  "Impact of Long-Term Lithium Treatment on Renal Function in Patients With Bipolar Disorder Based on Novel Biomarkers": "off",
+  "Optimal siting and sizing of electric vehicle charging stations": "off",
+  "Economic planning of electric vehicle charging stations considering traffic constraints and load profile templates": "off",
+  "Robust Optimisation for Electric Vehicle Charging Station Siting Under Demand Uncertainty: A Multi-Station Network Planning Model": "off",
+  "Charging Station Siting and Capacity Determination Based on a Generalized Least-Cost Model of Traffic Distribution": "off",
+  "Carrying capacity reconsidered": "off",
+  "Carrying capacity reconsidered: from Malthus' population theory to cultural carrying capacity": "off",
+  "Formulating variable carrying capacity by exploring a resource dynamics-based feedback mechanism underlying the population growth models": "off",
+  "Excess Capacity and Demand-Driven Business Cycles": "off",
+  "Capacity utilization, superior information, and the business cycle": "off",
+  "Investment, Capacity Utilization, and the Real Business Cycle": "off",
+  "The cell cycle: a review of regulation, deregulation and therapeutic targets in cancer": "off",
+  "CDK4: a master regulator of the cell cycle and its role in cancer": "off",
+  "Overcharging": "off",
+  "Inside the Black Box of Prosecutor Discretion": "off",
+  "Lithium in drinking water and Alzheimer's dementia: Epidemiological Findings from National Data Base of Japan": "off",
+  "Effects of mental fatigue on the capacity limits of visual attention": "off"
+ },
+ "papers": [
+  {
+   "paper_id": "doi:10.3390/e28060669",
+   "title": "Review of State-of-the-Art Degradation Models for Lithium-Ion Batteries",
+   "abstract": "Reviews degradation models for lithium-ion batteries. Major degradation mechanisms include formation and growth of the solid electrolyte interphase (SEI), lithium plating, and loss of active electrode material. These map onto degradation modes: loss of cyclable lithium, loss of active materials, and loss of electrolyte.",
+   "url": "https://doi.org/10.3390/e28060669",
+   "doi": "10.3390/e28060669",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "degradation models",
+    "SEI growth",
+    "lithium plating",
+    "loss of active material"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Electrochemistry"
+   ],
+   "topic_path": [
+    "degradation mechanism modeling"
+   ],
+   "venue": "Entropy",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:sciencedirect-degradation-cycling-conditions-review",
+   "title": "Degradation in Li-ion batteries and capacity decline under different cycling conditions: A comprehensive review",
+   "abstract": "Comprehensive review of Li-ion degradation and capacity decline under different cycling conditions. Loss of cyclable lithium often dominates total capacity loss and is typically linked to SEI surface film formation on graphite anodes. Lithium plating occurs with fast charging or low temperature and reacts with electrolyte to form additional SEI.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S2352152X26009345",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "capacity fade",
+    "cycling conditions",
+    "SEI",
+    "lithium plating"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "capacity fade mechanisms"
+   ],
+   "venue": "Journal of Energy Storage",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:review-commercial-li-ion-degradation-mechanisms",
+   "title": "State-of-the-art review of degradation mechanisms of commercial lithium-ion batteries",
+   "abstract": "Review of degradation mechanisms in commercial lithium-ion cells. Mechanical loss of active material reduces active surface area, so remaining material carries higher interfacial current density, accelerating SEI growth and particle cracking.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S037877532501078X",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "degradation mechanisms",
+    "commercial cells",
+    "particle cracking",
+    "active surface area"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "capacity fade mechanisms"
+   ],
+   "venue": "Journal of Power Sources",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2206.05078",
+   "title": "A Single Particle Model with Electrolyte and Side Reactions for degradation of lithium-ion batteries",
+   "abstract": "Physics-based single particle model extended with electrolyte dynamics and side reactions to simulate degradation of lithium-ion batteries such as SEI growth and lithium plating.",
+   "url": "https://arxiv.org/pdf/2206.05078",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "single particle model",
+    "side reactions",
+    "SEI",
+    "lithium plating"
+   ],
+   "fields": [
+    "Electrochemical Modeling"
+   ],
+   "topic_path": [
+    "physics-based degradation model"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:nature-comms-dma-lifetime-models",
+   "title": "The importance of degradation mode analysis in parameterising lifetime prediction models of lithium-ion battery degradation",
+   "abstract": "Many combinations of degradation mechanisms can produce the same patterns of capacity and power fade, making it impossible to find a unique validated solution from capacity data alone. Three models of differing complexity all fit capacity and resistance well, but only the model with five coupled mechanisms also fit degradation modes at all temperatures. Validating only against capacity and power fade is stated to be no longer sufficient.",
+   "url": "https://www.nature.com/articles/s41467-025-57968-3",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "degradation mode analysis",
+    "lifetime prediction",
+    "model validation",
+    "loss of lithium inventory"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Electrochemistry"
+   ],
+   "topic_path": [
+    "lifetime model validation"
+   ],
+   "venue": "Nature Communications",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2311.05482",
+   "title": "Lithium-ion battery degradation: using degradation mode analysis to validate lifetime prediction modelling",
+   "abstract": "Predicting lithium-ion battery lifetime is described as one of the greatest unsolved problems in battery research. Most prediction papers validate against remaining capacity, but different mechanism combinations give the same fade, so no unique solution exists. Degradation mode analysis (LLI, LAM at both electrodes, electrode slippage) is proposed as validation.",
+   "url": "https://arxiv.org/abs/2311.05482",
+   "doi": "",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "degradation mode analysis",
+    "lifetime prediction",
+    "validation",
+    "non-uniqueness"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "lifetime model validation"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:pptk-peak-tracking-dv-ic",
+   "title": "Peak-tracking method to quantify degradation modes in lithium-ion batteries via differential voltage and incremental capacity",
+   "abstract": "Uses peak signatures in voltage and capacity differentials with an open-circuit voltage model and optimization routines to quantify degradation modes. IC and DV analyses are effective for monitoring battery health, though diagnosis often requires considerable parameterization effort and low scan rates.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S2352152X2101344X",
+   "doi": "",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "differential voltage",
+    "incremental capacity",
+    "peak tracking",
+    "degradation modes"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "degradation diagnostics"
+   ],
+   "venue": "Journal of Energy Storage",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:review-degradation-differential-curve-diagnostics",
+   "title": "Degradation mechanisms and differential curve modeling for non-invasive diagnostics of lithium cells: An overview",
+   "abstract": "Overview of degradation mechanisms and their cell-level consequences (degradation modes: conductivity loss, loss of active material, loss of lithium inventory). Presents differential curves as non-invasive, straightforward diagnostic and prognostic tools, alongside pOCV, IC-DV, EIS and differential thermal voltammetry.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S136403212500022X",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "differential curves",
+    "non-invasive diagnostics",
+    "degradation modes",
+    "prognosis"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "degradation diagnostics"
+   ],
+   "venue": "Renewable and Sustainable Energy Reviews",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:rate-dependency-ica",
+   "title": "Rate dependency of incremental capacity analysis (dQ/dV) as a diagnostic tool for lithium-ion batteries",
+   "abstract": "Quantifies via peak detection how charge/discharge rate affects ICA on two cells. ICA normally needs low constant currents to limit resistance and diffusion effects, which is unfeasible for EV charging. Introduces a faster ICA that corrects peak shift using SOC-dependent resistance from current interrupt. Accuracy of ICA reduces at higher C-rates; C/6 is reported as optimum.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S2352152X19308175",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "incremental capacity analysis",
+    "C-rate",
+    "peak shift",
+    "state of health"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "degradation diagnostics"
+   ],
+   "venue": "Journal of Energy Storage",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2411.08025",
+   "title": "Degradation mode estimation using reconstructed open circuit voltage curves from multi-year home storage field data",
+   "abstract": "Reconstructs the OCV curve continuously over battery lifetime from eight years of operational data of 21 home storage systems (LMO/NMC blend, NMC, LFP). ICA and DVA are applied for degradation mode estimation. Loss of lithium inventory is dominant, while LAM at negative and positive electrodes may be present in some cases.",
+   "url": "https://arxiv.org/pdf/2411.08025",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "field data",
+    "open circuit voltage reconstruction",
+    "degradation modes",
+    "home storage"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "field degradation diagnostics"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2309.17331",
+   "title": "Identifiability Study of Lithium-Ion Battery Capacity Fade Using Degradation Mode Sensitivity for a Minimally and Intuitively Parametrized Electrode-Specific Cell Open-Circuit Voltage Model",
+   "abstract": "Re-parametrizes a full-cell OCV model by N/P and Li/P ratios and derives gradients of electrode slippage and OCV with respect to LLI and LAM parameters. Characterizes four regimes of degradation identifiability and uses Fisher information to identify informative SOC windows for degradation mode estimation.",
+   "url": "https://arxiv.org/abs/2309.17331",
+   "doi": "",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "identifiability",
+    "degradation mode sensitivity",
+    "open-circuit voltage model",
+    "Fisher information"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "degradation mode identifiability"
+   ],
+   "venue": "Journal of Power Sources",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2512.19773",
+   "title": "Phantom LAM and LLI: Resistance and Hysteresis Bias in Voltage-Curve Degradation Mode Analysis",
+   "abstract": "Degradation mode analysis decomposes capacity fade into LLI and LAM from low-rate voltage-capacity data, but the measured trace includes ohmic drop and charge-discharge hysteresis (notably in graphite-silicon oxide). These can create 'Phantom LAM/LLI', apparent material loss produced by curve registration, branch choice and voltage-windowing rather than true degradation. Tested on LG M50T and Molicel P45B cells with an IR correction.",
+   "url": "https://arxiv.org/abs/2512.19773",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "degradation mode analysis",
+    "hysteresis",
+    "ohmic drop",
+    "pseudo-OCV"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "diagnostic bias"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:critical-review-noninvasive-degradation-modes",
+   "title": "Critical review of non-invasive diagnosis techniques for quantification of degradation modes in lithium-ion batteries",
+   "abstract": "Critical review of pOCV, IC-DV, EIS and differential thermal voltammetry for quantifying conductivity loss, LAM and LLI, focused on strengths and weaknesses for automotive use. BMSs currently do not indicate the underlying degradation modes. Pseudo-OCV and IC-DV are found more advantageous than EIS and DTV.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S136403211930200X",
+   "doi": "",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "non-invasive diagnosis",
+    "degradation modes",
+    "pseudo-OCV",
+    "on-board implementation"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Automotive Engineering"
+   ],
+   "topic_path": [
+    "degradation diagnostics"
+   ],
+   "venue": "Renewable and Sustainable Energy Reviews",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:severson-nature-energy-2019",
+   "title": "Data-driven prediction of battery cycle life before capacity degradation",
+   "abstract": "Generates a dataset of 124 commercial LFP/graphite cells under fast charging with cycle lives from 150 to 2,300. Uses discharge voltage curves from early cycles with machine learning; best models reach 9.1% test error predicting cycle life from the first 100 cycles and 4.9% error classifying from the first 5 cycles. Capacity fade is negligible in the first 100 cycles and alone is not a good predictor.",
+   "url": "https://www.nature.com/articles/s41560-019-0356-8",
+   "doi": "",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "cycle life prediction",
+    "machine learning",
+    "early prediction",
+    "voltage curves"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "cycle-life prediction"
+   ],
+   "venue": "Nature Energy",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:attia-nature-2020-closed-loop",
+   "title": "Closed-loop optimization of fast-charging protocols for batteries with machine learning",
+   "abstract": "Optimizes six-step ten-minute fast-charging protocols for maximum cycle life using an early-outcome predictor and Bayesian optimization. Needed because testing a single cell to failure under fast charging takes about 40 days and many parameters must be optimized.",
+   "url": "https://www.nature.com/articles/s41586-020-1994-5",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "fast charging",
+    "Bayesian optimization",
+    "early outcome prediction",
+    "cycle life"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "accelerated protocol search"
+   ],
+   "venue": "Nature",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2201.02891",
+   "title": "\"Knees\" in lithium-ion battery aging trajectories",
+   "abstract": "Reviews rapid nonlinear degradation ('knees') that severely limits lifetime. Discusses six knee pathways: lithium plating, electrode saturation, resistance growth, electrolyte and additive depletion, percolation-limited connectivity, and mechanical deformation, some with internal state trajectories that are electrochemically undetectable. Notes challenges for knee modeling and prediction.",
+   "url": "https://arxiv.org/abs/2201.02891",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "knee",
+    "nonlinear aging",
+    "lithium plating",
+    "electrolyte depletion"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "nonlinear aging"
+   ],
+   "venue": "Journal of the Electrochemical Society",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.3390/batteries12050174",
+   "title": "State-of-Health Estimation for Li-Ion Batteries of Real-World Electric Vehicles: Progress, Challenges, and Prospects",
+   "abstract": "Reviews SoH estimation for real-world EVs. Most work is laboratory-based, leaving a gap to deployment; real batteries face dynamic loads, irregular charging and varied environments. SoH estimation is affected by data heterogeneity, environmental variability and label uncertainty.",
+   "url": "https://doi.org/10.3390/batteries12050174",
+   "doi": "10.3390/batteries12050174",
+   "year": 2026,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "state of health",
+    "electric vehicles",
+    "label uncertainty",
+    "real-world data"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Automotive Engineering"
+   ],
+   "topic_path": [
+    "SOH estimation"
+   ],
+   "venue": "Batteries",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:springer-soh-field-data-challenges",
+   "title": "Reviewing Practical Challenges in Estimating the State-of-Health of Lithium-Ion Batteries from Field Battery Data",
+   "abstract": "Highlights limitations of laboratory data and reviews practical challenges of field battery data for SoH estimation. Field data quality is far from ideal and incompatible with most state-of-the-art data-driven techniques. Challenges: bridging lab to real conditions, more reliable SoH labeling, less dependence on large training data.",
+   "url": "https://link.springer.com/chapter/10.1007/978-3-032-12579-8_71",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "state of health",
+    "field data",
+    "data quality",
+    "SoH labeling"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "SOH estimation"
+   ],
+   "venue": "Springer",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:pmc-soh-health-indicators-review",
+   "title": "State of Health Estimation and Battery Management: A Review of Health Indicators, Models and Machine Learning",
+   "abstract": "Review of health indicators, models and machine learning for SOH estimation. Existing methods are highly data dependent with insufficient physical interpretability and limited cross-scenario generalization; the relation between degradation mechanisms and health indicators is not fully explored.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12068027/",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "state of health",
+    "health indicators",
+    "machine learning",
+    "interpretability"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "SOH estimation"
+   ],
+   "venue": "PMC",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:accelerated-aging-dual-temperature",
+   "title": "An accelerated aging test procedure for lithium-ion battery based on a dual-temperature approach",
+   "abstract": "Charging at 20 C and discharging at 40 C replicates normal aging at 25 C with acceleration factor above 5 or even 8. Aims to preserve the aging mechanisms of normal conditions; mechanistic consistency is confirmed with incremental capacity analysis.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S0378775325010031",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "accelerated aging",
+    "dual temperature",
+    "acceleration factor",
+    "incremental capacity analysis"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "accelerated aging tests"
+   ],
+   "venue": "Journal of Power Sources",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:accelerated-aging-mechanism-equivalence",
+   "title": "Accelerated aging protocols design for Li-ion batteries based on equivalence of the degradation mechanisms",
+   "abstract": "Decouples LLI and positive-electrode active material loss in normal aging, then combines single accelerated protocols by their mechanism proportions. Notes that simply raising stress ignores mechanisms, and the same capacity attenuation does not mean the same state of health when mechanisms differ. Reports acceleration of 62x and 39x under extreme and gentle conditions.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S2352152X24029724",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "accelerated aging",
+    "mechanism equivalence",
+    "loss of lithium inventory",
+    "protocol design"
+   ],
+   "fields": [
+    "Energy Storage"
+   ],
+   "topic_path": [
+    "accelerated aging tests"
+   ],
+   "venue": "Journal of Energy Storage",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2504.03701",
+   "title": "Chemistry-aware battery degradation prediction under simulated real-world cyclic protocols",
+   "abstract": "Notes that existing prediction frameworks rely on rigid unchanging protocols that fail to capture real-world dynamics. Combines hidden Markov processes for realistic power simulation, automated batch testing, an XPS-derived interfacial chemistry database and machine learning to predict degradation under randomized conditions.",
+   "url": "https://arxiv.org/abs/2504.03701",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "degradation prediction",
+    "dynamic cycling",
+    "interfacial chemistry",
+    "hidden Markov model"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Machine Learning"
+   ],
+   "topic_path": [
+    "cycle-life prediction"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:arxiv-2512.15440",
+   "title": "Lithium-ion battery degradation: Introducing the concept of reservoirs to design for lifetime",
+   "abstract": "Frames degradation as depletion of finite interacting reservoirs (lithium, porosity, electrolyte) using a DFN model with SEI growth, lithium plating, cracking and solvent dry-out. Over 1,000 cycles, 1% more electrolyte or 5% more porosity extends life by over 30%; excess lithium can accelerate failure without structural or ionic buffers.",
+   "url": "https://arxiv.org/abs/2512.15440",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "reservoirs",
+    "DFN model",
+    "cell design",
+    "solvent dry-out"
+   ],
+   "fields": [
+    "Energy Storage",
+    "Electrochemical Modeling"
+   ],
+   "topic_path": [
+    "lifetime-aware design"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:carpinteri-generalized-paris",
+   "title": "A generalized Paris' law for fatigue crack growth",
+   "abstract": "Proposes a generalized form of Paris' law for fatigue crack growth. Paris' law is a log-linear relation between the stress intensity factor range and crack growth rate per cycle, valid in the middle (Region II) regime. Search summary notes the law can significantly underestimate the growth rate of short cracks.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0022509606000196",
+   "doi": "",
+   "year": 2006,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Paris law",
+    "fatigue crack growth",
+    "stress intensity factor",
+    "scaling"
+   ],
+   "fields": [
+    "Fracture Mechanics",
+    "Materials Science"
+   ],
+   "topic_path": [
+    "crack growth law"
+   ],
+   "venue": "Journal of the Mechanics and Physics of Solids",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:unusual-fcg-low-deltak",
+   "title": "Unusual Fatigue Crack Growth Behavior of Long Cracks at Low Stress Intensity Factor Ranges",
+   "abstract": "Examines fatigue crack growth of long cracks at low stress intensity factor ranges, where behavior departs from the standard Paris regime (Region I). Relevant because the Paris law is often not properly used for life prediction when most fatigue life is spent in Region I.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10890142/",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "fatigue crack growth",
+    "threshold",
+    "low stress intensity range",
+    "Paris regime"
+   ],
+   "fields": [
+    "Materials Science",
+    "Fracture Mechanics"
+   ],
+   "topic_path": [
+    "crack growth threshold behavior"
+   ],
+   "venue": "PMC (Materials)",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:corrosion-fatigue-paris-plates",
+   "title": "Corrosion-Fatigue Crack Growth in Plates: A Model Based on the Paris Law",
+   "abstract": "Presents a model of corrosion-fatigue crack growth in plates built on the Paris law, coupling an environmental (corrosion) contribution with cyclic loading crack growth.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5506980/",
+   "doi": "",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "corrosion fatigue",
+    "Paris law",
+    "crack growth",
+    "plates"
+   ],
+   "fields": [
+    "Structural Engineering",
+    "Corrosion Science"
+   ],
+   "topic_path": [
+    "coupled corrosion and cyclic damage"
+   ],
+   "venue": "Materials",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:bayes-fcg-miter-gates",
+   "title": "Bayesian Updating of Fatigue Crack Growth Parameters for Failure Prognosis of Miter Gates",
+   "abstract": "Updates fatigue crack growth parameters with Bayesian inference to support failure prognosis of miter gates. Illustrates fitting a physics-based crack growth law with observed data to predict failure.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11901935/",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Bayesian updating",
+    "fatigue crack growth",
+    "failure prognosis",
+    "miter gates"
+   ],
+   "fields": [
+    "Civil Engineering",
+    "Reliability Engineering"
+   ],
+   "topic_path": [
+    "Bayesian crack growth prognosis"
+   ],
+   "venue": "PMC",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:bayes-model-updating-fcg",
+   "title": "Bayesian model updating and prognosis of fatigue crack growth",
+   "abstract": "Bayesian model updating and prognosis framework for fatigue crack growth, combining a physical crack growth model with monitoring data to predict remaining life.",
+   "url": "https://www.researchgate.net/publication/255982499_Bayesian_model_updating_and_prognosis_of_fatigue_crack_growth",
+   "doi": "",
+   "year": 2013,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Bayesian updating",
+    "fatigue crack growth",
+    "prognosis",
+    "uncertainty"
+   ],
+   "fields": [
+    "Reliability Engineering",
+    "Fracture Mechanics"
+   ],
+   "topic_path": [
+    "Bayesian crack growth prognosis"
+   ],
+   "venue": "Engineering Structures",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:pf-crack-monitoring-mixture",
+   "title": "Dual crack growth prognosis by using a mixture proposal particle filter and on-line crack monitoring",
+   "abstract": "Uses a mixture proposal particle filter with on-line crack monitoring to prognose the growth of two cracks. Particle filters track crack evolution and predict remaining useful life. A noted challenge is that priors far from true values can give correct RUL prognosis but incorrect parameter estimation ('Coordinated Change').",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0951832021002878",
+   "doi": "",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "particle filter",
+    "crack growth prognosis",
+    "on-line monitoring",
+    "remaining useful life"
+   ],
+   "fields": [
+    "Reliability Engineering",
+    "Structural Health Monitoring"
+   ],
+   "topic_path": [
+    "particle filter prognosis"
+   ],
+   "venue": "Reliability Engineering & System Safety",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.3390/ma14237335",
+   "title": "Non-Linear Probabilistic Modification of Miner's Rule for Damage Accumulation",
+   "abstract": "Modifies Miner's linear damage accumulation rule with a nonlinear, probabilistic formulation. Miner's rule assumes damage is linear in cycle ratio and independent of load history; search summaries note it ignores load sequence and load interaction effects, lowering accuracy under variable amplitude loading.",
+   "url": "https://doi.org/10.3390/ma14237335",
+   "doi": "10.3390/ma14237335",
+   "year": 2021,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Miner's rule",
+    "damage accumulation",
+    "probabilistic",
+    "variable amplitude loading"
+   ],
+   "fields": [
+    "Fatigue Mechanics",
+    "Materials Science"
+   ],
+   "topic_path": [
+    "cumulative damage rules"
+   ],
+   "venue": "Materials",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:nonlinear-cdm-bogie",
+   "title": "Fatigue damage assessment of bogie frame based on an improved nonlinear cumulative damage model",
+   "abstract": "Proposes an improved nonlinear cumulative damage model for fatigue assessment of a railway bogie frame, addressing the limits of the linear Miner rule, which ignores loading sequence and load interactions.",
+   "url": "https://www.nature.com/articles/s41598-025-19435-3",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "nonlinear cumulative damage",
+    "fatigue",
+    "bogie frame",
+    "load sequence"
+   ],
+   "fields": [
+    "Railway Engineering",
+    "Fatigue Mechanics"
+   ],
+   "topic_path": [
+    "cumulative damage rules"
+   ],
+   "venue": "Scientific Reports",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:gamma-two-phase-rul",
+   "title": "Bayesian and likelihood inferences on remaining useful life in two-phase degradation models under gamma process",
+   "abstract": "Develops likelihood and Bayesian inference for remaining useful life in two-phase degradation models under a gamma process, with a random rate change time. Gamma processes model monotone degradation data.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0951832017303083",
+   "doi": "",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "gamma process",
+    "two-phase degradation",
+    "remaining useful life",
+    "Bayesian inference"
+   ],
+   "fields": [
+    "Reliability Engineering",
+    "Statistics"
+   ],
+   "topic_path": [
+    "gamma process degradation"
+   ],
+   "venue": "Reliability Engineering & System Safety",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:noisy-gamma-rul",
+   "title": "Remaining useful lifetime estimation and noisy gamma deterioration process",
+   "abstract": "Estimates remaining useful lifetime when the gamma deterioration process is observed with noise (measurement error).",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0951832015003683",
+   "doi": "",
+   "year": 2016,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "gamma process",
+    "noisy observations",
+    "remaining useful life",
+    "deterioration"
+   ],
+   "fields": [
+    "Reliability Engineering",
+    "Maintenance Engineering"
+   ],
+   "topic_path": [
+    "gamma process degradation"
+   ],
+   "venue": "Reliability Engineering & System Safety",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:bivariate-gamma-random-effect",
+   "title": "A common random effect induced bivariate gamma degradation process with application to remaining useful life prediction",
+   "abstract": "Develops a gamma-process model for bivariate dependent degradation data, where dependency between the two degradation processes is captured by a common random effect, and applies it to remaining useful life prediction.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0951832021006797",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "gamma process",
+    "bivariate degradation",
+    "random effect",
+    "remaining useful life"
+   ],
+   "fields": [
+    "Reliability Engineering",
+    "Statistics"
+   ],
+   "topic_path": [
+    "multivariate degradation"
+   ],
+   "venue": "Reliability Engineering & System Safety",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:online-bayes-gamma-rul",
+   "title": "Online Bayesian prediction of remaining useful life for gamma degradation process",
+   "abstract": "Online Bayesian prediction of remaining useful life for a gamma degradation process, updating the posterior as new degradation data arrive.",
+   "url": "https://arxiv.org/pdf/2212.02688",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "gamma process",
+    "online Bayesian",
+    "remaining useful life",
+    "degradation"
+   ],
+   "fields": [
+    "Statistics",
+    "Reliability Engineering"
+   ],
+   "topic_path": [
+    "gamma process degradation"
+   ],
+   "venue": "arXiv",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:wiener-review",
+   "title": "Degradation data analysis and remaining useful life estimation: A review on Wiener-process-based methods",
+   "abstract": "Reviews Wiener-process-based methods for degradation data analysis and RUL estimation. Advantages: degradation paths need not be strictly monotonic under noise, and first-hitting-time gives closed-form failure time expressions.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0377221718301486",
+   "doi": "",
+   "year": 2018,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Wiener process",
+    "degradation",
+    "remaining useful life",
+    "first hitting time"
+   ],
+   "fields": [
+    "Reliability Engineering",
+    "Operations Research"
+   ],
+   "topic_path": [
+    "Wiener process degradation"
+   ],
+   "venue": "European Journal of Operational Research",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:wiener-recursive-filter",
+   "title": "A Wiener-process-based degradation model with a recursive filter algorithm for remaining useful life estimation",
+   "abstract": "Uses a recursive filter to update the drift coefficient of a Wiener process and the EM algorithm to update all other parameters whenever new degradation data become available, to estimate remaining useful life.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0888327012003226",
+   "doi": "",
+   "year": 2013,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Wiener process",
+    "recursive filter",
+    "EM algorithm",
+    "remaining useful life"
+   ],
+   "fields": [
+    "Mechanical Systems and Signal Processing",
+    "Reliability Engineering"
+   ],
+   "topic_path": [
+    "Wiener process degradation"
+   ],
+   "venue": "Mechanical Systems and Signal Processing",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:three-stage-wiener-tool",
+   "title": "Three-Stage Wiener-Process-Based Model for Remaining Useful Life Prediction of a Cutting Tool in High-Speed Milling",
+   "abstract": "Three-stage Wiener-process model for RUL prediction of a cutting tool in high-speed milling, reflecting distinct wear phases.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9268909/",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "Wiener process",
+    "cutting tool wear",
+    "three-stage degradation",
+    "milling"
+   ],
+   "fields": [
+    "Manufacturing Engineering",
+    "Reliability Engineering"
+   ],
+   "topic_path": [
+    "tool wear prognostics"
+   ],
+   "venue": "PMC (Sensors/Machines)",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1002/pip.1182",
+   "title": "Photovoltaic Degradation Rates - an Analytical Review",
+   "abstract": "Reviews degradation rates of flat-plate terrestrial modules and systems from 40 years of field testing; compiles nearly 2000 rates with a median of 0.5%/year, with a historical outline, analytical summary and bibliography by technology.",
+   "url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/pip.1182",
+   "doi": "10.1002/pip.1182",
+   "year": 2013,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "photovoltaic",
+    "degradation rate",
+    "field testing",
+    "module lifetime"
+   ],
+   "fields": [
+    "Photovoltaics",
+    "Renewable Energy"
+   ],
+   "topic_path": [
+    "PV degradation rates"
+   ],
+   "venue": "Progress in Photovoltaics",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:pv-meta-analysis",
+   "title": "Determinants of the long-term degradation rate of photovoltaic modules: A meta-analysis",
+   "abstract": "Meta-analysis of PV module degradation rates finding mean and median of 1.1%/year and 0.94%/year, higher than earlier reviews. Meta-regression suggests cell technology, climate, mounting location and measurement method drive differences in reported rates, i.e. reported rates are not comparable across methods.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S1364032125003703",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "photovoltaic modules",
+    "degradation rate",
+    "meta-analysis",
+    "climate"
+   ],
+   "fields": [
+    "Photovoltaics",
+    "Renewable Energy"
+   ],
+   "topic_path": [
+    "PV degradation rates"
+   ],
+   "venue": "Renewable and Sustainable Energy Reviews",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:cmapss-dl-rul",
+   "title": "A Deep Learning Model for Remaining Useful Life Prediction of Aircraft Turbofan Engine on C-MAPSS Dataset",
+   "abstract": "Deep learning model predicting remaining useful life of aircraft turbofan engines on NASA's C-MAPSS run-to-failure simulation dataset. Related work uses a piecewise linear RUL target.",
+   "url": "https://ieeexplore.ieee.org/document/9874872/",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "remaining useful life",
+    "turbofan engine",
+    "C-MAPSS",
+    "deep learning"
+   ],
+   "fields": [
+    "Prognostics and Health Management",
+    "Aerospace Engineering"
+   ],
+   "topic_path": [
+    "turbofan RUL"
+   ],
+   "venue": "IEEE Access",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:bearing-rul-review",
+   "title": "Advancements in bearing remaining useful life prediction methods: a comprehensive review",
+   "abstract": "Reviews bearing RUL prediction across four aspects: data acquisition, health indicator construction, RUL algorithm development and evaluation. Categorizes algorithms as physical-based, statistical-based and data-driven.",
+   "url": "https://iopscience.iop.org/article/10.1088/1361-6501/ad5223",
+   "doi": "",
+   "year": 2024,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "bearing",
+    "remaining useful life",
+    "health indicator",
+    "prognostics"
+   ],
+   "fields": [
+    "Mechanical Engineering",
+    "Prognostics and Health Management"
+   ],
+   "topic_path": [
+    "bearing prognostics"
+   ],
+   "venue": "Measurement Science and Technology",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.3390/ma13204507",
+   "title": "Lifetime Prediction Methods for Degradable Polymeric Materials - A Short Review",
+   "abstract": "Reviews lifetime prediction for degradable polymers: Arrhenius, time-temperature superposition, WLF and isoconversional methods. Limitation: TTSP assumes thermorheological simplicity, which fails near phase transitions such as Tg.",
+   "url": "https://doi.org/10.3390/ma13204507",
+   "doi": "10.3390/ma13204507",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "polymer degradation",
+    "lifetime prediction",
+    "Arrhenius",
+    "time-temperature superposition"
+   ],
+   "fields": [
+    "Polymer Science",
+    "Materials Science"
+   ],
+   "topic_path": [
+    "accelerated aging extrapolation"
+   ],
+   "venue": "Materials",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ml-polymer-aging",
+   "title": "Machine Learning-Driven Paradigm for Polymer Aging Lifetime Prediction: Integrating Multi-Mechanism Coupling and Cross-Scale Modeling",
+   "abstract": "Argues the core limitation of the Arrhenius approach is that it isolates temperature as the dominant variable, whereas real polymers degrade under coupled heat, oxygen, moisture, light and stress, with activation energy modulated nonlinearly by multi-mechanism coupling; proposes machine-learning-based lifetime prediction.",
+   "url": "https://www.mdpi.com/2073-4360/17/22/2991",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "polymer aging",
+    "multi-mechanism coupling",
+    "machine learning",
+    "lifetime prediction"
+   ],
+   "fields": [
+    "Polymer Science",
+    "Materials Informatics"
+   ],
+   "topic_path": [
+    "multi-mechanism aging"
+   ],
+   "venue": "Polymers",
+   "found_by": []
+  },
+  {
+   "paper_id": "10.1515/corrrev-2019-0100",
+   "title": "Atmospheric corrosion prediction: a review",
+   "abstract": "Reviews models for predicting atmospheric corrosion. Search summary: the basic power-function kinetic model is accurate for short-term corrosion, but long-term corrosion is better described by linear models accounting for protective corrosion product layers.",
+   "url": "https://www.degruyterbrill.com/document/doi/10.1515/corrrev-2019-0100/html",
+   "doi": "10.1515/corrrev-2019-0100",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "atmospheric corrosion",
+    "power-law kinetics",
+    "corrosion prediction",
+    "review"
+   ],
+   "fields": [
+    "Corrosion Science",
+    "Materials Science"
+   ],
+   "topic_path": [
+    "corrosion kinetics"
+   ],
+   "venue": "Corrosion Reviews",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:power-linear-corrosion",
+   "title": "Long-term prediction of metal corrosion losses in atmosphere using a power-linear function",
+   "abstract": "Proposes a power-linear function to predict long-term metal corrosion loss in the atmosphere, combining a power-law early stage with a linear later stage.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0010938X1630141X",
+   "doi": "",
+   "year": 2016,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "corrosion loss",
+    "power-linear function",
+    "long-term prediction",
+    "atmospheric corrosion"
+   ],
+   "fields": [
+    "Corrosion Science",
+    "Materials Science"
+   ],
+   "topic_path": [
+    "corrosion kinetics"
+   ],
+   "venue": "Corrosion Science",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:concrete-life-models",
+   "title": "Service life prediction models for chloride-laden concrete",
+   "abstract": "Compares service life prediction models for chloride-induced corrosion of reinforced concrete (Life-365, CHLODIF, ClinConc, DuraCrete); search summary notes not all models suit all cases, especially advanced concrete under complex environments. Initiation time uses Fick's second law.",
+   "url": "https://civil.iitm.ac.in/faculty/pillai/admin/download/Service_life_models_for_chloride_laden_c%20(1).pdf",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "service life prediction",
+    "chloride diffusion",
+    "reinforced concrete",
+    "corrosion initiation"
+   ],
+   "fields": [
+    "Civil Engineering",
+    "Concrete Technology"
+   ],
+   "topic_path": [
+    "concrete service life"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:sn-essential-structure",
+   "title": "Essential structure of S-N curve: Prediction of fatigue life and fatigue limit of defective materials and nature of scatter",
+   "abstract": "Analyzes the structure of the S-N curve for defective materials, predicting fatigue life and fatigue limit and explaining the nature of scatter by combining crack growth with statistics of extremes of defects.",
+   "url": "https://www.sciencedirect.com/science/article/pii/S0142112320306708",
+   "doi": "",
+   "year": 2020,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "S-N curve",
+    "fatigue limit",
+    "scatter",
+    "defects"
+   ],
+   "fields": [
+    "Fatigue Mechanics",
+    "Materials Science"
+   ],
+   "topic_path": [
+    "S-N curve scatter"
+   ],
+   "venue": "International Journal of Fatigue",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:cantab-wm-mci",
+   "title": "Working memory assessment using cambridge neuropsychological test automated battery can help in the diagnosis of mild cognitive impairment: a systematic review and meta-analysis",
+   "abstract": "Systematic review and meta-analysis of CANTAB working memory tests in mild cognitive impairment. Significant differences between MCI patients and healthy controls were found in spatial working memory, spatial span, and rapid visual information processing.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9745972/",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "CANTAB",
+    "working memory",
+    "mild cognitive impairment",
+    "meta-analysis"
+   ],
+   "fields": [
+    "Neuropsychology",
+    "Neurology"
+   ],
+   "topic_path": [
+    "neuropsychological test battery for MCI diagnosis"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "pmid:30298182",
+   "title": "Psychometric Evaluation of the Neuropsychological Test Battery in Individuals with Normal Cognition, Mild Cognitive Impairment, or Mild to Moderate Alzheimer's Disease: Results from a Longitudinal Study",
+   "abstract": "The Neuropsychological Test Battery (NTB) combines widely used clinical tests of memory and executive function, designed to overcome limitations of the ADAS-Cog. It showed high reliability in mild-to-moderate Alzheimer's disease and MCI, with decline in mean subtest scores observed at weeks 13, 26, 52 and 78.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30298182/",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "neuropsychological test battery",
+    "Alzheimer's disease",
+    "psychometrics",
+    "longitudinal"
+   ],
+   "fields": [
+    "Neuropsychology",
+    "Alzheimer's Disease"
+   ],
+   "topic_path": [
+    "psychometric validation of a cognitive test battery"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ntb-changes-decline",
+   "title": "Examining the Consequences of Neuropsychological Test Battery Changes on Measuring Cognitive Decline",
+   "abstract": "Examines how changes to neuropsychological test batteries in long-running aging studies affect estimates of cognitive decline. When item response theory scoring is used, changes in test batteries over time may not meaningfully affect estimates of cognitive decline.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12760143/",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "test battery changes",
+    "cognitive decline",
+    "item response theory",
+    "cognitive aging"
+   ],
+   "fields": [
+    "Neuropsychology",
+    "Psychometrics"
+   ],
+   "topic_path": [
+    "measurement harmonization in cognitive aging studies"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1371/journal.pone.0175047",
+   "title": "Working memory test battery for young adults: Computerized working memory assessment",
+   "abstract": "Presents a computerized working memory test battery for young adults. Paper describes assessment of working memory capacity components.",
+   "url": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0175047",
+   "doi": "10.1371/journal.pone.0175047",
+   "year": 2017,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "working memory",
+    "computerized assessment",
+    "test battery",
+    "young adults"
+   ],
+   "fields": [
+    "Cognitive Psychology"
+   ],
+   "topic_path": [
+    "computerized working memory assessment"
+   ],
+   "venue": "PLOS ONE",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1186/s40345-023-00286-8",
+   "title": "Long-term lithium therapy and risk of chronic kidney disease, hyperparathyroidism and hypercalcemia: a cohort study",
+   "abstract": "Cohort study of long-term lithium therapy (a psychiatric mood stabilizer) and risk of chronic kidney disease, hyperparathyroidism and hypercalcemia. Large-scale epidemiological studies have shown that lithium treatment elevates the risk of chronic kidney disease.",
+   "url": "https://link.springer.com/article/10.1186/s40345-023-00286-8",
+   "doi": "10.1186/s40345-023-00286-8",
+   "year": 2023,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "lithium therapy",
+    "chronic kidney disease",
+    "hypercalcemia",
+    "bipolar disorder"
+   ],
+   "fields": [
+    "Psychiatry",
+    "Nephrology"
+   ],
+   "topic_path": [
+    "lithium nephrotoxicity cohort"
+   ],
+   "venue": "International Journal of Bipolar Disorders",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1186/s40345-015-0028-y",
+   "title": "Lithium nephrotoxicity",
+   "abstract": "Review of kidney toxicity of lithium in patients treated for bipolar disorder. Lithium enters collecting duct principal cells via the epithelial sodium channel and disrupts vasopressin-regulated water handling by downregulating aquaporin-2.",
+   "url": "https://link.springer.com/article/10.1186/s40345-015-0028-y",
+   "doi": "10.1186/s40345-015-0028-y",
+   "year": 2015,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "lithium",
+    "nephrotoxicity",
+    "aquaporin-2",
+    "bipolar disorder"
+   ],
+   "fields": [
+    "Psychiatry",
+    "Nephrology"
+   ],
+   "topic_path": [
+    "lithium renal toxicity mechanisms"
+   ],
+   "venue": "International Journal of Bipolar Disorders",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.3390/ijms27156730",
+   "title": "Lithium in Bipolar Disorder: Renal Mechanisms, Nephrotoxicity Phenotypes, and a Shared-Care Pathway for Clinical Practice",
+   "abstract": "Reviews renal mechanisms and nephrotoxicity phenotypes of lithium in bipolar disorder. Risk is amplified by episodes of lithium intoxication, dehydration, interacting medications, longer treatment duration and comorbid kidney disease.",
+   "url": "https://doi.org/10.3390/ijms27156730",
+   "doi": "10.3390/ijms27156730",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "lithium",
+    "bipolar disorder",
+    "nephrotoxicity",
+    "shared care"
+   ],
+   "fields": [
+    "Psychiatry",
+    "Clinical Pharmacology"
+   ],
+   "topic_path": [
+    "lithium toxicity clinical pathway"
+   ],
+   "venue": "International Journal of Molecular Sciences",
+   "found_by": []
+  },
+  {
+   "paper_id": "pmid:30932947",
+   "title": "Impact of Long-Term Lithium Treatment on Renal Function in Patients With Bipolar Disorder Based on Novel Biomarkers",
+   "abstract": "Studies renal function in patients on long-term lithium treatment for bipolar disorder using novel biomarkers.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30932947",
+   "doi": "",
+   "year": 2019,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "lithium",
+    "renal function",
+    "biomarkers",
+    "bipolar disorder"
+   ],
+   "fields": [
+    "Psychiatry",
+    "Nephrology"
+   ],
+   "topic_path": [
+    "lithium renal biomarkers"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ieee-6183283",
+   "title": "Optimal siting and sizing of electric vehicle charging stations",
+   "abstract": "Introduces an optimization process for sizing and siting of EV charging stations using graph theory, with the objective of minimizing the integrated cost of charging stations and consumers.",
+   "url": "https://ieeexplore.ieee.org/document/6183283/",
+   "doi": "",
+   "year": 2012,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "electric vehicles",
+    "charging stations",
+    "siting and sizing",
+    "graph theory"
+   ],
+   "fields": [
+    "Transportation Engineering",
+    "Power Systems"
+   ],
+   "topic_path": [
+    "EV charging station siting"
+   ],
+   "venue": "IEEE Conference",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:econ-planning-ev-2016",
+   "title": "Economic planning of electric vehicle charging stations considering traffic constraints and load profile templates",
+   "abstract": "Determines siting and sizing of charging stations using origin-destination traffic flow data to determine capacity, then integrates charging demand into a cost-based model to evaluate economics of candidate plans.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0306261916307966",
+   "doi": "",
+   "year": 2016,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "EV charging",
+    "economic planning",
+    "traffic flow",
+    "load profiles"
+   ],
+   "fields": [
+    "Energy Systems",
+    "Transportation Engineering"
+   ],
+   "topic_path": [
+    "EV charging infrastructure economics"
+   ],
+   "venue": "Applied Energy",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1007/s41660-026-00807-9",
+   "title": "Robust Optimisation for Electric Vehicle Charging Station Siting Under Demand Uncertainty: A Multi-Station Network Planning Model",
+   "abstract": "Mixed-integer linear programming model that handles demand uncertainty and jointly optimizes selection of candidate sites, fractional demand allocation across stations, and reserve capacity for worst-case demand deviations.",
+   "url": "https://link.springer.com/article/10.1007/s41660-026-00807-9",
+   "doi": "10.1007/s41660-026-00807-9",
+   "year": 2026,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "robust optimisation",
+    "EV charging siting",
+    "demand uncertainty",
+    "MILP"
+   ],
+   "fields": [
+    "Operations Research",
+    "Transportation Engineering"
+   ],
+   "topic_path": [
+    "robust EV charging network planning"
+   ],
+   "venue": "Process Integration and Optimization for Sustainability",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.3390/a18080479",
+   "title": "Charging Station Siting and Capacity Determination Based on a Generalized Least-Cost Model of Traffic Distribution",
+   "abstract": "Charging station siting and capacity determination based on a generalized least-cost model of traffic distribution.",
+   "url": "https://doi.org/10.3390/a18080479",
+   "doi": "10.3390/a18080479",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "charging station siting",
+    "capacity determination",
+    "least-cost model",
+    "traffic distribution"
+   ],
+   "fields": [
+    "Transportation Engineering"
+   ],
+   "topic_path": [
+    "EV charging station capacity planning"
+   ],
+   "venue": "Algorithms",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1007/BF02436118",
+   "title": "Carrying capacity reconsidered",
+   "abstract": "Assesses the utility of the carrying capacity concept and develops an alternative understanding of population growth. Criticizes evidence supposed to support carrying capacity; suggests it may be a self-validating belief with limited relevance to human population growth. Critics note that if conceived as static it is empirically vacuous, and if variable, theoretically incoherent.",
+   "url": "https://link.springer.com/article/10.1007/BF02436118",
+   "doi": "10.1007/BF02436118",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "carrying capacity",
+    "population growth",
+    "Malthus",
+    "critique"
+   ],
+   "fields": [
+    "Ecology",
+    "Demography"
+   ],
+   "topic_path": [
+    "critique of carrying capacity concept"
+   ],
+   "venue": "Population and Environment",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:cc-malthus-cultural",
+   "title": "Carrying capacity reconsidered: from Malthus' population theory to cultural carrying capacity",
+   "abstract": "Reconsiders carrying capacity from Malthus' population theory to cultural carrying capacity in ecological economics.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S0921800999000634",
+   "doi": "",
+   "year": 1999,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "carrying capacity",
+    "Malthus",
+    "cultural carrying capacity",
+    "ecological economics"
+   ],
+   "fields": [
+    "Ecological Economics",
+    "Ecology"
+   ],
+   "topic_path": [
+    "history of carrying capacity"
+   ],
+   "venue": "Ecological Economics",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:variable-cc-resource",
+   "title": "Formulating variable carrying capacity by exploring a resource dynamics-based feedback mechanism underlying the population growth models",
+   "abstract": "Formulates a variable carrying capacity through a resource dynamics-based feedback mechanism underlying population growth models.",
+   "url": "https://www.sciencedirect.com/science/article/abs/pii/S1476945X08000822",
+   "doi": "",
+   "year": 2008,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "variable carrying capacity",
+    "resource dynamics",
+    "population growth models",
+    "feedback"
+   ],
+   "fields": [
+    "Theoretical Ecology",
+    "Mathematical Biology"
+   ],
+   "topic_path": [
+    "variable carrying capacity models"
+   ],
+   "venue": "Ecological Complexity",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:restud-excess-capacity",
+   "title": "Excess Capacity and Demand-Driven Business Cycles",
+   "abstract": "Builds a macroeconomic model showing that in an economy where capacity is generally in excess, demand shocks can be the main driving forces of business cycles. Capacity is never fully utilized at the aggregate level.",
+   "url": "https://academic.oup.com/restud/article/92/4/2730/7698388",
+   "doi": "",
+   "year": 2025,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "excess capacity",
+    "business cycles",
+    "demand shocks",
+    "capacity utilization"
+   ],
+   "fields": [
+    "Macroeconomics"
+   ],
+   "topic_path": [
+    "capacity utilization over business cycle"
+   ],
+   "venue": "The Review of Economic Studies",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:jmacro-cap-util-2003",
+   "title": "Capacity utilization, superior information, and the business cycle",
+   "abstract": "Studies business cycle fluctuations of capacity utilization in a factor-hoarding environment with superior information and shows this environment offers a good explanation of the fluctuations of utilization.",
+   "url": "https://ideas.repec.org/a/eee/jmacro/v25y2003i3p283-309.html",
+   "doi": "",
+   "year": 2003,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "capacity utilization",
+    "business cycle",
+    "factor hoarding",
+    "superior information"
+   ],
+   "fields": [
+    "Macroeconomics"
+   ],
+   "topic_path": [
+    "factor hoarding and utilization"
+   ],
+   "venue": "Journal of Macroeconomics",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:ghh88",
+   "title": "Investment, Capacity Utilization, and the Real Business Cycle",
+   "abstract": "Adopts the view that shocks to the marginal efficiency of investment are important for business fluctuations in a neoclassical framework with endogenous capacity utilization.",
+   "url": "https://www.jeremygreenwood.net/papers/ghh88.pdf",
+   "doi": "",
+   "year": 1988,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "capacity utilization",
+    "real business cycle",
+    "investment shocks"
+   ],
+   "fields": [
+    "Macroeconomics"
+   ],
+   "topic_path": [
+    "real business cycle theory"
+   ],
+   "venue": "American Economic Review",
+   "found_by": []
+  },
+  {
+   "paper_id": "pmid:12814430",
+   "title": "The cell cycle: a review of regulation, deregulation and therapeutic targets in cancer",
+   "abstract": "Review of cell cycle regulation by cyclins, cyclin-dependent kinases and checkpoints, its deregulation and therapeutic targets in cancer.",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/12814430",
+   "doi": "",
+   "year": 2003,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "cell cycle",
+    "cyclin-dependent kinases",
+    "checkpoints",
+    "cancer therapy"
+   ],
+   "fields": [
+    "Cell Biology",
+    "Oncology"
+   ],
+   "topic_path": [
+    "cell cycle regulation"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "pmc:PMC9426627",
+   "title": "CDK4: a master regulator of the cell cycle and its role in cancer",
+   "abstract": "Reviews CDK4 as a regulator of the cell cycle. CDKs are holoenzymes of a cyclin regulatory subunit and a kinase catalytic subunit, activated by cyclin binding and T-loop phosphorylation.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9426627/",
+   "doi": "",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "CDK4",
+    "cell cycle",
+    "cyclin",
+    "cancer"
+   ],
+   "fields": [
+    "Cell Biology",
+    "Oncology"
+   ],
+   "topic_path": [
+    "CDK4 in cancer"
+   ],
+   "venue": "",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:overcharging-graham",
+   "title": "Overcharging",
+   "abstract": "Legal scholarship on prosecutorial overcharging, which is most often practiced to coerce a guilty plea. Horizontal overcharging involves multiple charges from a single incident; vertical overcharging applies more than one similar statute with disparate sentences. Strategic overcharging undermines the Sixth Amendment right to trial.",
+   "url": "https://www.thehealthlawfirm.com/wp-content/uploads/2023/11/Prosecutorial-Overcharging.pdf",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "overcharging",
+    "prosecutorial discretion",
+    "plea bargaining",
+    "criminal law"
+   ],
+   "fields": [
+    "Criminal Law"
+   ],
+   "topic_path": [
+    "prosecutorial overcharging"
+   ],
+   "venue": "Law review",
+   "found_by": []
+  },
+  {
+   "paper_id": "web:black-box-prosecutor",
+   "title": "Inside the Black Box of Prosecutor Discretion",
+   "abstract": "Empirical law review study of prosecutor discretion in charging decisions.",
+   "url": "https://lawreview.law.ucdavis.edu/sites/g/files/dgvnsk15026/files/media/documents/55-4_Wright_Baughman_Robertson.pdf",
+   "doi": "",
+   "year": null,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "prosecutor discretion",
+    "charging decisions",
+    "criminal justice"
+   ],
+   "fields": [
+    "Criminal Law"
+   ],
+   "topic_path": [
+    "prosecutor charging discretion"
+   ],
+   "venue": "UC Davis Law Review",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1111/bdi.13257",
+   "title": "Lithium in drinking water and Alzheimer's dementia: Epidemiological Findings from National Data Base of Japan",
+   "abstract": "Epidemiological study of lithium in drinking water and Alzheimer's dementia in Japan. Reviews describe such epidemiological studies as inconclusive because of indirect evidence.",
+   "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/bdi.13257",
+   "doi": "10.1111/bdi.13257",
+   "year": 2022,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "lithium",
+    "drinking water",
+    "Alzheimer's dementia",
+    "epidemiology"
+   ],
+   "fields": [
+    "Psychiatry",
+    "Epidemiology"
+   ],
+   "topic_path": [
+    "environmental lithium and dementia"
+   ],
+   "venue": "Bipolar Disorders",
+   "found_by": []
+  },
+  {
+   "paper_id": "doi:10.1080/20445911.2012.658039",
+   "title": "Effects of mental fatigue on the capacity limits of visual attention",
+   "abstract": "Examines how mental fatigue from time-on-task affects capacity limits of visual attention. Prolonged task performance typically produces mental fatigue and performance decrements, attributed to depletion of attentional resources, though reductions in motivation likely also play a role.",
+   "url": "https://www.tandfonline.com/doi/abs/10.1080/20445911.2012.658039",
+   "doi": "10.1080/20445911.2012.658039",
+   "year": 2012,
+   "cited_by_count": 0,
+   "provider": "websearch",
+   "keywords": [
+    "mental fatigue",
+    "visual attention",
+    "capacity limits",
+    "time-on-task"
+   ],
+   "fields": [
+    "Cognitive Psychology"
+   ],
+   "topic_path": [
+    "mental fatigue and attention capacity"
+   ],
+   "venue": "Journal of Cognitive Psychology",
+   "found_by": []
+  }
+ ]
+}

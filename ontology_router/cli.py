@@ -12,7 +12,7 @@ from .memory import MemoryStore
 from .models import AgentPolicy, Paper
 from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
                          EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
-                         SemanticScholarProvider)
+                         ProviderError, SemanticScholarProvider)
 from .report import write_outputs
 from .scheduling import ProviderStates
 
@@ -25,7 +25,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--openalex-key", default=os.getenv("OPENALEX_API_KEY", ""), help="OpenAlex API key (optional: raises rate limits, enables --semantic)")
     p.add_argument("--semantic", action="store_true", help="Use OpenAlex semantic search")
     p.add_argument("--mode", choices=("live", "assistant"), default="live", help="live: search scholarly APIs; assistant: use an offline evidence bundle")
-    p.add_argument("--bundle", help="JSON evidence bundle for assistant mode")
+    p.add_argument("--bundle", action="append", help="JSON evidence bundle for assistant mode: a file or a folder of *.json; repeat to merge several")
     p.add_argument("--fixture", help=argparse.SUPPRESS)
     p.add_argument("--crossref-only", action="store_true", help="Crossref alone (no abstracts or topics; expect neighbor_field to stay empty)")
     p.add_argument("--providers", default="", help="Comma-separated subset of: crossref,openalex,europepmc,doaj,semanticscholar,core")
@@ -57,11 +57,14 @@ def main() -> None:
     cache = Path.home() / ".cache" / "eonrise"
     http = CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
     corpus = None if args.no_corpus else CorpusStore(args.corpus or (cache / "corpus.jsonl"))
-    bundle_path = args.bundle or args.fixture
+    bundle_path = args.bundle or ([args.fixture] if args.fixture else None)
     if args.mode == "assistant" or bundle_path:
         if not bundle_path:
             raise SystemExit("assistant mode requires --bundle PATH")
-        providers = [EvidenceBundleProvider(bundle_path)]
+        try:
+            providers = [EvidenceBundleProvider(bundle_path)]
+        except ProviderError as exc:
+            raise SystemExit(str(exc))
         mode = "assistant"
     else:
         # Measured on one query, 20 results each: Europe PMC returned 20/20 abstracts and
@@ -149,7 +152,8 @@ def main() -> None:
             pass
     result["background_terms_penalised"] = len(background)
     result["mode"] = mode
-    result["input_bundle"] = str(Path(bundle_path).resolve()) if bundle_path else ""
+    result["input_bundle"] = str(Path(bundle_path[0]).resolve()) if bundle_path else ""
+    result["input_bundles"] = [str(Path(b).resolve()) for b in bundle_path or []]
     if not args.no_memory:
         try:
             store.append_run(result)

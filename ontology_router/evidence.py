@@ -17,10 +17,13 @@ from .models import Paper, Term
 DOWN_RELATIONS = ("mechanism", "measurement", "failure_mode", "method")
 
 REQUIRED_RELATIONS = ("mechanism", "measurement", "failure_mode", "method", "neighbor_field")
-STOPWORDS = {"a","an","and","are","as","at","be","been","being","but","by","can","could","did","do","does","for","from","had","has","have","how","if","in","into","is","it","its","may","might","more","most","of","on","or","our","should","so","than","that","the","their","them","then","there","these","they","this","to","under","using","was","we","were","what","when","where","which","who","why","will","with","within","without","would","across","reliably","change","effect","effects","impact","study","paper","papers","research","results","new","based","approach","using","used","large","system"}
+STOPWORDS = {"a","an","and","are","as","at","be","been","being","but","by","can","could","did","do","does","for","from","had","has","have","how","if","in","into","is","it","its","may","might","more","most","of","on","or","our","should","so","than","that","the","their","them","then","there","these","they","this","to","under","using","was","we","were","what","when","where","which","who","why","will","with","within","without","would","across","reliably","change","effect","effects","impact","study","paper","papers","research","results","new","based","approach","using","used","large","system",
+             # Conjunctions and quantifiers: `because` took one of six root slots in "when should a
+             # search stop because it has found enough relevant papers".
+             "because","since","while","whether","although","though","unless","until","also","just","only","enough","very","much","any","some","all","each","every","such","not","no","nor","yet","still","even","either","neither","both"}
 RELATION_MARKERS = {
     "mechanism": {"mechanism","process","pathway","architecture","dynamics","feedback","retrieval","storage","encoding","consolidation","adaptation","mediation","causal","intervention","memory","attention","learning","policy","control","update","resolution","propagation","interaction","inference"},
-    "measurement": {"metric","measure","measurement","accuracy","score","index","scale","benchmark","evaluation","reliability","validity","robustness","performance","recall","precision","rate","assessment","test","testing","fidelity","consistency","generalization","sensitivity","specificity","error","outcome"},
+    "measurement": {"estimate","estimator","estimation","coverage","completeness","metric","measure","measurement","accuracy","score","index","scale","benchmark","evaluation","reliability","validity","robustness","performance","recall","precision","rate","assessment","test","testing","fidelity","consistency","generalization","sensitivity","specificity","error","outcome"},
     "failure_mode": {"failure","failures","limitation","limitations","bias","confound","confounding","artifact","error","errors","weakness","risk","vulnerability","interference","hallucination","stale","obsolete","invalid","fragility","degradation","drift","collapse","forgetting","injection","noise","misalignment"},
     "method": {"experiment","experimental","randomized","controlled","trial","ablation","longitudinal","cross-sectional","simulation","survey","interview","cohort","case-control","meta-analysis","systematic review","protocol","replication","baseline","comparison","comparative","observational","ethnography","factorial","blinded","sampling","evaluation protocol","controlled evaluation","controlled experiment","comparative testing","component assessment","component-level assessment","human annotation","prediction-powered inference","reproducible workflow","metric validation"},
 }
@@ -90,6 +93,33 @@ def stem(token: str) -> str:
     return token
 
 
+# Derivational endings, longest first. `stem` only folds plurals, so a question asking for
+# "analogous" solutions shared no word with papers titled "analogy" or "analogical", and
+# "retrieve" missed "retrieval": 67 papers on exactly the question scored 0 on topic.
+_FAMILY_ENDINGS = ("ically", "ical", "ation", "ition", "ously", "ous", "ive", "ness", "ment",
+                   "ity", "ing", "ed", "al", "ic", "y", "e")
+
+
+def family(token: str) -> str:
+    """Word family for topical matching: `analogy`, `analogous` and `analogical` -> `analog`.
+
+    One ending is removed and at least four letters must remain. `-er` is never stripped
+    (`discover`/`discovery` must meet), and `-al` is kept after `er` so that `general`
+    does not join `generation`.
+    """
+    # `stem` would read the s of -ous as a plural: `analogous` -> `analogou`.
+    token = token if token.endswith("ous") else stem(token)
+    for ending in _FAMILY_ENDINGS:
+        if token.endswith(ending) and len(token) - len(ending) >= 4:
+            base = token[:-len(ending)]
+            if ending == "al" and base.endswith("er"):
+                return token
+            if ending in ("ing", "ed") and base[-1] == base[-2] and base[-1] not in "lsz":
+                base = base[:-1]  # stopping -> stop
+            return base
+    return token
+
+
 def concept_key(label: str) -> frozenset[str]:
     """Order- and plural-insensitive identity for a concept label."""
     return frozenset(stem(t) for t in tokens(label))
@@ -124,7 +154,7 @@ def canonical_root(question: str, max_tokens: int = 6) -> str:
 
 def paper_tokens(paper: Paper) -> set[str]:
     text = " ".join([paper.title, " ".join(paper.keywords), " ".join(paper.topic_path), " ".join(paper.fields)])
-    return {stem(t) for t in tokens(text)}
+    return {family(t) for t in tokens(text)}
 
 
 def topical_papers(question: str, papers: list[Paper]) -> set[str]:
@@ -138,8 +168,8 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
     root words ("search", "process") survives. Corpus-frequency weighting was tried and
     could not separate those cases without starving on-topic papers too.
     """
-    root = {stem(t) for t in tokens(canonical_root(question))}
-    rest = {stem(t) for t in tokens(question)} - root
+    root = {family(t) for t in tokens(canonical_root(question))}
+    rest = {family(t) for t in tokens(question)} - root
     keep: set[str] = set()
     for paper in papers:
         found = paper_tokens(paper)
@@ -147,6 +177,30 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
         if hits >= 2 or (hits >= 1 and (extra >= 1 or (len(root) == 1 and not rest))):
             keep.add(paper.paper_id)
     return keep
+
+
+def voting_core(question: str, papers: list[Paper], on_topic: set[str]) -> set[str] | None:
+    """Papers allowed to ground concepts. The gate's set when it is big enough.
+
+    Below MIN_TOPICAL_CORPUS every retrieved paper used to vote, so one gate miss handed
+    the map to whatever else was in the corpus: 99 analogy papers set beside 74 stopping-rule
+    papers put `literature based discovery` and `link prediction` in the concepts of a
+    question about when a search should stop. Now the best-matching papers top the gate up
+    to the minimum instead: gate first, then question words in title and labels, then in the
+    abstract. A paper with no question word at all never votes. None only when nothing does.
+    """
+    if len(on_topic) >= MIN_TOPICAL_CORPUS:
+        return on_topic
+    words = {family(t) for t in tokens(question)}
+    scored = []
+    for paper in papers:
+        own = len(words & paper_tokens(paper))
+        body = len(words & {family(t) for t in tokens(paper.abstract)})
+        if paper.paper_id in on_topic or own or body:
+            scored.append(((paper.paper_id in on_topic, own, body), paper.paper_id))
+    scored.sort(reverse=True)
+    core = {pid for _, pid in scored[:MIN_TOPICAL_CORPUS]}
+    return core or None
 
 
 def _content_runs(text: str) -> list[list[str]]:
@@ -177,36 +231,92 @@ LIMITATION_CUES = ("limitation", "limitations", "limited", "fails", "fail",
                    "cannot", "suffers", "suffer", "degrades", "degrade", "brittle",
                    "struggles", "struggle", "unable", "drawback", "drawbacks", "shortcoming",
                    "shortcomings", "bottleneck", "prone", "sensitive", "expensive",
-                   "intractable", "overfits", "overfitting", "underperforms")
+                   "intractable", "overfits", "overfitting", "underperforms",
+                   # v0.13: on 364 labelled abstract sentences the list above found 25 of 75
+                   # limitations (precision 0.89); with these, 36 of 75 at 0.88.
+                   "miss", "misses", "biased", "exaggerate", "exaggerates", "overestimate",
+                   "overestimates", "underestimate", "underestimates", "inaccurate",
+                   "misrepresent", "misrepresents", "lack", "lacks", "lacking", "vulnerable",
+                   "fragile", "hampered", "hinder", "hinders", "overlook", "overlooks",
+                   "ignore", "ignores", "omitting", "poorly", "difficult")
+# Words that announce a limitation rather than name one. "Limitation stated: ..." and
+# structured-abstract headings made `stated one designer` a failure mode.
+LIMITATION_META = {"limitation", "limitations", "stated", "noted", "note", "notes", "motivation",
+                   "drawback", "drawbacks", "weakness", "weaknesses", "shortcoming", "shortcomings",
+                   "states", "highlights", "reports", "finds", "shows", "showing", "suggesting",
+                   "indicating", "revealing"}
+_HEADER = re.compile(r"^[^:]{0,48}:\s+")
 
 
 def _sentences(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"(?<=[.!?])\s+|;\s+", text or "") if part.strip()]
 
 
+def _phrase_edge(run: list[str]) -> list[str]:
+    run = [w for w in run if w not in LIMITATION_CUES and w not in LIMITATION_META]
+    while run and (run[0] in WEAK_EDGE or run[0] in FILLER or run[0].endswith("ly")):
+        run = run[1:]
+    while run and (run[-1] in WEAK_EDGE or run[-1] in FILLER or run[-1].endswith("ly")):
+        run = run[:-1]
+    return run
+
+
 def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> list[tuple[str, str]]:
     """(phrase, sentence) pairs naming what a paper says goes wrong.
 
     `failure_mode` grounded on 0 of 4 self-test questions because limitations are written
-    as sentences ("however, the method fails on rare senses"), never as keywords. This
-    reads the words that follow the cue, which is where the object of the complaint sits.
+    as sentences ("however, the method fails on rare senses"), never as keywords.
+
+    v0.13: the phrase is one unbroken run of content words, never words gathered across
+    stopwords ("prone to stop a trial at a random high" gave `stop trial random`). The run
+    after the cue names the condition ("struggle with far analogies"); when it is a single
+    word the run before names the subject ("past cases that cannot be retrieved"). A leading
+    "Limitation stated:" header is dropped. One phrase per sentence, the first complaint.
     """
     found: list[tuple[str, str]] = []
     for sentence in _sentences(abstract):
-        words = re.findall(r"[a-z][a-z0-9-]+", sentence.lower())
+        body = sentence
+        head = sentence.split(":", 1)[0].lower()
+        if _HEADER.match(sentence) and set(re.findall(r"[a-z]+", head)) & LIMITATION_META:
+            body = _HEADER.sub("", sentence)
+        # Single letters kept: dropping "a" joined "stop a trial" into `stop trial`.
+        words = re.findall(r"[a-z][a-z0-9-]*|[.,;:()!?]", body.lower())
         # The sentence has to be talking about the question. `current chemical libraries`
         # was a real grounded limitation for a question about stopping criteria.
-        if root_tokens and not ({stem(w) for w in words} & root_tokens):
+        if root_tokens and not ({family(w) for w in words} & root_tokens):
             continue
         for index, word in enumerate(words):
             if word not in LIMITATION_CUES:
                 continue
-            tail = [w for w in words[index + 1:index + 8]
-                    if w not in STOPWORDS and w not in LIMITATION_CUES
-                    and w not in FILLER and len(w) > 2]
-            if len(tail) >= 2:
-                found.append((" ".join(tail[:3]), sentence[:200]))
+            after, j = [], index + 1
+            while j < min(len(words), index + 5) and (words[j] in STOPWORDS or words[j] in LIMITATION_CUES
+                                                      or words[j].endswith("ly")):
+                j += 1
+            while j < len(words) and words[j][0].isalpha() and words[j] not in STOPWORDS and len(after) < 4:
+                after.append(words[j]); j += 1
+            before, k = [], index - 1
+            while k > index - 3 and k >= 0 and words[k] in STOPWORDS:
+                k -= 1
+            while k >= 0 and words[k][0].isalpha() and words[k] not in STOPWORDS and len(before) < 4:
+                before.insert(0, words[k]); k -= 1
+            after, before = _phrase_edge(after), _phrase_edge(before)
+            pick = after if len(after) >= 2 else before if len(before) >= 2 else after or before
+            if pick and len(" ".join(pick)) >= 5:
+                found.append((" ".join(pick), sentence[:200]))
+                break
     return found
+
+
+# One list for both jobs. A phrase used to enter the candidates because it held a
+# measurement marker (`recall`, `precision`, `measure`) and was then classified from a
+# shorter list as a plain topic: `average precision` and `target recall` never grounded, and
+# both v0.10 self-runs reported measurement as empty.
+MEASUREMENT_WORDS = {"accuracy", "accurate", "metric", "metrics", "score", "scores", "rate", "rates",
+                     "benchmark", "evaluation", "reliability", "validity", "robustness", "performance",
+                     "fidelity", "consistency", "generalization", "sensitivity", "assessment",
+                     "precision", "recall", "specificity", "measure", "measures", "measurement",
+                     "measurements", "estimate", "estimates", "estimator", "estimation",
+                     "coverage", "completeness", "index"}
 
 
 def _relation_for(term: str, context: str, source_kind: str, question_tokens: set[str]) -> str:
@@ -216,7 +326,7 @@ def _relation_for(term: str, context: str, source_kind: str, question_tokens: se
         return "method"
     if term_tokens & {"failure", "failures", "stale", "obsolete", "invalid", "fragility", "bias", "confound", "vulnerability", "degradation", "interference", "hallucination"}:
         return "failure_mode"
-    if term_tokens & {"accuracy", "accurate", "metric", "metrics", "score", "rate", "benchmark", "evaluation", "reliability", "validity", "robustness", "performance", "fidelity", "consistency", "generalization", "sensitivity", "assessment"}:
+    if term_tokens & MEASUREMENT_WORDS:
         return "measurement"
     if term_tokens & {"experiment", "experimental", "randomized", "controlled", "trial", "ablation", "longitudinal", "simulation", "survey", "cohort", "replication", "baseline", "sampling", "comparative", "annotation", "validation", "protocol"}:
         return "method"
@@ -285,7 +395,7 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
     """`background` holds labels that ranked highly on unrelated past questions. They are
     the field's wallpaper, not this question's answer, so their score is halved."""
     q_tokens = set(tokens(question))
-    root_tokens = {stem(t) for t in tokens(canonical_root(question))}
+    root_tokens = {family(t) for t in tokens(canonical_root(question))}
     candidates: dict[str, CandidateEvidence] = {}
     for paper in papers:
         context = f"{paper.title}. {paper.abstract}"

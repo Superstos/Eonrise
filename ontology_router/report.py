@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .unseen import WARN_BELOW
+
 
 def render_compact_markdown(result: dict) -> str:
     lines = ["# Eonrise brief", "", f"**Question:** {result['question']}",
@@ -31,6 +33,14 @@ def render_compact_markdown(result: dict) -> str:
         # without knowing that is how a degraded run passes for a thin literature.
         lines.append(f"**Degraded:** {', '.join(down)} answered nothing this run — "
                      "expect fewer abstracts, no keywords and no topic hierarchy.")
+    unseen = result.get("unseen") or {}
+    if unseen and unseen.get("found_share", 1) < WARN_BELOW:
+        # Chao2 is a lower bound on what is out there, so this share is an upper bound on
+        # what was found. When it is low, the true figure is lower still.
+        lines.append(f"**Unfinished:** {unseen['singletons']} of {unseen['observed']} on-topic papers turned up "
+                     f"for one query only, so this run saw at most ~{round(100 * unseen['found_share'])}% of what "
+                     f"its queries can reach (Chao2 ≈ {round(unseen['estimated_total'])}). Treat an empty "
+                     "relation as unsearched, not absent.")
     lines.extend(["", "## Grounded map", ""])
     for relation, terms in result["coverage"].items():
         label = relation.replace("_", " ").title(); shown = ", ".join(terms[:3]) if terms else "not grounded yet"; lines.append(f"- **{label}:** {shown}")
@@ -40,6 +50,16 @@ def render_compact_markdown(result: dict) -> str:
         lines.extend(["", "## Stated limitations", ""])
         for term in quotes[:3]:
             lines.append(f'- **{term["text"]}** — "{term["examples"][0][:180]}"')
+    harvested = result.get("harvest") or []
+    if harvested:
+        # The papers the gate set aside that carry the same shape. Distant fields are the
+        # product; a brief that only showed the on-topic map hid them.
+        for heading, group in (("Same shape, other fields", [h for h in harvested if h.get("distant")]),
+                               ("Same field, missed by the word gate", [h for h in harvested if not h.get("distant")])):
+            if group:
+                lines.extend(["", f"## {heading}", ""])
+                lines.extend(f"- **{h['title']}** ({h.get('year') or 'n.d.'}, {h['field']}) — shares "
+                             + ", ".join(h["shares"][:3]) for h in group[:5])
     concepts = result.get("concepts", [])
     if concepts:
         by_dir: dict[str, list[str]] = {}
@@ -58,6 +78,9 @@ def render_compact_markdown(result: dict) -> str:
                         "spending queries on it rather than calling it an unfilled gap."])
     if result["recommended_queries"]:
         lines.extend(["", "## Next searches", ""]); lines.extend(f"- `{q}`" for q in result["recommended_queries"][:3])
+    if result.get("distant_queries"):
+        lines.extend(["", "## Searches toward other fields", ""])
+        lines.extend(f"- `{q}`" for q in result["distant_queries"])
     return "\n".join(lines) + "\n"
 
 

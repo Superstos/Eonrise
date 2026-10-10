@@ -568,3 +568,293 @@ topicality. It measures the intended mechanism, not live retrieval across provid
 Equivalence-aware topical gating, concept deduplication, neighbor-field discovery,
 knowledge-gap detection, and Swanson-style bridging remain future integrations. Each
 needs its own benchmark before it touches ranking or gating.
+
+# v0.10 — word families: the tool failed on its own question
+
+Added 2026-09-29. First pass of a self-improvement loop: Eonrise was run on the question it
+exists to answer, "how can a system retrieve analogous solutions to a problem from distant
+research fields", in assistant mode against 99 papers gathered by five web-search agents
+(analogy mining, literature-based discovery, bio-inspired design, serendipity metrics, the
+vocabulary problem). The network policy of that sandbox blocked every scholarly API, so the
+bundle path was the only one open; `--bundle` now repeats and accepts a folder.
+
+## The failure
+
+`failed — 67 papers retrieved, none about the question`, exit 2. The corpus held "Accelerating
+Innovation Through Analogy Mining" and "Augmenting Scientific Creativity with an Analogical
+Search Engine". `stem` folds plurals only, so `analogous` never met `analogy` or `analogical`
+and `retrieve` never met `retrieval`. Any question worded with adjectives or verbs, against
+literature that names things with nouns, was one word short of the two-hit gate.
+
+## The rule
+
+`family()` removes one derivational ending (`-ical`, `-ation`, `-ous`, `-ive`, `-ity`, `-ing`,
+`-ed`, `-al`, `-y`, ...) with at least four letters left, and is used by the topical gate and
+the limitation-sentence filter only. Concept identity (`concept_key`) is unchanged. Two
+guards come from inspecting every merge on a 3,000-word vocabulary: `-er` is never stripped
+(`discover` must meet `discovery`), and `-al` is kept after `er` so `general` does not join
+`generation`. `-ous` is removed before `stem`, which otherwise read its s as a plural.
+
+## Measured
+
+Gold set: `tests/fixtures/crossfield_gold.json`, the 99 papers labelled `on` (47), `near` (42)
+or `off` (10) by an annotator agent that never saw the code.
+
+| Gate | on kept | near kept | off kept | Self-run status |
+|---|---|---|---|---|
+| plural `stem` (v0.9) | 2/47 | 0/42 | 0/10 | failed |
+| word families (v0.10) | 14/47 | 4/42 | 0/10 | partial, 3/5 relations |
+
+Cross-corpus leakage (four questions against the 14-paper spaced-repetition fixture and
+against the 99) is unchanged; the equivalence benchmark is unchanged (net median gain
+0.2833, false-equivalence rate 0.0).
+
+## Tried and not shipped: pseudo-relevance feedback in the gate
+
+Rocchio-style feedback, the IR answer to vocabulary mismatch: treat the gated papers as
+seeds, learn the word families concentrated in them, re-gate. Most on-topic papers here share
+no word with the question at all ("literature-based discovery", "bisociation", "biomimetic").
+
+| Variant | on | near | off |
+|---|---|---|---|
+| 8 learned families, abstracts included | 35/47 | 13/42 | 6/10 |
+| 12 learned families, abstracts included | 37/47 | 14/42 | 6/10 |
+| 4 learned families, author words only | 19/47 | 5/42 | 0/10 |
+
+The first two are query drift, the documented failure of feedback: learned words were
+`find`, `search`, `represent`. The third is clean on this set, but what it learned was a
+field label (`human-computer interaction`) that would admit every HCI paper, and ten `off`
+papers cannot show it is safe. It waits for a second gold set with more negatives.
+
+## Seen in the self-run, not fixed here
+
+- `failure_mode` phrases are the three words after a cue: "cannot be spontaneously
+  retrieved when relevant" yields `spontaneously retrieved relevant`, while the thing that
+  fails ("past cases") sits before the cue.
+- The brief never shows the distant papers the tool exists to find: off-gate papers are
+  dropped from the map, and the harness needs an external script to list them.
+
+# v0.11 — the harvest reaches the brief, and a small gate no longer hands the map to everyone
+
+Added 2026-09-29, second self-improvement pass. Question: "when should an iterative
+literature search stop because it has found enough relevant papers" — Eonrise's own stop
+rule. Four web-search agents gathered 74 papers from four fields that solved that shape:
+TAR/e-discovery stopping rules (home field), ecology's unseen-species estimators, qualitative
+and software-testing saturation, and sequential/optimal stopping. The 99 analogy papers from
+v0.10 were added as distractors.
+
+## Harvest
+
+`harvest.py` ranks the papers the gate set aside by how much of the run's grounded shape
+they carry, and the brief now prints them under "Same shape, other fields" and "Same field,
+missed by the word gate". Borrowed from the v0.10 corpus: MAC/FAC (surface proposes,
+structure decides), purpose/mechanism analogy mining, and mechanism skeletons.
+
+- The signature is every grounded concept except field labels; one-word concepts are out.
+- A concept is shared only when its words are adjacent in the paper (bag-of-words matched
+  `accumulation curve` in "Curve fitting for accumulation of snow"). Hyphens split; a
+  concept of three words also travels as its adjacent pairs.
+- Rarer concepts weigh more; down-relations weigh 1.5; two kinds of concept earn 1.25.
+- One shared topic label alone is surface similarity and is dropped.
+- At most two papers per field, so one field cannot fill the list.
+
+Measured with the v0.11 signature over all 173 papers, top 9: 5 from other fields
+(group-sequential trials, active-learning stopping in NLP and ML), 4 home-field TAR papers,
+0 of 99 distractors. The v0.10 brief showed no paper from another field at all.
+
+## Voting core
+
+Below `MIN_TOPICAL_CORPUS` every retrieved paper used to vote, to avoid starving small
+bundles. On the mixed corpus the gate kept 6, so the analogy distractors voted and the
+stop-rule map read `literature based discovery`, `link prediction`, `analogical search`.
+`voting_core` now tops the gate up to the minimum with the closest papers (gate, then
+question words in title and labels, then in the abstract); a paper with no question word
+never votes. Saturation still counts on-topic arrivals only when the real gate is big
+enough, as before. After: the signature was `technology assisted reviews`, `stopping rule`,
+`capture mark recapture`, `stochastic curtailment`, `group sequential`, `target recall`.
+
+## Stopwords
+
+`because` held one of the six root slots in that question. Conjunctions and quantifiers
+(`because`, `since`, `whether`, `enough`, `only`, `all`, ...) are now stopwords.
+
+## Measured and not fixed
+
+- Retrieval, not ranking, now limits the harvest in a full run: the cleaner concepts made
+  narrower follow-up queries, and the run retrieved 60 of 173 papers with no ecology paper
+  among them, so its brief listed three harvest hits.
+- Ecology writes "capture-recapture"; the signature's pairs of "capture mark recapture" are
+  `capture mark` and `mark recapture`. A skip-pair would match it; not yet measured.
+- Removing question scaffolding (`problem`, `solutions`, `found`) from the root was tried on
+  both gold sets and lowered recall on both (14 -> 12 on v0.10's). Not shipped.
+
+# v0.12 — capture histories: a stop rule killed, a warning kept
+
+Added 2026-09-29, third pass, built from the v0.11 evidence. Every paper records the queries
+that found it, which is a capture history: ecology estimates unseen species from how many
+were caught once (Q1) or twice (Q2). Chao's estimator is already a stopping rule for
+technology-assisted review, and STADS treats software testing as species discovery.
+`unseen.py` computes incidence Chao2 and Chao-Jost sample coverage per run, with each
+distinct query as one sampling unit.
+
+## The stop rule it was meant to replace, and the test that kept it
+
+`python -m ontology_router.unseen_benchmark`: six simulated literatures of known size with
+log-normal findability, 40 seeds each, five queries a round. Median queries at the stop and
+the share of runs stopping with true recall >= 0.8:
+
+| Scenario | Size | saturation (engine) | coverage >= 0.9 | Chao2 share >= 0.8 |
+|---|---|---|---|---|
+| small, easy | 40 | 20 q, 0.75 | 20 q, 0.55 | 15 q, 0.28 |
+| small, hard | 40 | 15 q, 0.00 | 30 q, 0.10 | 20 q, 0.07 |
+| mid, even | 150 | 50 q, 0.97 | 40 q, 0.88 | 30 q, 0.23 |
+| mid, skewed | 150 | 45 q, 0.03 | 30 q, 0.00 | 30 q, 0.00 |
+| large, skewed | 400 | 60 q, 0.00 | 55 q, 0.00 | 60 q, 0.00 |
+| large, very skewed | 400 | 60 q, 0.00 | 50 q, 0.00 | 60 q, 0.00 |
+
+Pooled: saturation 0.292, coverage 0.254, Chao2 share 0.096. Both estimator rules stop
+earlier with less found and fail the kill rule. The engine's check stays. Requiring both
+(saturation and share >= 0.8) reached 0.308 at the same cost — inside the noise.
+
+The same literature predicted why: under heterogeneous findability Chao2 is a lower bound.
+Measured: observed / Chao2 overstated true recall at 90% of stops, median by 0.15.
+
+## What shipped
+
+That bias makes the share an upper bound on recall, which is useful in one direction only.
+When the engine's own rule stops and the share is below 0.70, the brief says the run saw
+"at most ~N%" of what its queries can reach and that an empty relation is unsearched, not
+absent. Fired at 19 of 240 simulated stops and was right at 17 (0.89). It stayed silent at
+18 stops that had found under half, so its silence is not reassurance, and the brief says
+nothing when it is silent. `research_map.json` carries the estimate as `unseen`.
+
+A closed evidence bundle is the whole reachable population, so there the estimate reads
+1.0 (v0.10 self-run: 18 on-topic papers, no singleton across 24 queries) — correctly.
+
+# v0.13 — limitation sentences: find more of them, stop gluing their words together
+
+Added 2026-09-29, fourth pass. The v0.10 brief listed `spontaneously retrieved relevant` and
+`situ studies biologically` as failure modes. Gold: `tests/fixtures/limitation_gold.json`,
+364 sentences from the self-run bundles, 75 labelled as limitations with a verbatim label by
+an annotator agent that never saw the code.
+
+| | v0.12 | v0.13 |
+|---|---|---|
+| limitation sentences found (cue present) | 25/75, precision 0.89 | 36/75, precision 0.88 |
+| phrase matches the gold label (token F1 >= 0.5) | 5/75, precision 0.17 | 7/75, precision 0.23 |
+
+- Cues added: `miss`, `biased`, `exaggerates`, `underestimates`, `inaccurate`,
+  `misrepresents`, `lacks`, `vulnerable`, `overlooks`, `ignores`, ... chosen before scoring;
+  `poorly` and `difficult` were chosen from the labelled misses, so those two are fitted.
+  `however` would add one more and stays out, as before.
+- A phrase is one unbroken run of content words. The old rule gathered the next three
+  content words across stopwords: "prone to stop a trial at a random high" gave
+  `stop trial random`. The run after the cue is taken; when it is one word, the subject run
+  before the cue. One phrase per sentence.
+- Announcing words (`stated`, `noted`, `showing`, a leading "Limitation stated:" header, as
+  in structured abstracts) never become the phrase.
+
+The phrase stays weak: 23% agree with a human's label. The sentence is the evidence, and the
+brief already quotes it beside the phrase. Choosing which of two complaints in one sentence
+matters is beyond a stdlib heuristic; it is recorded here rather than tuned further on 75
+examples.
+
+# v0.14 — one measurement vocabulary
+
+Fifth pass. Both v0.10 self-runs reported measurement as empty. A phrase entered the
+candidates because it held a measurement marker (`recall`, `precision`, `measure`), and
+`_relation_for` then classified it from a shorter, separate list, so `target recall` and
+`average precision` became plain topics. `MEASUREMENT_WORDS` is now the one list, extended
+with `estimate`, `coverage`, `completeness`; ambiguous markers (`error`, `test`, `scale`,
+`outcome`) keep their other readings. Measured: the stop-rule run now grounds
+`target recall`; the analogy run stays empty because `average precision` occurs in one
+abstract, and single-paper phrases are dropped by design. The spaced-repetition fixture
+is unchanged. `either`, `neither` and `both` are stopwords (`existing work either`).
+
+# v0.15 — searches that follow the harvest out of the home field
+
+Sixth pass. The v0.11 harvest was limited by retrieval, and the brief's "Next searches" are
+gap-cue strings (`technology assisted reviews ablation experiment`). Three sources of next
+queries were run against the stop-rule world (74 papers + 99 distractors), counting papers
+the run had not retrieved:
+
+| Source | New other-field papers | New distractors |
+|---|---|---|
+| gap-cue recommended queries (unchanged) | 2 | 0 |
+| concepts an other-field harvest hit shares | 4 | 0 |
+| that hit's own keywords (pearl growing) | 3 | 1 |
+
+`distant_queries` (the second row) ships in `research_map.json` and as "Searches toward
+other fields" in the brief. One scenario and small counts, so they are offered to the agent
+running Eonrise, not run inside the loop; running them in-loop needs its own benchmark.
+
+Fixed on the way: "other field" was judged against the voting core, so a biostatistics
+paper topped up into the core made trial-stopping papers read as "same field". Home fields
+now come from the gate's own papers only. Field labels are free text, so near-synonyms
+(Evidence Synthesis beside Information Retrieval) still count as different fields.
+
+# v0.16 — a two-stage gate: words propose, grounded concepts decide
+
+Seventh pass, suggested by the tool's own output: the v0.11 brief's "Same field, missed by
+the word gate" list was a second-stage gate waiting to be used. `concept_gate` admits a
+paper that carries two of the concepts the gate's own papers ground, each as adjacent words,
+and repeats once with the enlarged set. It never bootstraps from an empty gate.
+
+| Gate | analogy gold `on` | `off` + distractors admitted | stop-rule TAR papers |
+|---|---|---|---|
+| words only (v0.15) | 14/47 | 0 | 2/17 |
+| + concepts, 1 round | 24/47 | 0 | 8/17 |
+| + concepts, 2 rounds (shipped) | 31/47 | 0 of 109 | 14/17 |
+| 3 shared concepts, 2 rounds | 20/47 | 0 | 4/17 |
+
+`near` papers admitted rose 4 -> 10 of 42; they are supporting techniques, not drift.
+v0.10's token-level feedback admitted 6 of 10 `off` papers; whole grounded concepts in
+adjacent words are what the drift could not survive.
+
+End to end, stop-rule question on its 74 papers plus the 99 distractors: on topic 4 -> 16,
+retrieved 60 -> 103, measurement grounded (`recall target`, `chao estimator`). The brief's
+other-field list now names Chao's estimator, capture-recapture population estimation
+(ecology, 1979) and active-learning stopping criteria, and offers
+`capture recapture chao estimator` as a search — the port v0.12 made by hand.
+
+# v0.17 — held-out validation
+
+Eighth pass. Every number since v0.10 was measured on two questions the loop itself chose,
+so the gains could be fitted to them. A third set was built afterwards and never tuned on:
+"why do lithium-ion batteries lose capacity over repeated charging cycles", 72 papers from
+three agents (battery home field, same-shape distant fields such as fatigue, corrosion and
+remaining-useful-life prognostics, and lexical traps such as business cycles, lithium
+therapy, cognitive capacity), labelled blind: 23 on, 25 near, 24 off.
+`tests/fixtures/heldout_battery.json`.
+
+| | v0.9 (`main`) | v0.16 |
+|---|---|---|
+| status | partial | usable, 4/5 relations |
+| on-topic kept | 16/23 | 23/23 |
+| off kept | 1/24 | 1/24 (same paper) |
+| measurement | empty | `soh estimation`, `mode estimation` |
+| harvest | none shown | 2, both distant (Wiener-process degradation, RUL inference), 0 traps |
+
+The gains hold off the tuning set. Two honest limits: the harvest found 2 of 25 same-shape
+papers, because the only concept they shared was `degradation models`; and
+`machine learning` and `home storage` are grounded as mechanisms, which they are not.
+
+Tried and reverted: making `over` and other prepositions stopwords. Linguistically right,
+but the cleaner root produced queries that retrieved more business-cycle papers, which pass
+the word gate on `capacity` + `cycles`: off kept rose 1 -> 3.
+
+## v0.17 follow-up: two held-out ideas measured and not shipped
+
+The battery harvest found 2 of 25 same-shape papers. Diagnosis: retrieval, not ranking. The
+run retrieved only 6 of the 25, since every follow-up query is anchored on the question's
+own words (`lithium ion batteries experiment`).
+
+- Multi-word field labels in the harvest signature (`cycle life prediction` would share
+  `life prediction` with fatigue papers): battery harvest unchanged, stop-rule harvest
+  6 -> 4. Not shipped.
+- One query slot per round for the strongest grounded concept containing none of the
+  question's words (a "mechanism skeleton"): battery same-shape papers retrieved 6 -> 8,
+  harvest unchanged; stop-rule distractors retrieved 47 -> 38, harvest +1; analogy
+  unchanged. It also chose `machine learning` as a skeleton. Too small for a slot every
+  round. Not shipped; the next attempt should pick skeletons from down-relation concepts
+  only, once relation typing stops calling `machine learning` a mechanism.

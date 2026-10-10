@@ -1,0 +1,1825 @@
+{
+ "note": "Sentences from the v0.10/v0.11 self-run bundles (web-search snippet summaries). Label = verbatim failure phrase chosen by an annotator agent that never saw the code; null = not a limitation.",
+ "sentences": [
+  {
+   "id": "s0",
+   "sentence": "Explores learning simpler structural representations called problem schemas, which specify the purpose of solutions, to find analogies in large idea repositories such as patents.",
+   "label": null
+  },
+  {
+   "id": "s1",
+   "sentence": "Stated motivation: hand-created databases do not scale, and machine-learning similarity metrics struggle to account for structural similarity, which is central to analogy.",
+   "label": "do not scale"
+  },
+  {
+   "id": "s2",
+   "sentence": "Perspective on moving analogy out of one person's mind and distributing it across human and machine processors.",
+   "label": null
+  },
+  {
+   "id": "s3",
+   "sentence": "Aims to overcome cognitive fixation, scale to large idea repositories and support problems with multiple constraints",
+   "label": null
+  },
+  {
+   "id": "s4",
+   "sentence": "reports first steps with crowds and AI and names core challenges still critical to realizing the vision.",
+   "label": null
+  },
+  {
+   "id": "s5",
+   "sentence": "Humans annotate aspects of research papers (background, purpose, mechanism, findings) and a computational model builds a semantic representation from these annotations to find analogies among papers.",
+   "label": null
+  },
+  {
+   "id": "s6",
+   "sentence": "Finds more analogies than baseline information-retrieval approaches, annotations generalize beyond domain, and found analogies are useful to experts.",
+   "label": null
+  },
+  {
+   "id": "s7",
+   "sentence": "Presents a representation that automatically breaks products into fine-grained functional aspects capturing the purposes and mechanisms of ideas, built from large repositories of products, patents and scientific papers.",
+   "label": null
+  },
+  {
+   "id": "s8",
+   "sentence": "Used to support functional search for ideas and exploration of the design space around a focal problem.",
+   "label": null
+  },
+  {
+   "id": "s9",
+   "sentence": "Exploratory search system where users select a portion of text core to their interest from a paper abstract and retrieve papers highly similar to that aspect but differing in domain.",
+   "label": null
+  },
+  {
+   "id": "s10",
+   "sentence": "Motivation: improved scholarly search helps in familiar domains but may fall short of helping scientists explore diverse ideas outside them.",
+   "label": "fall short"
+  },
+  {
+   "id": "s11",
+   "sentence": "Surveys data-driven design-by-analogy studies and categorizes them by data, methods and applications into four categories: analogy encoding, retrieval, mapping, and evaluation.",
+   "label": null
+  },
+  {
+   "id": "s12",
+   "sentence": "Benchmarks the field against frontier data science and AI research to identify opportunities.",
+   "label": null
+  },
+  {
+   "id": "s13",
+   "sentence": "Examines how analogical distance (near vs far), commonness and modality of examples affect ideation.",
+   "label": null
+  },
+  {
+   "id": "s14",
+   "sentence": "Stated limitation: 'Drawing inspiration from examples by analogy can be a powerful tool for innovative design during conceptual ideation but also carries the risk of negative design outcomes (e.g., design fixation), depending on key properties of examples.'",
+   "label": "design fixation"
+  },
+  {
+   "id": "s15",
+   "sentence": "Cognitive engineering design study of how analogical distance of stimuli affects generated solutions, using the U.S.",
+   "label": null
+  },
+  {
+   "id": "s16",
+   "sentence": "Near and far stimuli were chosen from patent structure built with latent semantic analysis and a Bayesian algorithm for discovering structural form.",
+   "label": null
+  },
+  {
+   "id": "s17",
+   "sentence": "Transforms a design problem into a functional representation and searches patent databases using a mapped functional basis to find near- and far-field analogies for ideation.",
+   "label": null
+  },
+  {
+   "id": "s18",
+   "sentence": "Uses a vector space model to score functional similarity between design problems and patent descriptions",
+   "label": null
+  },
+  {
+   "id": "s19",
+   "sentence": "the case study shows analogies ranging from literal near-field to far-field cross-domain solutions.",
+   "label": null
+  },
+  {
+   "id": "s20",
+   "sentence": "Patent-based search tool for concept generation that maps functions using a functional patent vocabulary (about 2,100 functions extracted from 65,000 patents).",
+   "label": null
+  },
+  {
+   "id": "s21",
+   "sentence": "Related work notes novice designers lacking far-field retrieval skill are constrained to patents with surface similarities, and retrieving domain-similar patents led to ideas that directly copied the patent designs.",
+   "label": "surface similarities"
+  },
+  {
+   "id": "s22",
+   "sentence": "Reviews function-based patent search, a TRIZ-inspired direction that theorizes invention from patent observation.",
+   "label": null
+  },
+  {
+   "id": "s23",
+   "sentence": "Patents can help designers find technologies providing desired functionality, find applications of specific structures, and resolve engineering conflicts",
+   "label": null
+  },
+  {
+   "id": "s24",
+   "sentence": "the title flags open problems remaining.",
+   "label": null
+  },
+  {
+   "id": "s25",
+   "sentence": "Studies retrieval of biology articles for engineering design problems.",
+   "label": null
+  },
+  {
+   "id": "s26",
+   "sentence": "Stated limitation: in situ studies of biologically inspired design retrieval identified findability and recognizability of relevant biology articles on the Web as major challenges.",
+   "label": "findability and recognizability"
+  },
+  {
+   "id": "s27",
+   "sentence": "Biologically inspired design invents technology by analogy to biological systems.",
+   "label": null
+  },
+  {
+   "id": "s28",
+   "sentence": "Describes semantic tagging of biology articles using Structure-Behavior-Function models, and an engineering-to-biology thesaurus that maps functional-basis terms to biological terms to make biology accessible to engineers with limited biological knowledge.",
+   "label": null
+  },
+  {
+   "id": "s29",
+   "sentence": "Theoretical framework in which analogy maps relational structure between a base and target representation, favoring systems of interconnected relations over object attributes.",
+   "label": null
+  },
+  {
+   "id": "s30",
+   "sentence": "Foundation for later computational models of analogy.",
+   "label": null
+  },
+  {
+   "id": "s31",
+   "sentence": "Model reconciling that structure outweighs surface in similarity judgments of items in working memory, yet in retrieval superficial similarity is more important than structural similarity, while purely structural remindings sometimes occur.",
+   "label": null
+  },
+  {
+   "id": "s32",
+   "sentence": "Uses a two-stage process: a computationally cheap non-structural matcher filters long-term memory, then structural alignment (SME) selects among candidates.",
+   "label": null
+  },
+  {
+   "id": "s33",
+   "sentence": "Shows comparing two analogous examples facilitates deriving a schema that supports transfer to a structurally similar problem.",
+   "label": null
+  },
+  {
+   "id": "s34",
+   "sentence": "Reported effect: 45% of participants in the comparison condition spontaneously generated the convergence solution to the tumor problem versus 21% in the single-analog condition.",
+   "label": null
+  },
+  {
+   "id": "s35",
+   "sentence": "Both structural features, which play a causal role in determining possible solutions, and salient surface features, which do not, influence spontaneous selection of an analogue.",
+   "label": null
+  },
+  {
+   "id": "s36",
+   "sentence": "Structural features have greater impact on the ability to use an analogue once its relevance is pointed out",
+   "label": null
+  },
+  {
+   "id": "s37",
+   "sentence": "spontaneous retrieval remains influenced by surface features.",
+   "label": "surface features"
+  },
+  {
+   "id": "s38",
+   "sentence": "Addresses inert knowledge, past cases that cannot be spontaneously retrieved when relevant.",
+   "label": "inert knowledge"
+  },
+  {
+   "id": "s39",
+   "sentence": "comparing and abstracting across cases, supports relational retrieval of past events.",
+   "label": null
+  },
+  {
+   "id": "s40",
+   "sentence": "Retrieval otherwise tends to be driven by surface similarity such as similar characters and settings.",
+   "label": "surface similarity"
+  },
+  {
+   "id": "s41",
+   "sentence": "Operationalizes theories of analogy with surface and system mappings to build a benchmark covering far (cross-domain) and near (within-domain) analogies and disanalogies.",
+   "label": null
+  },
+  {
+   "id": "s42",
+   "sentence": "Stated limitation: while LLMs largely recognize near analogies, even the largest struggle with far analogies zero-shot, with GPT-4 scoring below random",
+   "label": "far analogies"
+  },
+  {
+   "id": "s43",
+   "sentence": "solved examples and chain-of-thought help.",
+   "label": null
+  },
+  {
+   "id": "s44",
+   "sentence": "Distills each paper into a domain- and method-name-stripped faceted computational fingerprint (free-text mechanism skeleton plus controlled facets) to find cross-field pairs solving the same problem, e.g.",
+   "label": null
+  },
+  {
+   "id": "s45",
+   "sentence": "Kalman filter, Bayesian forecasting and data assimilation.",
+   "label": null
+  },
+  {
+   "id": "s46",
+   "sentence": "On 109 papers in 18 method families, the skeleton raises cross-domain retrieval average precision over the abstract from 0.222 to 0.513 (whole fingerprint 0.557), showing raw abstracts retrieve poorly across fields.",
+   "label": "retrieve poorly"
+  },
+  {
+   "id": "s47",
+   "sentence": "The thesaurus acts as a set of correspondent terms to the functions and flows of the functional basis, providing term mapping between engineering and biological domains for engineers with limited biological background.",
+   "label": null
+  },
+  {
+   "id": "s48",
+   "sentence": "It increases retrieval of relevant biological information, with a reported 33% improvement in relevant solutions for specific functions like detection.",
+   "label": null
+  },
+  {
+   "id": "s49",
+   "sentence": "Provides biologically meaningful keywords for the functional terms of the engineering Functional Basis so that engineers can search biological text for solutions to a functional need.",
+   "label": null
+  },
+  {
+   "id": "s50",
+   "sentence": "The keyword set supports bio-inspired concept generation from function statements.",
+   "label": null
+  },
+  {
+   "id": "s51",
+   "sentence": "A general method for functionally representing biological systems uses functional representation and abstraction techniques to translate biological systems into an engineering context.",
+   "label": null
+  },
+  {
+   "id": "s52",
+   "sentence": "The method takes the essential function the design must fulfill as input.",
+   "label": null
+  },
+  {
+   "id": "s53",
+   "sentence": "Compares three ways to find bio-inspiration: the AskNature database, a natural language processing approach over a large corpus of biological publications, and consultation of an expert biologist.",
+   "label": null
+  },
+  {
+   "id": "s54",
+   "sentence": "The NLP approach retrieves relevant publications with good recall without an expert",
+   "label": null
+  },
+  {
+   "id": "s55",
+   "sentence": "however, extracting the working principles from the retrieved biological articles is error-prone and time consuming.",
+   "label": "error-prone"
+  },
+  {
+   "id": "s56",
+   "sentence": "AskNature.org is a biomimetic database that includes a Biomimicry Taxonomy, biological strategy pages organized by function, search and tri-browse features, and bio-inspired product pages as examples of design successes.",
+   "label": null
+  },
+  {
+   "id": "s57",
+   "sentence": "Analyses bio-inspired products in AskNature to categorise analogical transfer.",
+   "label": null
+  },
+  {
+   "id": "s58",
+   "sentence": "In 71% of the products multiple categories of analogical transfer were present, so transfer is complex, and the majority of commercialised bio-inspired products did not rely on physical characteristic-based analogies alone.",
+   "label": null
+  },
+  {
+   "id": "s59",
+   "sentence": "A divergent thinking tool built on bio-inspired design knowledge from AskNature, aimed at the difficulty designers face extracting design knowledge from biological information",
+   "label": null
+  },
+  {
+   "id": "s60",
+   "sentence": "keyword-centric search and fragmented knowledge frameworks may hamper efficiency.",
+   "label": "keyword-centric search"
+  },
+  {
+   "id": "s61",
+   "sentence": "Uses retrieval-augmented generation, merging semantic retrieval with generative reasoning, to translate biological knowledge for stages of biomimicry design and mitigate hallucinations in LLM outputs.",
+   "label": null
+  },
+  {
+   "id": "s62",
+   "sentence": "LLMs in a Pinterest-like interface support identifying key solution mechanisms, transferring them to the problem domain and considering tradeoffs, using a tree-of-life approach for diverse inspirations.",
+   "label": null
+  },
+  {
+   "id": "s63",
+   "sentence": "Users generated more ideas, rated higher in creative quality and more diverse.",
+   "label": null
+  },
+  {
+   "id": "s64",
+   "sentence": "Limitation: BioSpark was limited in conveying active ingredients, the core abstraction underpinning how mechanisms work, and generative hallucination is a concern.",
+   "label": "generative hallucination"
+  },
+  {
+   "id": "s65",
+   "sentence": "Re-presents a problem in terms of its abstract structure and lets people use this structural representation to find analogies",
+   "label": null
+  },
+  {
+   "id": "s66",
+   "sentence": "a crowdsourcing process helps people navigate a large dataset.",
+   "label": null
+  },
+  {
+   "id": "s67",
+   "sentence": "Crowds find the most useful inspirations when the problem domain is represented abstractly and constraints more concretely.",
+   "label": null
+  },
+  {
+   "id": "s68",
+   "sentence": "In vivo study of analogy use in engineering design teams.",
+   "label": null
+  },
+  {
+   "id": "s69",
+   "sentence": "Concepts were more similar to their preceding concepts after far analogy use compared to baseline, yet far analogies increased the team's concept generation rate.",
+   "label": null
+  },
+  {
+   "id": "s70",
+   "sentence": "Aims to provide evidence on the effect of analogical distance on ideation",
+   "label": null
+  },
+  {
+   "id": "s71",
+   "sentence": "the effect on design outcomes is controversial.",
+   "label": null
+  },
+  {
+   "id": "s72",
+   "sentence": "Designers not trained in design-by-analogy benefit from sources sharing sub-functions and context with the target, producing ideas of higher novelty and quality than those exposed to more distant analogies.",
+   "label": null
+  },
+  {
+   "id": "s73",
+   "sentence": "Notes that automatically extracting analogical knowledge and constructing semantic relations between knowledge levels is a key problem for design-by-analogy",
+   "label": null
+  },
+  {
+   "id": "s74",
+   "sentence": "a knowledge graph mines semantic relationships between levels to enable structured retrieval.",
+   "label": null
+  },
+  {
+   "id": "s75",
+   "sentence": "Applies non-negative matrix factorization iteratively to build hierarchical repositories of design solutions from patents processed into component-, behavior- or material-based content, so designers can explore clusters of analogical stimuli.",
+   "label": null
+  },
+  {
+   "id": "s76",
+   "sentence": "Automatically generates abstract representations of source-domain content and applies them to discover analogous objects in semantically distant target domains.",
+   "label": null
+  },
+  {
+   "id": "s77",
+   "sentence": "It can find deep functional analogies even where there is a misleading superficial matching of terms between query and target domains.",
+   "label": null
+  },
+  {
+   "id": "s78",
+   "sentence": "Reviews knowledge graph databases and methods for modelling and predicting drug-disease relationships.",
+   "label": null
+  },
+  {
+   "id": "s79",
+   "sentence": "Drug repurposing is framed as link prediction between drug and disease nodes, using KGs that integrate multiple sources.",
+   "label": null
+  },
+  {
+   "id": "s80",
+   "sentence": "Gives an overview of KG-based repurposing methods from classical ML to graph neural networks, covering tools, construction and link prediction, and discusses their inherent advantages and limitations.",
+   "label": null
+  },
+  {
+   "id": "s81",
+   "sentence": "Repurposing old drugs uses de-risked compounds with potentially lower cost and shorter timelines.",
+   "label": null
+  },
+  {
+   "id": "s82",
+   "sentence": "Limitation: the potential of this strategy has not been as widely realized as hoped, in part owing to legal and regulatory barriers.",
+   "label": "legal and regulatory barriers"
+  },
+  {
+   "id": "s83",
+   "sentence": "Simulates Swanson's discoveries: two disjoint literature sets that do not cite or co-cite each other are linked through intermediate terms such as blood viscosity, platelet aggregation and vascular reactivity, a link later verified in clinical trials.",
+   "label": null
+  },
+  {
+   "id": "s84",
+   "sentence": "Proposes a framework for transferring technologies between industries as cross-industry innovation.",
+   "label": null
+  },
+  {
+   "id": "s85",
+   "sentence": "Conceptual model of knowledge transfer for cross-industry innovation, where novel ideas emerge from combining distant knowledge and interaction with idea suppliers from distant domains.",
+   "label": null
+  },
+  {
+   "id": "s86",
+   "sentence": "Swanson linked Raynaud's disease to reduced blood viscosity in one set of articles and fish oil to lowered blood viscosity in another.",
+   "label": null
+  },
+  {
+   "id": "s87",
+   "sentence": "No study connected Raynaud's and fish oil directly, yet the hypothesis suggested a new therapeutic use later confirmed by clinical research.",
+   "label": null
+  },
+  {
+   "id": "s88",
+   "sentence": "Knowledge is public yet undiscovered when independently created fragments are logically related but never retrieved and brought together.",
+   "label": null
+  },
+  {
+   "id": "s89",
+   "sentence": "Replicates and re-examines Swanson's Raynaud-fish oil discovery to assess how far it can be supported by a computational discovery support system.",
+   "label": null
+  },
+  {
+   "id": "s90",
+   "sentence": "Analyses Swanson's Raynaud-fish oil and migraine-magnesium discoveries in a semantic vector space, as a minimal computational account of LBD.",
+   "label": null
+  },
+  {
+   "id": "s91",
+   "sentence": "Reviews evaluation of LBD systems: domain-expert vetting, discovery replication and time-slicing.",
+   "label": null
+  },
+  {
+   "id": "s92",
+   "sentence": "Replication is cheap but systems are usually tested only against a small set of confirmed discoveries, often Swanson's own.",
+   "label": "small set"
+  },
+  {
+   "id": "s93",
+   "sentence": "Time-slicing treats co-occurrences appearing after a cutoff year as gold discoveries",
+   "label": null
+  },
+  {
+   "id": "s94",
+   "sentence": "however, using co-occurrences as a proxy for discoveries is a dramatic simplification, with very few co-occurrences representing a true discovery and the vast majority being meaningless or poorly informative.",
+   "label": "dramatic simplification"
+  },
+  {
+   "id": "s95",
+   "sentence": "Survey of literature-based discovery models and methods, including open and closed discovery and how such systems are evaluated.",
+   "label": null
+  },
+  {
+   "id": "s96",
+   "sentence": "Applies neural networks to both open and closed LBD, evaluated against replication of known discoveries and time-sliced data.",
+   "label": null
+  },
+  {
+   "id": "s97",
+   "sentence": "Survey of LBD under the ABC model, in which A-B is known in one area and B-C in another and an A-C relationship is proposed.",
+   "label": null
+  },
+  {
+   "id": "s98",
+   "sentence": "Notes that most approaches rely on PubMed and often only article abstracts, omitting contextual relationships valuable for complex hypothesis generation.",
+   "label": "only article abstracts"
+  },
+  {
+   "id": "s99",
+   "sentence": "Formulates hypothesis generation as link prediction over a temporally evolving knowledge graph, using active curriculum learning",
+   "label": null
+  },
+  {
+   "id": "s100",
+   "sentence": "temporal interactions between entities inform prediction of future relationships.",
+   "label": null
+  },
+  {
+   "id": "s101",
+   "sentence": "Uses knowledge graph completion over literature-derived relations to propose drug repurposing candidates for COVID-19, an LBD-style ABC inference.",
+   "label": null
+  },
+  {
+   "id": "s102",
+   "sentence": "Link prediction in biomedical knowledge graphs.",
+   "label": null
+  },
+  {
+   "id": "s103",
+   "sentence": "Most link prediction algorithms are black boxes such as embedding or deep-learning methods where the rationale is difficult or impossible to explain, which hampers scientific insight and user acceptance",
+   "label": "black boxes"
+  },
+  {
+   "id": "s104",
+   "sentence": "the paper adds explanation and exploration.",
+   "label": null
+  },
+  {
+   "id": "s105",
+   "sentence": "Builds a semantic network where physical concepts are nodes and links join concepts studied together, then uses neural networks to predict which links will form",
+   "label": null
+  },
+  {
+   "id": "s106",
+   "sentence": "basis of the Science4Cast link-prediction benchmark.",
+   "label": null
+  },
+  {
+   "id": "s107",
+   "sentence": "Predicts future links in a knowledge network of AI concepts (Science4Cast) so as to suggest concept pairs that will be studied jointly.",
+   "label": null
+  },
+  {
+   "id": "s108",
+   "sentence": "Analogical search engine for scientists that finds structurally similar problems across knowledge domains",
+   "label": null
+  },
+  {
+   "id": "s109",
+   "sentence": "explores distributing analogy, finding deep structural patterns across domains, over many information processors.",
+   "label": null
+  },
+  {
+   "id": "s110",
+   "sentence": "Frames creative information exploration as finding new, surprising, valuable relationships that conventional retrieval and data mining would not reveal, via bisociation: perceiving a situation in two unrelated matrices of thought.",
+   "label": null
+  },
+  {
+   "id": "s111",
+   "sentence": "Builds topic-based bisociative networks to explore links between otherwise disconnected domains of text.",
+   "label": null
+  },
+  {
+   "id": "s112",
+   "sentence": "Large-scale human study with 100+ NLP researchers comparing LLM and expert ideas",
+   "label": null
+  },
+  {
+   "id": "s113",
+   "sentence": "LLM ideas were judged more novel than human-expert ideas.",
+   "label": null
+  },
+  {
+   "id": "s114",
+   "sentence": "43 expert researchers each spent over 100 hours executing randomly assigned LLM or expert ideas.",
+   "label": null
+  },
+  {
+   "id": "s115",
+   "sentence": "Scores of LLM ideas decrease significantly more than expert ideas after execution on novelty, excitement, effectiveness and overall (p<0.05), flipping rankings on many metrics.",
+   "label": "decrease significantly"
+  },
+  {
+   "id": "s116",
+   "sentence": "Highlights the limitation of LLMs in generating effective ideas and of evaluating ideas without execution.",
+   "label": "generating effective ideas"
+  },
+  {
+   "id": "s117",
+   "sentence": "LLM judges consistently rate model-generated research questions as highly novel, a 'novelty mirage', stronger in comparative evaluation, while domain experts reach the opposite conclusion.",
+   "label": "novelty mirage"
+  },
+  {
+   "id": "s118",
+   "sentence": "Many generated questions are narrow or source-bound, which LLM judges miss unless explicitly tested.",
+   "label": "narrow or source-bound"
+  },
+  {
+   "id": "s119",
+   "sentence": "Survey of hypothesis generation and validation.",
+   "label": null
+  },
+  {
+   "id": "s120",
+   "sentence": "LLMs are often constrained by reliance on established knowledge bases and historical data, which can limit transformative or genuinely novel hypotheses and restricts exploration of counterintuitive or uncharted areas.",
+   "label": "reliance on established knowledge bases"
+  },
+  {
+   "id": "s121",
+   "sentence": "Provides definitions of serendipity and related concepts, reviews serendipity-oriented recommendation algorithms, and describes strategies to assess serendipity in recommender systems.",
+   "label": null
+  },
+  {
+   "id": "s122",
+   "sentence": "Serendipity has three components (relevance, novelty, unexpectedness), each with multiple variations.",
+   "label": null
+  },
+  {
+   "id": "s123",
+   "sentence": "Survey and empirical analysis of beyond-accuracy objectives (diversity, serendipity, novelty, coverage) in recommender systems.",
+   "label": null
+  },
+  {
+   "id": "s124",
+   "sentence": "Examines serendipity metrics for recommendations and validates them against users' perceived serendipity.",
+   "label": null
+  },
+  {
+   "id": "s125",
+   "sentence": "Serendipity metrics are divided into component metrics (e.g.",
+   "label": null
+  },
+  {
+   "id": "s126",
+   "sentence": "one common form is unexpectedness multiplied by relevance, where relevance is 1 if the item was interacted with and 0 otherwise.",
+   "label": null
+  },
+  {
+   "id": "s127",
+   "sentence": "Survey of deep learning approaches designed to produce serendipitous recommendations.",
+   "label": null
+  },
+  {
+   "id": "s128",
+   "sentence": "Systematic literature review of serendipity in recommender systems",
+   "label": null
+  },
+  {
+   "id": "s129",
+   "sentence": "serendipity is treated as a criterion whose usefulness is the main advantage over novelty and diversity.",
+   "label": null
+  },
+  {
+   "id": "s130",
+   "sentence": "Proposes a topic-level Bayesian surprise measure to capture serendipity in recommendations, comparing what a user is expected to like against what is recommended.",
+   "label": null
+  },
+  {
+   "id": "s131",
+   "sentence": "Addresses anomalous results from using Rao-Stirling diversity, relating them to how variety and balance are combined in its definition, and proposes a modified indicator (DIV) that operationalizes variety, balance, and disparity independently.",
+   "label": null
+  },
+  {
+   "id": "s132",
+   "sentence": "Shows how the Rao-Stirling diversity index can compare institutions' interdisciplinary practices, with decompositions exploring different components of diversity in cited references.",
+   "label": null
+  },
+  {
+   "id": "s133",
+   "sentence": "Discusses how disparity, variety, and balance can be distinguished and recombined in measures of diversity and interdisciplinarity.",
+   "label": null
+  },
+  {
+   "id": "s134",
+   "sentence": "Examines popularity bias in generative recommenders, a long-standing issue.",
+   "label": "popularity bias"
+  },
+  {
+   "id": "s135",
+   "sentence": "Identifies that severe popularity bias emerges from token-level optimization flaws and undifferentiated item tokenization, and proposes Ghost with asymmetric unlikelihood optimization and skeleton-founded tokenization.",
+   "label": "severe popularity bias"
+  },
+  {
+   "id": "s136",
+   "sentence": "Systematic review that concludes filter bubbles exist in recommender systems, examining forms of bias that contribute to personalization problems arising in system design, implementation, evaluation, and user interaction.",
+   "label": "filter bubbles"
+  },
+  {
+   "id": "s137",
+   "sentence": "Notes that recommender systems often amplify bias by over-recommending popular items, which can lead to filter bubbles where users' interests become overly skewed and self-reinforcing",
+   "label": "over-recommending popular items"
+  },
+  {
+   "id": "s138",
+   "sentence": "applies causal intervention on personal popularity.",
+   "label": null
+  },
+  {
+   "id": "s139",
+   "sentence": "Multi-armed bandits model an agent that both acquires new knowledge (exploration) and optimizes decisions from existing knowledge (exploitation)",
+   "label": null
+  },
+  {
+   "id": "s140",
+   "sentence": "reviews bandit use for diverse document ranking, news recommendation, and ranker evaluation.",
+   "label": null
+  },
+  {
+   "id": "s141",
+   "sentence": "Shows that balancing exploration and exploitation can substantially improve online performance of learning to rank, via the first online learning to rank method that balances the two when learning from noisy, relative feedback.",
+   "label": null
+  },
+  {
+   "id": "s142",
+   "sentence": "Addresses learning rankings from search engine logs with an active exploration strategy that yields faster learning, using a Bayesian approach to choose rankings whose user interactions give more informative training data.",
+   "label": null
+  },
+  {
+   "id": "s143",
+   "sentence": "Analysis of 17.9 million papers finds the highest-impact science is grounded in exceptionally conventional combinations of prior work while also featuring an intrusion of unusual combinations",
+   "label": null
+  },
+  {
+   "id": "s144",
+   "sentence": "a journal pair is atypical if less likely than random to be co-cited.",
+   "label": null
+  },
+  {
+   "id": "s145",
+   "sentence": "Papers of this type were twice as likely to be highly cited.",
+   "label": null
+  },
+  {
+   "id": "s146",
+   "sentence": "Novelty alone was not the driver of impact.",
+   "label": null
+  },
+  {
+   "id": "s147",
+   "sentence": "Simplifies analogical relations to purpose (what problem does it solve) and mechanism (how)",
+   "label": null
+  },
+  {
+   "id": "s148",
+   "sentence": "SOLVENT is a mixed-initiative system where humans annotate background, purpose, mechanism and findings of papers and a model builds a semantic representation to find cross-domain analogies.",
+   "label": null
+  },
+  {
+   "id": "s149",
+   "sentence": "It finds more analogies than baseline IR approaches and results are useful to experts.",
+   "label": null
+  },
+  {
+   "id": "s150",
+   "sentence": "Uses latent semantic analysis on full text to measure distance between citing and cited articles",
+   "label": null
+  },
+  {
+   "id": "s151",
+   "sentence": "the mean distance has steadily increased since 1990, so scholars cite more distantly related work than 20 years earlier.",
+   "label": null
+  },
+  {
+   "id": "s152",
+   "sentence": "Argues diverse and novel recommendations in paper recommendation expose researchers to ideas from other fields, removing barriers to interdisciplinary research",
+   "label": null
+  },
+  {
+   "id": "s153",
+   "sentence": "assesses disciplinary diversity of recommended papers.",
+   "label": null
+  },
+  {
+   "id": "s154",
+   "sentence": "Learns an MMR model, which re-ranks by query relevance while penalizing similarity to already selected documents, by directly optimizing diversity evaluation measures.",
+   "label": null
+  },
+  {
+   "id": "s155",
+   "sentence": "Reviews literature-based discovery, which uncovers undiscovered public knowledge by linking topics across disconnected literatures, exemplified by the fish oil and Raynaud's syndrome link.",
+   "label": null
+  },
+  {
+   "id": "s156",
+   "sentence": "Studies spontaneous word choice for objects in five application-related domains and finds surprisingly large variability: two people favor the same term with probability less than 0.20.",
+   "label": "surprisingly large variability"
+  },
+  {
+   "id": "s157",
+   "sentence": "Limitation stated: using one designer's favorite single word results in 80-90 percent failure rates in many common situations.",
+   "label": "80-90 percent failure rates"
+  },
+  {
+   "id": "s158",
+   "sentence": "Derives an optimal 'unlimited aliasing' strategy shown to give several-fold improvements",
+   "label": null
+  },
+  {
+   "id": "s159",
+   "sentence": "three access terms improve success by 50-100% over a single term.",
+   "label": null
+  },
+  {
+   "id": "s160",
+   "sentence": "Argues a fundamental deficiency of information retrieval is that the words searchers use often are not the words by which the information has been indexed (synonymy and polysemy).",
+   "label": "synonymy and polysemy"
+  },
+  {
+   "id": "s161",
+   "sentence": "Uses truncated singular value decomposition to estimate latent structure in word usage across documents.",
+   "label": null
+  },
+  {
+   "id": "s162",
+   "sentence": "Limitation noted in secondary description: LSI is designed primarily to handle synonymy (recall) and is less successful with polysemy (precision).",
+   "label": "less successful with polysemy"
+  },
+  {
+   "id": "s163",
+   "sentence": "Argues that coarse-grained similar/not-similar judgments neglect the facets (e.g., method, findings) that make research papers similar.",
+   "label": "neglect the facets"
+  },
+  {
+   "id": "s164",
+   "sentence": "Treats aspect-based similarity as pairwise sequence-pair classification with Transformer models over titles and abstracts, so one can obtain tailored recommendations such as similar methods but different findings.",
+   "label": null
+  },
+  {
+   "id": "s165",
+   "sentence": "Proposes specialized document embeddings for aspect-based similarity of research papers, following the pairwise-classification approach of earlier work, motivated by tailored recommendations along research aspects.",
+   "label": null
+  },
+  {
+   "id": "s166",
+   "sentence": "A test collection for faceted query-by-example over computer science papers, where the facets of a paper (e.g., background, method, result) define what similar means.",
+   "label": null
+  },
+  {
+   "id": "s167",
+   "sentence": "Recognizes that research paper similarity is concerned with multiple facets of the presented research.",
+   "label": null
+  },
+  {
+   "id": "s168",
+   "sentence": "Pretrains a Transformer on the citation graph as an inter-document relatedness signal using a triplet loss.",
+   "label": null
+  },
+  {
+   "id": "s169",
+   "sentence": "Needs no citation information at inference, so new uncited papers can be embedded.",
+   "label": null
+  },
+  {
+   "id": "s170",
+   "sentence": "Introduces the SCIDOCS benchmark of seven document-level tasks.",
+   "label": null
+  },
+  {
+   "id": "s171",
+   "sentence": "Motivation: token/sentence-level language models lack document-level relatedness signal.",
+   "label": null
+  },
+  {
+   "id": "s172",
+   "sentence": "Benchmark of 24 tasks across classification, regression, ranking and search formats.",
+   "label": null
+  },
+  {
+   "id": "s173",
+   "sentence": "Limitation stated: state-of-the-art models like SPECTER and SciNCL struggle to generalize across task formats, and simple multi-task training fails to improve them.",
+   "label": "struggle to generalize"
+  },
+  {
+   "id": "s174",
+   "sentence": "Learning multiple embeddings per document tailored to each format (SPECTER2) improves performance by over 2 points absolute.",
+   "label": null
+  },
+  {
+   "id": "s175",
+   "sentence": "Benchmark of 18 datasets including SciFact (fact checking) and SCIDOCS (citation prediction) for zero-shot evaluation.",
+   "label": null
+  },
+  {
+   "id": "s176",
+   "sentence": "Finds BM25 a robust baseline, with re-ranking and late-interaction models best on average at high compute cost.",
+   "label": null
+  },
+  {
+   "id": "s177",
+   "sentence": "Limitation: dense-retrieval models are computationally efficient but often underperform, showing room for improvement in generalization.",
+   "label": "often underperform"
+  },
+  {
+   "id": "s178",
+   "sentence": "Builds EntityQuestions from Wikidata facts and finds dense retrievers drastically underperform sparse methods.",
+   "label": "drastically underperform"
+  },
+  {
+   "id": "s179",
+   "sentence": "Limitation: dense retrievers only generalize to common entities unless the question pattern was seen in training",
+   "label": "only generalize to common entities"
+  },
+  {
+   "id": "s180",
+   "sentence": "data augmentation does not fix the generalization problem.",
+   "label": "generalization problem"
+  },
+  {
+   "id": "s181",
+   "sentence": "Argues a more robust passage encoder helps.",
+   "label": null
+  },
+  {
+   "id": "s182",
+   "sentence": "HyDE prompts an instruction-following LLM to write a hypothetical document that captures relevance patterns but may contain hallucinations, then embeds it with an unsupervised contrastive encoder (Contriever) to find a neighborhood of real documents in the corpus embedding space.",
+   "label": null
+  },
+  {
+   "id": "s183",
+   "sentence": "Bridges query and document vocabulary without relevance labels.",
+   "label": null
+  },
+  {
+   "id": "s184",
+   "sentence": "Examines LLM-based query expansion methods such as HyDE and Query2doc that use generated pseudo-documents to enhance retrieval, questioning whether gains reflect real vocabulary bridging or leakage of knowledge memorized by the LLM.",
+   "label": "leakage"
+  },
+  {
+   "id": "s185",
+   "sentence": "Survey stating query expansion remains a core technique for mitigating vocabulary mismatch, with its design space reshaped by pre-trained and large language models.",
+   "label": null
+  },
+  {
+   "id": "s186",
+   "sentence": "Distinguishes embedding-level methods that strengthen the query vector without emitting terms from selection-based explicit methods that keep vocabulary corpus-grounded.",
+   "label": null
+  },
+  {
+   "id": "s187",
+   "sentence": "Addresses query drift in pseudo-relevance-feedback query expansion, where the expanded query moves away from the user's original intent because of irrelevant feedback information, proposing a method to prevent it.",
+   "label": "query drift"
+  },
+  {
+   "id": "s188",
+   "sentence": "Uses large language models to filter pseudo-relevance feedback documents to reduce query drift, where irrelevant information in the feedback set pulls the reformulated query toward an unintended topic, while keeping retrieval effectiveness.",
+   "label": "query drift"
+  },
+  {
+   "id": "s189",
+   "sentence": "Reviews Swanson's literature-based discovery: connecting literatures that are logically related but bibliographically noninteractive, exemplified by magnesium deprivation and migraine, two literatures never jointly cited that yielded a hypothesis later supported by clinical trials.",
+   "label": null
+  },
+  {
+   "id": "s190",
+   "sentence": "Extends OAEI datasets to study hallucinations of LLMs in ontology matching.",
+   "label": null
+  },
+  {
+   "id": "s191",
+   "sentence": "Limitation: although LLMs bring strong background knowledge, they may miss true mappings and generate false mappings, and hallucination is common in domain-specific downstream tasks.",
+   "label": "hallucination is common"
+  },
+  {
+   "id": "s192",
+   "sentence": "Applies large language models to ontology matching across OAEI tracks",
+   "label": null
+  },
+  {
+   "id": "s193",
+   "sentence": "evaluation reports LLM-based systems achieve results close to state-of-the-art on simple matching tasks and improve on complex and few-shot tasks.",
+   "label": null
+  },
+  {
+   "id": "s194",
+   "sentence": "Uses LLM agents for ontology matching, evaluated on OAEI tracks",
+   "label": null
+  },
+  {
+   "id": "s195",
+   "sentence": "matches ontologies whose concept labels differ in wording, a form of cross-vocabulary alignment.",
+   "label": null
+  },
+  {
+   "id": "s196",
+   "sentence": "Improves the traditional Chao lower bound, which uses only singletons and doubletons, by applying a modified Good-Turing frequency formula and adding tripleton and quadrupleton counts to correct bias in the estimate of undetected species.",
+   "label": null
+  },
+  {
+   "id": "s197",
+   "sentence": "Limitation stated: the traditional lower bound uses only information on the rarest species, so it can be biased when heterogeneity is strong.",
+   "label": "heterogeneity"
+  },
+  {
+   "id": "s198",
+   "sentence": "Extends the Chao nonparametric lower bound from a single community to the number of species shared by several communities, using frequency counts of rare shared species.",
+   "label": null
+  },
+  {
+   "id": "s199",
+   "sentence": "Proposes comparing communities at equal sample coverage (completeness) instead of equal sample size.",
+   "label": null
+  },
+  {
+   "id": "s200",
+   "sentence": "Limitation of the old approach: traditional rarefaction or extrapolation to equal-sized samples can misrepresent richness relationships because a sample of a given size may fully characterize a low-diversity community but be insufficient for a richer one, systematically biasing differences.",
+   "label": "misrepresent richness relationships"
+  },
+  {
+   "id": "s201",
+   "sentence": "Integrated curves based on sampling theory link rarefaction (interpolation) and prediction (extrapolation), standardizing samples on sample size or sample completeness.",
+   "label": null
+  },
+  {
+   "id": "s202",
+   "sentence": "Motivated by the fact that empirical estimates of Hill numbers tend to be an increasing function of sampling effort.",
+   "label": null
+  },
+  {
+   "id": "s203",
+   "sentence": "Software providing sample-size- and coverage-based rarefaction and extrapolation curves for Hill numbers from abundance or incidence data, giving a unified standardization for comparing assemblages.",
+   "label": null
+  },
+  {
+   "id": "s204",
+   "sentence": "Uses a small sample to estimate the number of distinct elements ('species') that would be seen in a larger future sample.",
+   "label": null
+  },
+  {
+   "id": "s205",
+   "sentence": "Classical results extend to sample size 2n",
+   "label": null
+  },
+  {
+   "id": "s206",
+   "sentence": "this smoothed Good-Toulmin estimator is minimax optimal and extends to n log n samples.",
+   "label": null
+  },
+  {
+   "id": "s207",
+   "sentence": "Limitation: the unsmoothed Good-Toulmin estimator failed because of exponential growth of its variance, and prediction reach is bounded by roughly log n.",
+   "label": "exponential growth of its variance"
+  },
+  {
+   "id": "s208",
+   "sentence": "Shows that when a species appears r times in a sample of size N, r/N is a poor estimate of its population frequency when r is small.",
+   "label": "poor estimate"
+  },
+  {
+   "id": "s209",
+   "sentence": "Gives estimates based on smoothed counts n_r of species represented r times, assuming virtually nothing about the population.",
+   "label": null
+  },
+  {
+   "id": "s210",
+   "sentence": "Studies the convergence properties of the Chao unseen-species estimator, which estimates the number of species not yet observed from singleton and doubleton counts.",
+   "label": null
+  },
+  {
+   "id": "s211",
+   "sentence": "Argues that the amount of unseen species depends chiefly on information about the seen part of the sample, relating unseen-mass estimation to the frequency profile of observed species.",
+   "label": null
+  },
+  {
+   "id": "s212",
+   "sentence": "Splits richness estimation into estimating local richness and distinctness of assemblages.",
+   "label": null
+  },
+  {
+   "id": "s213",
+   "sentence": "Local richness is estimated by extrapolating species accumulation curves, fitting parametric relative abundance distributions, or non-parametric techniques based on distributions of individuals among species or species among samples.",
+   "label": null
+  },
+  {
+   "id": "s214",
+   "sentence": "Develops analytical rarefaction and extrapolation of incidence-based species accumulation curves, with variance estimates, to compare samples of different sizes.",
+   "label": null
+  },
+  {
+   "id": "s215",
+   "sentence": "Notes ecologists have not always appreciated effects of abundance and sampling effort on richness comparisons",
+   "label": null
+  },
+  {
+   "id": "s216",
+   "sentence": "recommends accumulation and rarefaction curves.",
+   "label": null
+  },
+  {
+   "id": "s217",
+   "sentence": "Limitation stated: for taxon-rich groups such as tropical arthropods observed richness rarely reaches an asymptote despite intensive sampling, so asymptotic estimators provide only lower-bound estimates.",
+   "label": "rarely reaches an asymptote"
+  },
+  {
+   "id": "s218",
+   "sentence": "Models richness estimation with Poisson or binomial mixtures for abundance and incidence data and examines the role of rare species and the inferential challenges of estimating richness from samples.",
+   "label": null
+  },
+  {
+   "id": "s219",
+   "sentence": "Addresses how much sampling is sufficient for asymptotic minimum (lower-bound) richness estimators such as Chao to stabilize.",
+   "label": null
+  },
+  {
+   "id": "s220",
+   "sentence": "Burnham and Overton generalized-jackknife estimator of closed-population size when capture probabilities vary among individuals",
+   "label": null
+  },
+  {
+   "id": "s221",
+   "sentence": "the estimator is a linear combination of capture frequencies, chosen from a sequence of estimators.",
+   "label": null
+  },
+  {
+   "id": "s222",
+   "sentence": "Proposes a point estimator and confidence interval for closed population size under heterogeneity of capture probability.",
+   "label": null
+  },
+  {
+   "id": "s223",
+   "sentence": "Especially useful when most captured individuals are caught once or twice, a case where the jackknife estimator usually does not work well.",
+   "label": "does not work well"
+  },
+  {
+   "id": "s224",
+   "sentence": "Generalizes Chao's lower bound estimator to use covariate information.",
+   "label": null
+  },
+  {
+   "id": "s225",
+   "sentence": "Notes that Chao's estimator, developed under unobserved heterogeneity, is a lower bound but uses only part of the available information and hence suffers from lack of efficiency.",
+   "label": "lack of efficiency"
+  },
+  {
+   "id": "s226",
+   "sentence": "Proposes capture-mark-recapture modeling as an empirically derived stopping rule for deciding when to stop searching in systematic reviews, and to estimate the total literature on a topic.",
+   "label": null
+  },
+  {
+   "id": "s227",
+   "sentence": "Examines capture-recapture for estimating the number of missing references in searches for systematic reviews.",
+   "label": null
+  },
+  {
+   "id": "s228",
+   "sentence": "Limitation stated: manual model selection yielded large estimates that varied markedly with broad confidence intervals, whereas boosting was robust against overfitting.",
+   "label": "varied markedly"
+  },
+  {
+   "id": "s229",
+   "sentence": "In a methodological study of 25 in-depth interviews, code saturation was reached at nine interviews, when the range of thematic issues was identified.",
+   "label": null
+  },
+  {
+   "id": "s230",
+   "sentence": "16 to 24 interviews were needed to reach meaning saturation, a richly textured understanding of the issues.",
+   "label": null
+  },
+  {
+   "id": "s231",
+   "sentence": "Code saturation may indicate when researchers have 'heard it all', but meaning saturation is needed to 'understand it all'.",
+   "label": null
+  },
+  {
+   "id": "s232",
+   "sentence": "Stopping on new-code counts alone therefore stops early.",
+   "label": "stops early"
+  },
+  {
+   "id": "s233",
+   "sentence": "Uses sixty in-depth interviews with women in two West African countries and systematically documents the degree of data saturation and variability over the course of thematic analysis.",
+   "label": null
+  },
+  {
+   "id": "s234",
+   "sentence": "Saturation occurred within the first twelve interviews, although basic elements for metathemes were present as early as six interviews.",
+   "label": null
+  },
+  {
+   "id": "s235",
+   "sentence": "Variability within the data followed similar patterns.",
+   "label": null
+  },
+  {
+   "id": "s236",
+   "sentence": "Proposes a quantitative saturation assessment built on three parameters: base size, run length, and a new information threshold.",
+   "label": null
+  },
+  {
+   "id": "s237",
+   "sentence": "Example: base size 4, run length 2, threshold of 5% or less new information.",
+   "label": null
+  },
+  {
+   "id": "s238",
+   "sentence": "With a 5% threshold, saturation occurred after six to seven interviews at the median and 11 to 12 at the high end.",
+   "label": null
+  },
+  {
+   "id": "s239",
+   "sentence": "0%) gives a more conservative assessment.",
+   "label": null
+  },
+  {
+   "id": "s240",
+   "sentence": "Adapts species accumulation models from ecology: a latent distribution of theme elicitation probabilities, with accumulation of themes as a mixture of zero-truncated binomials.",
+   "label": null
+  },
+  {
+   "id": "s241",
+   "sentence": "After an initial sample of 25 to 200 participants, doubling the sample size, the model predicted the number of themes with mean error of 1 to 3% on simulated data and under 2% on real data.",
+   "label": null
+  },
+  {
+   "id": "s242",
+   "sentence": "Stopping when the slope of the expected accumulation curve (per 5 participants) fell below 0.05 identified 97.5% of themes.",
+   "label": null
+  },
+  {
+   "id": "s243",
+   "sentence": "Questions the universal application of saturation across qualitative methodologies.",
+   "label": null
+  },
+  {
+   "id": "s244",
+   "sentence": "Argues saturation is often used to justify sample sizes yet its relevance varies by approach, and its uncritical use risks methodological mismatch and oversimplification.",
+   "label": "methodological mismatch"
+  },
+  {
+   "id": "s245",
+   "sentence": "Researchers should justify sampling and analytic strategy by the epistemological logic of the chosen method.",
+   "label": null
+  },
+  {
+   "id": "s246",
+   "sentence": "Proposes 'information power': the more information the sample holds that is relevant to the study, the fewer participants are needed.",
+   "label": null
+  },
+  {
+   "id": "s247",
+   "sentence": "Adequate size depends on study aim, sample specificity, use of established theory, quality of dialogue, and analysis strategy.",
+   "label": null
+  },
+  {
+   "id": "s248",
+   "sentence": "Positions this against saturation, which is tied to a specific methodology and inconsistently applied.",
+   "label": "inconsistently applied"
+  },
+  {
+   "id": "s249",
+   "sentence": "Systematic review of empirical tests of saturation.",
+   "label": null
+  },
+  {
+   "id": "s250",
+   "sentence": "9 to 17 interviews or 4 to 8 focus group discussions reached saturation",
+   "label": null
+  },
+  {
+   "id": "s251",
+   "sentence": "across designs a range of 5 to 24 was reported.",
+   "label": null
+  },
+  {
+   "id": "s252",
+   "sentence": "Most reviewed studies had relatively homogeneous populations and narrowly defined objectives.",
+   "label": "homogeneous populations"
+  },
+  {
+   "id": "s253",
+   "sentence": "Larger samples are needed for more heterogeneous populations or broader aims.",
+   "label": null
+  },
+  {
+   "id": "s254",
+   "sentence": "Addresses the problem of determining the optimum time when testing can stop and the system be considered ready for operational use.",
+   "label": null
+  },
+  {
+   "id": "s255",
+   "sentence": "The answer depends on the model of the software failure process and the criterion used for readiness.",
+   "label": null
+  },
+  {
+   "id": "s256",
+   "sentence": "With the Goel-Okumoto time-dependent error detection model, two criteria are studied: software reliability and total expected cost, and an optimal release policy is derived from the cost criterion.",
+   "label": null
+  },
+  {
+   "id": "s257",
+   "sentence": "Derives a release policy for software reliability growth models that balances cost against reliability.",
+   "label": null
+  },
+  {
+   "id": "s258",
+   "sentence": "Frames the trade-off directly: if testing time is very large the software is more reliable but testing cost rises, and if testing time is short the software may not be fault free.",
+   "label": "may not be fault free"
+  },
+  {
+   "id": "s259",
+   "sentence": "Deciding when to close a crowdtesting task is largely done by guesswork.",
+   "label": "guesswork"
+  },
+  {
+   "id": "s260",
+   "sentence": "Bug detection rate decreases sharply during crowdtesting, so knowing when to stop can improve cost-effectiveness.",
+   "label": null
+  },
+  {
+   "id": "s261",
+   "sentence": "Presents 8 methods for close prediction based on bug trend, bug arrival model, and capture-recapture model.",
+   "label": null
+  },
+  {
+   "id": "s262",
+   "sentence": "Stopping too early gives unsatisfying quality",
+   "label": "unsatisfying quality"
+  },
+  {
+   "id": "s263",
+   "sentence": "stopping too late wastes testing resources.",
+   "label": "wastes testing resources"
+  },
+  {
+   "id": "s264",
+   "sentence": "Evaluates capture-recapture models from ecology for estimating how many defects remain after inspection, so a manager can decide whether re-inspection is needed.",
+   "label": null
+  },
+  {
+   "id": "s265",
+   "sentence": "Models are affected by the number of inspectors",
+   "label": null
+  },
+  {
+   "id": "s266",
+   "sentence": "when the number is too small no model is sufficiently accurate and underestimation may be substantial.",
+   "label": "underestimation"
+  },
+  {
+   "id": "s267",
+   "sentence": "Critiques the capture-recapture method for estimating remaining software defects.",
+   "label": null
+  },
+  {
+   "id": "s268",
+   "sentence": "Reported problems: estimators can produce extreme estimates of residual defects, point estimates ignore error levels, and few studies compare predicted remaining defects with real ones, so quality-management decisions built on them may carry high risk of mistakes.",
+   "label": "extreme estimates"
+  },
+  {
+   "id": "s269",
+   "sentence": "Frames software testing as species discovery from ecology: each bug or coverage element is a species and each test input a sample.",
+   "label": null
+  },
+  {
+   "id": "s270",
+   "sentence": "Applies the Good-Turing estimator, with discovery probability estimated as f1/n (singletons over total inputs), to estimate the probability that the next test input reveals something new.",
+   "label": null
+  },
+  {
+   "id": "s271",
+   "sentence": "Residual risk is the probability that an undiscovered species remains.",
+   "label": null
+  },
+  {
+   "id": "s272",
+   "sentence": "Estimates the residual risk of a fuzzing campaign that has found no errors, i.e.",
+   "label": null
+  },
+  {
+   "id": "s273",
+   "sentence": "the probability that a bug exists that has not been found, using the Good-Turing estimator extended to greybox fuzzing with current corpus and global distribution.",
+   "label": null
+  },
+  {
+   "id": "s274",
+   "sentence": "Gives a statistical statement about the chance that the next input discovers something new after extended runs with no discovery.",
+   "label": null
+  },
+  {
+   "id": "s275",
+   "sentence": "Advocates a statistical estimate of the number of code elements in the fuzzer's search space, using species richness estimators from applied statistics whose accuracy improves with analysis runtime.",
+   "label": null
+  },
+  {
+   "id": "s276",
+   "sentence": "The estimate measures untested code, technique effectiveness, and completeness of the ongoing campaign relative to asymptotic maximum achievable coverage.",
+   "label": null
+  },
+  {
+   "id": "s277",
+   "sentence": "Examines whether species-richness estimators of maximum achievable coverage are reliable.",
+   "label": null
+  },
+  {
+   "id": "s278",
+   "sentence": "Notes static reachability gives an upper bound that is often highly inaccurate, and that the lack of reliable benchmarks with labeled ground truth has limited rigorous evaluation of the statistical estimators.",
+   "label": "highly inaccurate"
+  },
+  {
+   "id": "s279",
+   "sentence": "Adapts a reliability check without ground truth by varying the sampling unit size, which in theory should not change the estimate.",
+   "label": null
+  },
+  {
+   "id": "s280",
+   "sentence": "A fuzzer can run forever, but as more resources are spent the coverage rate drops and utility declines.",
+   "label": null
+  },
+  {
+   "id": "s281",
+   "sentence": "Asks whether the future coverage rate can be predicted during the campaign and how prediction error grows with horizon.",
+   "label": null
+  },
+  {
+   "id": "s282",
+   "sentence": "The method accounts for adaptive bias and reports up to an order of magnitude lower prediction error and 35-77% average error reduction in predicting time to a target coverage rate.",
+   "label": null
+  },
+  {
+   "id": "s283",
+   "sentence": "Hypothesizes that time can be saved with low risk of missing bugs by stopping a fuzzing campaign when it stagnates on potentially vulnerable code regions.",
+   "label": null
+  },
+  {
+   "id": "s284",
+   "sentence": "Uses coverage of predicted-vulnerable fragments instead of whole-codebase coverage as the saturation signal, since whole-code coverage plateaus (roughly 12 to 24 hours) while deep logic stays unreachable.",
+   "label": null
+  },
+  {
+   "id": "s285",
+   "sentence": "Campaigns are otherwise stopped when crashes or coverage have not increased for some period.",
+   "label": null
+  },
+  {
+   "id": "s286",
+   "sentence": "Variant of the secretary problem where candidates arrive sequentially and are ranked relative to predecessors, with the aim of maximizing the chance of selecting the best.",
+   "label": null
+  },
+  {
+   "id": "s287",
+   "sentence": "The variant adds querying an external expert during reviewing, where experts may provide faulty suggestions.",
+   "label": "faulty suggestions"
+  },
+  {
+   "id": "s288",
+   "sentence": "Takes a unifying approach to single-selection optimal stopping problems with random arrival order and independent sampling of items, linking the secretary problem to the i.i.d.",
+   "label": null
+  },
+  {
+   "id": "s289",
+   "sentence": "Studies a secretary-problem variant where the decision maker accepts a good-enough candidate rather than the best, combining closed-form stopping solutions with simulated annealing.",
+   "label": null
+  },
+  {
+   "id": "s290",
+   "sentence": "In contrast to prior investigations that find no evidence for learning in the classical scenario, in the repeated setting the authors observe substantial learning resulting in near-optimal stopping behavior.",
+   "label": null
+  },
+  {
+   "id": "s291",
+   "sentence": "Participants' behavior is best described by a class of threshold-based models that contains the theoretically optimal strategy.",
+   "label": null
+  },
+  {
+   "id": "s292",
+   "sentence": "Examines whether human foraging in patchy environments follows marginal value theorem predictions of patch residence time as environment quality varies.",
+   "label": null
+  },
+  {
+   "id": "s293",
+   "sentence": "Tests whether foraging for social resources follows Marginal Value Theorem principles, in which a forager leaves a patch when its marginal rate falls to the environment average.",
+   "label": null
+  },
+  {
+   "id": "s294",
+   "sentence": "Experimental analysis and simulation model comparing simple patch-leaving decision rules with predictions of the Marginal Value Theorem.",
+   "label": null
+  },
+  {
+   "id": "s295",
+   "sentence": "Studies patch foraging when environment statistics are unknown, finding behavior follows the MVT with Bayesian updating of the forager's environment representation.",
+   "label": null
+  },
+  {
+   "id": "s296",
+   "sentence": "Notes that the MVT is only valid in deterministic environments whose statistics are known to the forager, and naturalistic environments seldom meet these requirements.",
+   "label": "deterministic environments"
+  },
+  {
+   "id": "s297",
+   "sentence": "Extends the MVT to include predation risk.",
+   "label": null
+  },
+  {
+   "id": "s298",
+   "sentence": "States that a major limitation of the MVT is that it considers resource acquisition only, omitting risks inherent to foraging such as predation risk.",
+   "label": "predation risk"
+  },
+  {
+   "id": "s299",
+   "sentence": "Develops a normative theory of patch-foraging decisions for environments beyond the deterministic, known-statistics case assumed by the classical marginal value theorem.",
+   "label": null
+  },
+  {
+   "id": "s300",
+   "sentence": "Compares a futility design with stochastic curtailment for stopping a trial when treatment appears ineffective.",
+   "label": null
+  },
+  {
+   "id": "s301",
+   "sentence": "Examines stochastic curtailment, which stops a trial based on conditional power to reject the null at the planned end, within group sequential designs.",
+   "label": null
+  },
+  {
+   "id": "s302",
+   "sentence": "Related literature notes stopping criteria based on stochastic curtailment are difficult to interpret on the scale of estimated treatment effects or unconditional power.",
+   "label": "difficult to interpret"
+  },
+  {
+   "id": "s303",
+   "sentence": "Simulation study of overestimation when trials stop early.",
+   "label": "overestimation"
+  },
+  {
+   "id": "s304",
+   "sentence": "Stopping rules are prone to stop a trial at a random high, so the crude estimate exaggerates the true effect",
+   "label": "random high"
+  },
+  {
+   "id": "s305",
+   "sentence": "overestimation is most common when few outcome events have occurred, especially under 200.",
+   "label": "overestimation"
+  },
+  {
+   "id": "s306",
+   "sentence": "Meta-regression of truncated randomized trials: truncated trials showed greater effect sizes than non-truncated trials, especially in small studies, so stopping at a random high exaggerates the estimate.",
+   "label": "exaggerates the estimate"
+  },
+  {
+   "id": "s307",
+   "sentence": "Proposes a stopping criterion guaranteeing that the change in generalization error from adding a new sample is bounded by the annotation cost",
+   "label": null
+  },
+  {
+   "id": "s308",
+   "sentence": "applicable to any Bayesian active learning.",
+   "label": null
+  },
+  {
+   "id": "s309",
+   "sentence": "Stopping criterion based on the difference in expected generalization errors and hypothesis testing, using a novel upper bound derived from PAC-Bayesian theory.",
+   "label": null
+  },
+  {
+   "id": "s310",
+   "sentence": "Analyzes stopping active learning when predictions stabilize, measured by inter-model Kappa agreement between consecutive models exceeding a threshold for three consecutive iterations.",
+   "label": null
+  },
+  {
+   "id": "s311",
+   "sentence": "Notes that while many papers apply active learning to NLP tasks, little work has defined a stopping criterion",
+   "label": null
+  },
+  {
+   "id": "s312",
+   "sentence": "studies stopping criteria for named entity recognition.",
+   "label": null
+  },
+  {
+   "id": "s313",
+   "sentence": "Characterizes the complexity of best-arm identification in one-parameter bandit problems with a tight lower bound on sample complexity.",
+   "label": null
+  },
+  {
+   "id": "s314",
+   "sentence": "Proposes Track-and-Stop: a sampling rule tracking optimal arm proportions and a Chernoff stopping rule.",
+   "label": null
+  },
+  {
+   "id": "s315",
+   "sentence": "Improves Wald's SPRT, which stops when the cumulative likelihood ratio crosses thresholds set by the type-I and type-II error levels, by avoiding overshoot at the boundary.",
+   "label": null
+  },
+  {
+   "id": "s316",
+   "sentence": "A TAR stopping method predicts when a reviewer has examined enough documents to reach a target recall while minimising documents examined.",
+   "label": null
+  },
+  {
+   "id": "s317",
+   "sentence": "The paper models the rate of relevant documents found down the ranking with point processes (counting processes) to decide when to stop.",
+   "label": null
+  },
+  {
+   "id": "s318",
+   "sentence": "Evaluated at a range of recall targets on TAR benchmarks.",
+   "label": null
+  },
+  {
+   "id": "s319",
+   "sentence": "Proposes an ensemble-based active learning strategy and a stopping criterion using Chao's population size estimator (from ecology/capture-recapture) to estimate prevalence of relevant documents.",
+   "label": null
+  },
+  {
+   "id": "s320",
+   "sentence": "Two versions of Chao's estimator are integrated into a TAR system.",
+   "label": null
+  },
+  {
+   "id": "s321",
+   "sentence": "Evaluated in an extensive simulation study and compared with other stopping methods.",
+   "label": null
+  },
+  {
+   "id": "s322",
+   "sentence": "TAR workflows must meet a recall target while holding down costs.",
+   "label": null
+  },
+  {
+   "id": "s323",
+   "sentence": "A variety of heuristic stopping rules have been suggested but none have been tested against a range of recall targets and tasks.",
+   "label": "heuristic stopping rules"
+  },
+  {
+   "id": "s324",
+   "sentence": "The paper proposes Quant and QuantCI, based on model-based estimation from survey research, and finds them accurate at hitting a range of recall targets while substantially reducing review costs.",
+   "label": null
+  },
+  {
+   "id": "s325",
+   "sentence": "Uses quantile estimation theory to give sample-based stopping rules for one-phase TAR that are statistically valid, including the Quantile Point Estimate Threshold (QPET) rule usable with any sample size and recall target.",
+   "label": null
+  },
+  {
+   "id": "s326",
+   "sentence": "Limitation stated: overshooting a recall target, treated as innocuous in past evaluations of stopping rules, is a major source of excess cost",
+   "label": "overshooting a recall target"
+  },
+  {
+   "id": "s327",
+   "sentence": "and estimating recall by sampling requires roughly 385 relevant documents for a 0.05 margin at 95% confidence, so low prevalence needs very large samples.",
+   "label": "very large samples"
+  },
+  {
+   "id": "s328",
+   "sentence": "Proposes confidence-based stopping methods for screening in systematic reviews, in the family of TAR stopping methods that decide when a reviewer can stop while meeting a recall target.",
+   "label": null
+  },
+  {
+   "id": "s329",
+   "sentence": "Treats the decision to stop document screening as a decision-theoretic problem, trading review cost against missed relevant documents.",
+   "label": null
+  },
+  {
+   "id": "s330",
+   "sentence": "Statistical stopping criteria based on rejecting the hypothesis of having missed a given recall target with a given level of confidence.",
+   "label": null
+  },
+  {
+   "id": "s331",
+   "sentence": "They achieve reliable recall levels while providing work reductions of on average 17%, for machine-learning-prioritised screening in systematic reviews.",
+   "label": null
+  },
+  {
+   "id": "s332",
+   "sentence": "Validates stop criteria for active-learning screening in ASReview.",
+   "label": null
+  },
+  {
+   "id": "s333",
+   "sentence": "Stated finding: no stop criterion reliably ensures that all relevant studies are identified, and early stopping may result in missed studies depending on dataset characteristics",
+   "label": "missed studies"
+  },
+  {
+   "id": "s334",
+   "sentence": "criteria should be applied cautiously with quality assurance measures.",
+   "label": null
+  },
+  {
+   "id": "s335",
+   "sentence": "Introduces SAFE, a practical and conservative eclectic mix of stopping heuristics for active-learning screening, including stopping when no extra relevant records appear in the last 50 records, to minimise the risk of missing relevant papers.",
+   "label": null
+  },
+  {
+   "id": "s336",
+   "sentence": "Reviews ML-prioritised screening with early stopping aimed at a high recall while avoiding screening all records.",
+   "label": null
+  },
+  {
+   "id": "s337",
+   "sentence": "Notes 46 screening tools as of January 2024 many with ML prioritisation.",
+   "label": null
+  },
+  {
+   "id": "s338",
+   "sentence": "Recommends authors justify stopping decisions and that arbitrary stopping criteria be criticised in peer review",
+   "label": null
+  },
+  {
+   "id": "s339",
+   "sentence": "current approaches lack robust evaluation.",
+   "label": "lack robust evaluation"
+  },
+  {
+   "id": "s340",
+   "sentence": "Addresses stopping in continuous active learning TAR.",
+   "label": null
+  },
+  {
+   "id": "s341",
+   "sentence": "Notes existing work either lacks transparency (ad-hoc stopping point without indicating how many relevant documents remain) or lacks efficiency (extra cost to estimate total relevant documents before review).",
+   "label": "lacks transparency"
+  },
+  {
+   "id": "s342",
+   "sentence": "Proposes sampling from an adaptive distribution to estimate residual relevant documents (AutoStop).",
+   "label": null
+  },
+  {
+   "id": "s343",
+   "sentence": "A TAR stopping rule trained on example rankings with a reward function to identify the optimal stopping point.",
+   "label": null
+  },
+  {
+   "id": "s344",
+   "sentence": "Tested at several target recall levels on CLEF e-Health, TREC Total Recall and Reuters RCV1",
+   "label": null
+  },
+  {
+   "id": "s345",
+   "sentence": "substantially reduces workload and outperforms alternatives, close to the maximum possible in some circumstances.",
+   "label": null
+  },
+  {
+   "id": "s346",
+   "sentence": "Applies capture-mark-recapture to estimate closeness to capturing the total body of literature on a surgical topic, giving an estimate of missed articles.",
+   "label": null
+  },
+  {
+   "id": "s347",
+   "sentence": "Models the arrival of relevant documents in a ranked search result as a Poisson process to derive stopping criteria for search results.",
+   "label": null
+  },
+  {
+   "id": "s348",
+   "sentence": "Statistical estimation of how many relevant items a search has omitted, related to capture-recapture style estimation from overlapping search results.",
+   "label": null
+  },
+  {
+   "id": "s349",
+   "sentence": "We study memory encoding and retrieval process with controlled experiment measuring recall accuracy and robustness.",
+   "label": null
+  },
+  {
+   "id": "s350",
+   "sentence": "Randomized trial of spaced repetition schedule measuring retention rate and reliability across weeks.",
+   "label": null
+  },
+  {
+   "id": "s351",
+   "sentence": "Failure analysis of forgetting and interference causing retrieval degradation and memory collapse under load.",
+   "label": null
+  },
+  {
+   "id": "s352",
+   "sentence": "Systems study of cache eviction and stale invalidation as failure mode with benchmark evaluation of hit rate.",
+   "label": null
+  },
+  {
+   "id": "s353",
+   "sentence": "Neural networks suffer catastrophic forgetting and interference",
+   "label": "catastrophic forgetting"
+  },
+  {
+   "id": "s354",
+   "sentence": "ablation and controlled comparison measure accuracy degradation.",
+   "label": null
+  },
+  {
+   "id": "s355",
+   "sentence": "Controlled evaluation protocol with human annotation measuring precision and recall of retrieval practice interventions.",
+   "label": null
+  },
+  {
+   "id": "s356",
+   "sentence": "Systematic review of consolidation mechanism linking encoding dynamics to long term storage architecture.",
+   "label": null
+  },
+  {
+   "id": "s357",
+   "sentence": "Stress testing and component-level assessment of recall fidelity with benchmark validity checks.",
+   "label": null
+  },
+  {
+   "id": "s358",
+   "sentence": "Analysis of hallucination and confabulation bias as failure mode with error rate measurement.",
+   "label": null
+  },
+  {
+   "id": "s359",
+   "sentence": "Comparative testing and randomized trial of interleaving schedule measuring generalization performance.",
+   "label": null
+  },
+  {
+   "id": "s360",
+   "sentence": "Meta analysis of testing effect experiments measuring retention robustness across cohorts.",
+   "label": null
+  },
+  {
+   "id": "s361",
+   "sentence": "Trace analysis of distributed cache behavior measuring hit rate consistency and stale failure modes.",
+   "label": null
+  },
+  {
+   "id": "s362",
+   "sentence": "Experimental study of attention mediation in encoding with controlled experiment and validity assessment.",
+   "label": null
+  },
+  {
+   "id": "s363",
+   "sentence": "Reproducible workflow and evaluation protocol for memory studies with replication baseline.",
+   "label": null
+  }
+ ]
+}
