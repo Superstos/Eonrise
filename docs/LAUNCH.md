@@ -35,8 +35,8 @@ work waits until people use it (see After launch).
 
 - [x] User docs: `docs/USAGE.md`; `tests/test_docs.py` keeps every doc in line with the code
 - [x] CI badge
-- [ ] README top: one real run with one distant-field result
-- [ ] `examples/`: 2-3 real runs from different fields
+- [x] README rewritten (create-readme + readme-write gates pass); hero is a real brief
+- [x] `examples/`: 2 live runs + the demo
 - [ ] `CITATION.cff`
 - [ ] Repo description and topics
 

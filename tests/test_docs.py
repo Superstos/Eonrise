@@ -42,6 +42,15 @@ class DocsMatchCodeTests(unittest.TestCase):
                 with self.subTest(doc=name, var=var):
                     self.assertIn(f'getenv("{var}"', source)
 
+    def test_numbers_the_readme_states(self):
+        import json
+        readme = self._text("README.md")
+        demo = json.loads((ROOT / "eonrise" / "data" / "demo_bundle.json").read_text(encoding="utf-8"))
+        self.assertIn(f"a sample of {len(demo['papers'])} papers", readme)
+        defaults = cli._provider_names(cli.parser().parse_args(["q", "--s2-key", "", "--core-key", ""]), {})
+        words = {4: "Four", 5: "Five", 6: "Six"}
+        self.assertIn(f"{words[len(defaults)]} sources run by default", readme)
+
 
 if __name__ == "__main__":
     unittest.main()

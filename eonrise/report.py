@@ -15,9 +15,10 @@ def _words(relations: list[str]) -> str:
 
 def _header(result: dict) -> list[str]:
     papers = result["papers"]
-    return ["# Eonrise brief", "", f"**Question:** {result['question']}",
-            f"**Root topic:** {result.get('root_topic', '')}",
-            f"**Status:** {result['status']} — {result['stop_reason']}",
+    # One paragraph each: consecutive lines render as one run-on paragraph on GitHub.
+    return ["# Eonrise brief", "", f"**Question:** {result['question']}", "",
+            f"**Root topic:** {result.get('root_topic', '')}", "",
+            f"**Status:** {result['status']} — {result['stop_reason']}", "",
             f"**Evidence:** {len(papers)} papers kept of {result.get('retrieved_papers', len(papers))} retrieved"
             f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts"]
 
@@ -57,7 +58,7 @@ def _degraded_warning(result):
     if down and result["status"] != "failed":
         # A run that lost OpenAlex has no keywords and few abstracts. Reading the map
         # without knowing that is how a degraded run passes for a thin literature.
-        return [f"**Degraded:** {', '.join(down)} answered nothing this run — "
+        return ["", f"**Degraded:** {', '.join(down)} answered nothing this run — "
                      "expect fewer abstracts, no keywords and no topic hierarchy."]
     return []
 
@@ -67,7 +68,7 @@ def _coverage_warning(result):
     if unseen and unseen.get("found_share", 1) < WARN_BELOW:
         # Chao2 is a lower bound on what is out there, so this share is an upper bound on
         # what was found. When it is low, the true figure is lower still.
-        return [f"**Unfinished:** {unseen['singletons']} of {unseen['observed']} on-topic papers turned up "
+        return ["", f"**Unfinished:** {unseen['singletons']} of {unseen['observed']} on-topic papers turned up "
                      f"for one query only, so this run saw at most ~{round(100 * unseen['found_share'])}% of what "
                      f"its queries can reach (Chao2 ≈ {round(unseen['estimated_total'])}). Treat an empty "
                      "relation as unsearched, not absent."]
@@ -150,10 +151,10 @@ def render_compact_markdown(result: dict) -> str:
 
 
 def _full_map(result: dict) -> list[str]:
-    lines = ["# Eonrise research report", "", f"**Question:** {result['question']}",
-             f"**Root topic:** {result.get('root_topic', '')}",
-             f"**Agent:** {result.get('policy', {}).get('name', 'default')}",
-             f"**Mode:** {result.get('mode', 'unknown')}",
+    lines = ["# Eonrise research report", "", f"**Question:** {result['question']}", "",
+             f"**Root topic:** {result.get('root_topic', '')}", "",
+             f"**Agent:** {result.get('policy', {}).get('name', 'default')}", "",
+             f"**Mode:** {result.get('mode', 'unknown')}", "",
              f"**Status:** {result['status']} — {result['stop_reason']}", "", "## Research map", ""]
     lines += [f"- **{relation.replace('_', ' ').title()}:** {', '.join(terms) if terms else 'not grounded yet'}"
               for relation, terms in result["coverage"].items()]

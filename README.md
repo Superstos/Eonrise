@@ -1,84 +1,84 @@
+<div align="center">
+
 # Eonrise
 
+Finds the research fields that already solved your problem under another name.
+
 [![ci](https://github.com/Superstos/Eonrise/actions/workflows/ci.yml/badge.svg)](https://github.com/Superstos/Eonrise/actions/workflows/ci.yml)
+[![python](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen)](pyproject.toml)
 
-Eonrise maps where fields intersect. It searches scholarly sources and organizes the evidence into mechanisms, measurements, failure modes, methods, and neighboring fields.
+[Features](#features) · [How it works](#how-it-works) · [Install](#install) · [Examples](#examples) · [FAQ](#faq) · [Docs](#docs)
 
-The goal is a shortcut to ideas: a problem that is new or half solved in your field is often already solved, more maturely, in another one. Results from distant fields are the point, not noise.
+<code>eonrise --demo --out output</code>
 
-It can also learn when different fields use different names for the same or closely related idea, then reuse that vocabulary in later searches.
+<img src="docs/assets/brief.png" alt="Excerpt of a real Eonrise brief for the question how can written instructions prevent the same mistakes from repeating when every worker is new. It lists mechanisms, measurements, failure modes and methods from the papers, then two papers from other fields with the same shape: one on nursing students and clinical mistakes, one on designing teaching problems." width="760">
 
-No third-party Python packages are required at runtime.
+</div>
 
-## Quick start
+A problem that feels new in my field is often an old one somewhere else. Someone in law, medicine
+or materials science has usually studied it for years, under words I would never think to search
+for. Eonrise takes a question in plain language, searches up to six scholarly sources, and returns a
+short brief: what the literature says about the question, what it admits it cannot do, and which
+distant fields share the same shape of problem.
 
-Eonrise installs on Python 3.11+.
+## Features
+
+| You give it | You get back | You need |
+| --- | --- | --- |
+| A question in plain words | A brief with the mechanisms, measurements, failure modes, methods and neighboring fields the papers support | Internet access; no API key |
+| The same question | Papers from distant fields that share the question's shape, plus searches to take into those fields | Nothing extra |
+| Papers you gathered yourself (`--bundle`) | The same brief, fully offline | A JSON file, format in [docs/USAGE.md](docs/USAGE.md) |
+| Repeated runs over weeks | A local paper store, searched before the APIs, and learned cross-field synonyms | Disk space under `~/.cache/eonrise/` |
+| A script or another tool | `research_map.json` and `graph.json` with every term, paper and edge | Nothing extra |
+
+Every term in the brief comes from a paper's title, abstract or keywords. When the papers do
+not support part of the map, that part stays empty and the brief says so.
+
+## How it works
+
+```text
+question ──> one root topic ──> search the sources ─> drop papers that drift off the question
+                                       ^                              │
+                                       │                              v
+                     repair the gaps <─┴── read terms and stated limits from abstracts
+                                                                      │
+                                                                      v
+               brief + map + graph <── rank distant papers that share the question's shape
+```
+
+1. The question becomes one root topic, and every later search stays tied to it.
+2. Each round searches the sources, drops papers that are about something else, and reads
+   terms, relations and stated limitations from the abstracts.
+3. Empty parts of the map get targeted searches in the next round, up to `--max-rounds`.
+4. Papers from far fields that share the question's terms are kept apart and ranked. They are
+   the point of the tool, and the brief lists them under "Same shape, other fields".
+5. The run reports how much of the reachable literature it saw, so a thin map reads as
+   unfinished, never as proof the literature is silent.
+
+## Install
+
+Eonrise needs Python 3.11 or newer and nothing else.
 
 ```bash
+git clone https://github.com/Superstos/Eonrise
+cd Eonrise
 pip install .
 eonrise --demo --out output
 ```
 
-`--demo` runs offline on a sample of 99 papers about finding analogous solutions in distant
-fields, and writes the brief to `output/report.md` in about a second. It saves nothing else.
+The demo runs offline on a sample of 99 papers about finding analogous solutions in distant
+fields. It writes the brief to `output/report.md` in about a second and saves nothing else.
 
-A real question searches scholarly APIs:
-
-```bash
-eonrise "how does spaced repetition improve memory retention" --out output
-```
-
-Live runs keep a local cache so later runs reuse papers already found; [`docs/USAGE.md`](docs/USAGE.md)
-lists what is saved and how to turn it off.
-
-To run offline on papers you gathered yourself, pass a bundle (format in `docs/USAGE.md`).
-From a source checkout:
+Then ask your own question:
 
 ```bash
-eonrise "how does spaced repetition improve memory retention" \
-  --mode assistant \
-  --bundle tests/fixtures/papers.json \
-  --out output \
-  --no-memory --no-corpus --no-equivalence \
-  --max-rounds 2 --results 10
+eonrise "how can written instructions prevent the same mistakes from repeating when every worker is new" --out output
 ```
 
-## What you get
-
-A run writes four files:
-
-- `report.md` is the short readable result.
-- `research_map.json` contains the full structured map.
-- `graph.json` contains nodes and typed edges for other tools or a UI.
-- `internal_report.md` shows the concept tree and supporting evidence.
-
-A map can look like this:
-
-```text
-Mechanism: retrieval practice, encoding dynamics
-Measurement: recall accuracy, retention rate
-Failure mode: accuracy degradation
-Method: randomized trial, replication baseline
-Neighbor field: cognitive psychology, learning science
-```
-
-If Eonrise cannot support part of the map with evidence, it leaves that part empty instead of making something up.
-
-[`docs/USAGE.md`](docs/USAGE.md) describes each file's keys, the bundle format and the environment variables.
-
-## How it works
-
-Eonrise keeps one root question for the whole run. It searches several scholarly sources, rejects papers that drift too far from that question, extracts supported concepts, then uses later searches to repair missing parts of the map.
-
-Normal runs can grow a local paper store at `~/.cache/eonrise/corpus.jsonl`. Later runs search that store before spending API calls, and a paper can gain richer metadata when another source returns a better copy of the same record.
-
-Cross-field terminology lives in `~/.cache/eonrise/equivalence.jsonl`. An `equivalent` link needs support from at least two independent on-topic papers before it can change retrieval. Repeated co-occurrence alone is stored as `closely_related` and does not alter searches.
-
-The design history, benchmarks and rejected experiments live in [`docs/SPEC.md`](docs/SPEC.md), oldest first.
-
-## Sources
-
-Eonrise can search:
+Four sources run by default, with no key. Semantic Scholar and CORE join when you give their
+free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 
 | Source | Access |
 | --- | --- |
@@ -86,41 +86,101 @@ Eonrise can search:
 | OpenAlex | keyless, optional API key |
 | Europe PMC | keyless |
 | DOAJ | keyless |
-| Semantic Scholar | free API key |
-| CORE | free API key |
+| Semantic Scholar | free API key, or `--providers` |
+| CORE | free API key, or `--providers` |
 
-Use `--providers` to choose a subset. API availability and limits belong to the providers and can change independently of Eonrise.
+## Tech stack and why
 
-## Current limits
+- **Python standard library only.** A research tool should install anywhere in one step, and
+  zero dependencies means nothing to break, audit or pin.
+- **Open scholarly APIs.** Crossref, OpenAlex and Europe PMC cover most fields for free and
+  return abstracts and topic hierarchies, which is where the cross-field links come from.
+- **JSON and JSONL files on disk.** The paper store and the synonym graph are plain files you
+  can read, copy or delete, with no database to run.
 
-- Topical filtering still depends partly on word overlap, so ambiguous wording can let unrelated papers through.
-- Eonrise works from the metadata and abstracts returned by its sources. It does not read full papers.
-- Plain everyday questions with no technical vocabulary tend to produce weaker maps.
-- Live runs depend on external scholarly APIs. A provider outage can make a run thinner or fail it outright.
+## Architecture
 
-Eonrise reports provider failures instead of treating a broken search as evidence that the literature is empty.
+| Path | What it holds |
+| --- | --- |
+| `eonrise/cli.py` | Command-line flags, stores and the printed summary |
+| `eonrise/engine.py` | The search loop: plan queries, fetch, filter, read, repair gaps |
+| `eonrise/providers.py` | One client per scholarly source, plus offline bundles and the HTTP cache |
+| `eonrise/evidence.py` | Papers in, grounded and ranked terms out |
+| `eonrise/distant_fields.py` | Distant papers that share the question's shape, ranked |
+| `eonrise/equivalence.py` | Learned synonyms across fields, used to widen later searches |
+| `eonrise/literature_coverage.py` | How much of the reachable literature a run has seen |
+| `eonrise/paper_store.py` | Every paper seen so far, so later runs start rich |
+| `eonrise/scheduling.py` | Which source to call next, and which are rate limited |
+| `eonrise/report.py` | The brief, the full report and the JSON files |
+| `tests/`, `benchmarks/` | Unit tests, byte-for-byte output snapshots, and quality gates |
 
-## Development
+## Examples
 
-The installable package targets Python 3.11+. CI also runs the source tests on Python 3.8, 3.9, and 3.10 to catch avoidable compatibility breakage.
+These are real runs, copied unedited into [examples/](examples/).
 
-```bash
-python -m unittest discover -s tests -v
-python -m benchmarks.run --quick
-python -m benchmarks.run
-```
+| Question | What it found in other fields |
+| --- | --- |
+| [How can written instructions prevent the same mistakes from repeating when every worker is new?](examples/written-instructions-new-workers.md) | Jury instructions: courts test which wording of a one-time instruction changes what new jurors decide. That is a ready method for testing onboarding docs. Also nursing training on clinical mistakes. |
+| [Why do rules and plans keep growing in scope without being finished or removed?](examples/plans-that-keep-growing.md) | Management: *Corporate Planning: An Executive Viewpoint* (1981). Urban design: *Cinema as a form of composition* (2021). |
+| [How can a system retrieve analogous solutions from distant research fields?](examples/demo-analogous-solutions.md) | Link prediction in knowledge networks, from machine learning. This is the `--demo` run. |
 
-Build the package with:
+What it is good for:
 
-```bash
-python -m pip install build
-python -m build
-```
+- Before designing something, to see which field already measured the failure you are about to hit.
+- When searches in your own field keep returning the same ten papers.
+- To find the words another field uses, so the next search reaches its literature.
+- As the research step for an AI coding agent: `research_map.json` gives it sources it can cite.
 
-Contributions should stay small and measurable. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+## FAQ
 
-## License and retrieved data
+<details><summary><strong>Is the distant-field list just noise?</strong></summary>
 
-Eonrise is MIT-licensed. See [`LICENSE`](LICENSE).
+It is the main output. A paper from another field shows up because it shares the question's
+terms and topic structure. Read each one as "their solution, our version": what did they solve
+that has the same shape as my problem? Some will not map, and that is worth knowing too.
 
-The license covers Eonrise itself. Metadata, abstracts, and other material returned by external scholarly sources keep their original licenses and terms. Live mode may save those records locally, so redistribution is subject to the source or provider terms.
+</details>
+
+<details><summary><strong>Does it read full papers?</strong></summary>
+
+No. It works from titles, abstracts, keywords and topic data returned by the sources. Fields
+whose abstracts are short or missing produce thinner maps.
+
+</details>
+
+<details><summary><strong>Why did my run end with status "failed" and exit code 2?</strong></summary>
+
+No source returned papers about the question, often because a source timed out or rate
+limited the run. The brief names the sources that failed. Try again later, add a free API key,
+or pick sources with `--providers`.
+
+</details>
+
+<details><summary><strong>What does it save on my machine?</strong></summary>
+
+Cached API responses, a paper store, learned synonyms, a run log and source limits, all under
+`~/.cache/eonrise/`. [docs/USAGE.md](docs/USAGE.md) lists each file and the flag that turns it
+off. `--demo` saves nothing.
+
+</details>
+
+<details><summary><strong>Where are the limits?</strong></summary>
+
+The topic filter still leans on shared words, so an ambiguous question lets unrelated papers in.
+Everyday questions with no technical words produce weaker maps. Live runs depend on outside
+APIs, so the same question returns different papers on different days.
+
+</details>
+
+## Docs
+
+- [docs/USAGE.md](docs/USAGE.md): bundle format, output files, environment variables, what is saved.
+- [examples/](examples/): real briefs from different fields.
+- [docs/SPEC.md](docs/SPEC.md): design history, benchmarks and rejected experiments, oldest first.
+- [CHANGELOG.md](CHANGELOG.md): user-facing changes and renamed names.
+- [CONTRIBUTING.md](CONTRIBUTING.md): checks to run and what a change should look like.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Papers and abstracts returned by the sources keep their own
+licenses, so check a source's terms before sharing a saved paper store.

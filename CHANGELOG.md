@@ -14,6 +14,8 @@ User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
 ### Changed
 
+- The brief's header lines (question, root topic, status, evidence, warnings) are separate paragraphs; they ran together into one line on GitHub.
+- README rewritten around a real brief; `examples/` holds two live runs and the demo.
 - The import package is now `eonrise` (was `ontology_router`).
 - `--max-nodes` defaults to 400 (was 120), so a typical question finishes gap repair on default settings.
 - A failed request no longer prints its query string, which carried API keys and the contact email.
