@@ -38,24 +38,22 @@ not support part of the map, that part stays empty and the brief says so.
 
 ## How it works
 
-```text
-question ──> one root topic ──> search the sources ─> drop papers that drift off the question
-                                       ^                              │
-                                       │                              v
-                     repair the gaps <─┴── read terms and stated limits from abstracts
-                                                                      │
-                                                                      v
-               brief + map + graph <── rank distant papers that share the question's shape
+```mermaid
+flowchart LR
+  Q[Question] --> T[Root topic] --> S[Search sources] --> F[Drop off-topic] --> R[Read abstracts]
+  R -- gaps --> S
+  R --> D[Rank distant papers] --> B[Brief and map]
 ```
 
-1. The question becomes one root topic, and every later search stays tied to it.
-2. Each round searches the sources, drops papers that are about something else, and reads
-   terms, relations and stated limitations from the abstracts.
-3. Empty parts of the map get targeted searches in the next round, up to `--max-rounds`.
-4. Papers from far fields that share the question's terms are kept apart and ranked. They are
-   the point of the tool, and the brief lists them under "Same shape, other fields".
-5. The run reports how much of the reachable literature it saw, so a thin map reads as
-   unfinished, never as proof the literature is silent.
+1. Root topic: the question becomes one root topic, and every later search stays tied to it.
+2. Search sources: each round queries the scholarly sources.
+3. Drop off-topic: papers about something else are removed before anything is read.
+4. Read abstracts: terms, relations and stated limitations come from titles and abstracts.
+   Empty parts of the map send targeted searches back to step 2, up to `--max-rounds`.
+5. Rank distant papers: papers from far fields that share the question's terms are kept
+   apart and ranked. They are the point of the tool.
+6. Brief and map: the run writes the brief, the map and the graph, and says how much of
+   the reachable literature it saw, so a thin map reads as unfinished.
 
 ## Install
 
