@@ -43,6 +43,31 @@ def _scenario_output(bundle: str, question: str | None) -> dict:
             "compact": render_compact_markdown(result), "full": render_markdown(result)}
 
 
+def _cli_output(extra: list[str]) -> dict:
+    """The whole command: flags, stores under a fake home, files written, summary printed."""
+    from unittest import mock
+    from eonrise import cli
+    with tempfile.TemporaryDirectory() as tmp:
+        home, out = Path(tmp) / "home", Path(tmp) / "out"
+        argv = ["eonrise", "how does spaced repetition improve memory retention",
+                "--bundle", str(FIXTURES / "papers.json"), "--out", str(out), *extra]
+        printed: list[str] = []
+        with mock.patch("sys.argv", argv), mock.patch("pathlib.Path.home", return_value=home), \
+                mock.patch("builtins.print", side_effect=lambda *a, **k: printed.append(" ".join(map(str, a)))):
+            cli.main()
+        files = {p.relative_to(tmp).as_posix(): p.read_text(encoding="utf-8")
+                 for p in sorted(Path(tmp).rglob("*")) if p.is_file() and "observed_at" not in p.read_text(encoding="utf-8")}
+        dirs = {d for raw in (tmp, str(FIXTURES)) for d in (raw, str(Path(raw).resolve()))}
+        spellings = sorted({s for d in dirs for s in (d, json.dumps(d)[1:-1])}, key=len, reverse=True)
+
+        def scrub(text: str) -> str:
+            for spelling in spellings:
+                text = text.replace(spelling, "<dir>")
+            return text
+        return {"printed": [scrub(line) for line in printed],
+                "files": {name: scrub(text) for name, text in files.items()}}
+
+
 def _canonical(data: dict) -> str:
     return json.dumps(data, indent=1, sort_keys=True, ensure_ascii=False, default=sorted) + "\n"
 
@@ -56,6 +81,16 @@ class OutputSnapshotTests(unittest.TestCase):
                 path = SNAPSHOTS / f"{name}.json"
                 if update:
                     SNAPSHOTS.mkdir(exist_ok=True)
+                    path.write_bytes(actual.encode("utf-8"))
+                self.assertEqual(path.read_text(encoding="utf-8"), actual)
+
+    def test_command_line_matches_snapshots(self):
+        update = os.getenv("EONRISE_UPDATE_SNAPSHOTS") == "1"
+        for name, extra in {"cli_stores": [], "cli_no_stores": ["--no-memory", "--no-corpus", "--no-equivalence"]}.items():
+            with self.subTest(name):
+                actual = _canonical(_cli_output(extra))
+                path = SNAPSHOTS / f"{name}.json"
+                if update:
                     path.write_bytes(actual.encode("utf-8"))
                 self.assertEqual(path.read_text(encoding="utf-8"), actual)
 
