@@ -4,7 +4,7 @@ import math
 import time
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterable
 
 from .models import DOWN, SIDEWAYS, UP, SearchSettings, ConceptNode, Paper, RoundStats, Term
@@ -92,14 +92,6 @@ def next_queries(question: str, terms: list[Term], gaps: list[str], searched: se
         if len(output) >= 5: break
     return list(dict.fromkeys(output))[:5]
 
-def _stop_checks(round_number: int, papers: list[Paper], terms: list[Term], gaps: list[str], *, new_papers: int, new_grounded_terms: int, new_on_topic: int | None = None) -> dict[str, bool]:
-    top = terms[:20]
-    grounded = [t for t in top if t.confidence in {"high", "medium"}]
-    # Saturation counts on-topic arrivals only: a run that has drifted into a neighbouring
-    # literature keeps returning new papers forever and would never look saturated.
-    fresh = new_papers if new_on_topic is None else new_on_topic
-    return {"minimum_rounds": round_number >= 2, "enough_papers": len(papers) >= 12, "relations_covered": not gaps, "grounded_top_terms": len(grounded) / max(len(top), 1) >= 0.70, "multiple_search_paths": len({q for p in papers for q in p.found_by}) >= 4, "saturated": round_number >= 2 and fresh <= 2 and new_grounded_terms <= 2}
-
 def _keep_score(paper: Paper, on_topic: set[str]) -> tuple:
     """Which 50 of several hundred papers survive into the artifact.
 
@@ -147,9 +139,403 @@ def relation_to_direction(relation: str, source_kind: str) -> str:
     return SIDEWAYS
 
 
-def _query_for_node(node: ConceptNode) -> str:
-    # Direction steers priority, not query mangling: query stays the label.
-    return node.label
+GROUNDED = {"high", "medium"}
+
+
+@dataclass
+class _Round:
+    """What one round planned, fetched and read."""
+    number: int
+    expandable: list[ConceptNode]
+    queries: list[tuple[ConceptNode, str]]
+    gap_queries: list[str]
+    added: int = 0
+    new_on_topic: int = 0
+    topic_filter: set[str] | None = None
+    corpus: list[Paper] = field(default_factory=list)
+    terms: list[Term] = field(default_factory=list)
+    gaps: list[str] = field(default_factory=list)
+    grounded: set[str] = field(default_factory=set)
+    new_frontier: list[ConceptNode] = field(default_factory=list)
+
+
+@dataclass
+class _Search:
+    """One run's state. Each method is one step of a round; `run_search` drives them."""
+    question: str
+    providers: list[SearchProvider]
+    policy: SearchSettings
+    results_per_query: int
+    background: set[str] | None
+    states: ProviderStates
+    equivalence: object | None
+    expansion_slots: int
+    papers: list[Paper] = field(default_factory=list)
+    searched: set[str] = field(default_factory=set)
+    rounds: list[RoundStats] = field(default_factory=list)
+    provider_errors: list[str] = field(default_factory=list)
+    provider_calls: Counter = field(default_factory=Counter)
+    provider_failures: Counter = field(default_factory=Counter)
+    previous_grounded: set[str] = field(default_factory=set)
+    last_terms: list[Term] = field(default_factory=list)
+    last_gaps: list[str] = field(default_factory=list)
+    # A relation the literature never mentions is not a gap to chase. Tracked per round so
+    # two rounds of silence is the evidence, not one unlucky query.
+    silent_rounds: Counter = field(default_factory=Counter)
+    dormant: set[str] = field(default_factory=set)
+    corpus_saved: int = 0  # paid calls the local store made unnecessary
+    on_topic: set[str] = field(default_factory=set)
+    previous_on_topic: int = 0
+    expanded_queries: list[str] = field(default_factory=list)
+    counter: int = 1
+    status: str = "partial"
+    stop_reason: str = "no additional distinct queries"
+
+    def __post_init__(self) -> None:
+        self.root_label = canonical_root(self.question)
+        self.root = ConceptNode("c0", self.root_label, "root", 0, 1.0, [], "", self.root_label, 0)
+        self.concepts = {self.root.node_id: self.root}
+        self.visited = {normalize(self.root_label)}
+        self.taken_keys = {concept_key(self.root_label)}
+        self.frontier = [self.root]
+        self.expansion_remaining = self.expansion_slots
+
+    # --- the loop -------------------------------------------------------------------------
+
+    def run_rounds(self) -> None:
+        for number in range(1, max(1, self.policy.max_rounds) + 1):
+            if self.run_round(number):
+                return
+        self._stop("partial", "maximum rounds reached")
+
+    def run_round(self, number: int) -> bool:
+        """Plan, fetch, read, grow. True when the run should stop."""
+        if len(self.concepts) >= self.policy.max_nodes:
+            return self._stop("partial", "node budget reached")
+        step = self.plan_round(number)
+        if not step.queries:
+            return self._stop("partial", "no additional distinct queries")
+        self.fetch(step)
+        self.read_round(step)
+        step.new_frontier = self.grow(step)
+        checks = self.record(step)
+        return self.decide(step, checks)
+
+    def _stop(self, status: str, reason: str) -> bool:
+        self.status, self.stop_reason = status, reason
+        return True
+
+    # --- plan -----------------------------------------------------------------------------
+
+    def plan_round(self, number: int) -> _Round:
+        expandable = [c for c in sorted(self.frontier, key=lambda c: c.weight, reverse=True)
+                      if c.depth < self.policy.max_depth]
+        cap = self.policy.per_direction_cap
+        budget = max(1, cap) if cap is not None else 5
+        gap_queries = self.gap_queries()
+        reserve = min(self.expansion_remaining, max(0, budget - len(gap_queries)))
+        expandable = expandable[: max(1, budget - len(gap_queries) - reserve)]
+        queries = [(node, node.label) for node in expandable if self._is_new(node.label)]
+        queries += [(self.root, query) for query in gap_queries]
+        queries += self.expansions(queries, budget)
+        return _Round(number, expandable, queries, gap_queries)
+
+    def _is_new(self, query: str) -> bool:
+        return normalize(query) not in {normalize(x) for x in self.searched}
+
+    def gap_queries(self) -> list[str]:
+        """Gaps were computed, printed, and never searched. Reserve slots for them."""
+        found: list[str] = []
+        variants = range(len(GAP_CUES["failure_mode"])) if self.last_gaps else range(0)
+        for variant in variants:
+            batch = next_queries(self.question, self.last_terms, self.last_gaps, self.searched, variant)
+            found += [q for q in dict.fromkeys(batch) if self._is_new(q) and q not in found]
+            if len(found) >= GAP_QUERY_SLOTS:
+                break
+        return found[:GAP_QUERY_SLOTS]
+
+    def expansions(self, queries: list[tuple[ConceptNode, str]], budget: int) -> list[tuple[ConceptNode, str]]:
+        """One conservative equivalence alias may use a query slot. It never replaces the
+        original query, so the run still searches what the question literally asked."""
+        expand = getattr(self.equivalence, "expand_query", None)
+        out: list[tuple[ConceptNode, str]] = []
+        for node, query in queries if callable(expand) else []:
+            if self.expansion_remaining <= 0 or len(queries) + len(out) >= budget:
+                break
+            alias = self._new_alias(expand(query, max_aliases=1))
+            if alias is not None:
+                out.append((node, alias))
+                self.expanded_queries.append(alias)
+                self.expansion_remaining -= 1
+        return out
+
+    def _new_alias(self, candidates: list[str]) -> str | None:
+        seen = {normalize(q) for q in self.expanded_queries}
+        return next((c for c in candidates if self._is_new(c) and normalize(c) not in seen), None)
+
+    # --- fetch ----------------------------------------------------------------------------
+
+    def fetch(self, step: _Round) -> None:
+        incoming: list[Paper] = []
+        ordered = self._provider_order()
+        for _, query in step.queries:
+            self.searched.add(query)
+            incoming += self._ask_all(ordered, query)
+        self.papers, step.added = _dedupe_papers(self.papers, incoming)
+        for node, query in step.queries:
+            node.paper_ids += [p.paper_id for p in self.papers
+                               if query in p.found_by and p.paper_id not in node.paper_ids]
+            node.support = len(node.paper_ids)
+
+    def _provider_order(self) -> list[SearchProvider]:
+        # Ask the source that carries what this round is missing, and skip one that is
+        # rate limited until its window passes -- including a window set by an earlier run.
+        by_name = {p.name: p for p in self.providers}
+        names = order_for([p.name for p in self.providers], self.last_gaps, self.states)
+        # The local store answers before paid providers. Ranking by metadata richness
+        # otherwise puts DOAJ/OpenAlex first and spends a call a held paper could answer.
+        if "corpus" in by_name and "corpus" in names:
+            names = ["corpus", *[name for name in names if name != "corpus"]]
+        return [by_name[n] for n in names]
+
+    def _ask_all(self, ordered: list[SearchProvider], query: str) -> list[Paper]:
+        found: list[Paper] = []
+        local_hits = 0
+        for provider in ordered:
+            # v0.6 ordered the providers and then called every one of them, so a paper
+            # already held cost exactly as much as a paper fetched. The store only pays
+            # off if it can end the query: a full local answer stops the paid calls.
+            if local_hits >= self.results_per_query and provider.name != "corpus":
+                self.corpus_saved += 1
+                continue
+            answer = self._ask(provider, query)
+            found += answer
+            local_hits = len(answer) if provider.name == "corpus" else local_hits
+        return found
+
+    def _ask(self, provider: SearchProvider, query: str) -> list[Paper]:
+        self.provider_calls[provider.name] += 1
+        try:
+            found = provider.search(query, self.results_per_query)
+        except ProviderError as exc:
+            self._record_failure(provider.name, exc)
+            return []
+        for p in found:
+            p.found_by = list(dict.fromkeys([*p.found_by, query]))
+        self.states.observe(provider.name, True)
+        return found
+
+    def _record_failure(self, name: str, exc: ProviderError) -> None:
+        self.provider_failures[name] += 1
+        self.states.observe(name, False)
+        if isinstance(exc, ProviderUnavailable):
+            self.states.block(name, getattr(exc, "retry_after", 0.0) or 0.0, str(exc))
+        self.provider_errors.append(f"{name}: {exc}")
+
+    # --- read -----------------------------------------------------------------------------
+
+    def read_evidence(self) -> tuple[set[str], set[str] | None, list[Paper], list[Term]]:
+        on_topic = concept_gate(self.question, self.papers, topical_papers(self.question, self.papers))
+        # A small bundle can legitimately have few literal matches; do not starve it, but
+        # top it up with the closest papers rather than letting the whole corpus vote.
+        topic_filter = grounding_papers(self.question, self.papers, on_topic)
+        # Concepts are read from the on-topic corpus only. Letting drifted papers vote
+        # produced `protein structure and dynamics` as a mechanism for a question about
+        # stopping criteria: one on-topic supporter was enough to launder the rest.
+        corpus = self.papers if topic_filter is None else [p for p in self.papers if p.paper_id in topic_filter]
+        return on_topic, topic_filter, corpus, extract_terms(self.question, corpus, topic_filter, self.background)
+
+    def read_round(self, step: _Round) -> None:
+        on_topic, step.topic_filter, step.corpus, step.terms = self.read_evidence()
+        step.new_on_topic = max(0, len(on_topic) - self.previous_on_topic)
+        self.on_topic, self.previous_on_topic = on_topic, len(on_topic)
+        _, gaps = coverage(step.terms)
+        self._track_silence(step.terms)
+        step.gaps = [g for g in gaps if g not in self.dormant]
+        self.last_terms, self.last_gaps = step.terms, step.gaps
+        step.grounded = {t.text for t in step.terms if t.confidence in GROUNDED}
+
+    def _track_silence(self, terms: list[Term]) -> None:
+        present = {t.relation for t in terms}
+        for relation in REQUIRED_RELATIONS:
+            self.silent_rounds[relation] = 0 if relation in present else self.silent_rounds[relation] + 1
+        # Two full rounds with not one candidate term: the question does not have this
+        # facet in this literature. Chasing it spends the query budget on cue words.
+        self.dormant = {r for r, n in self.silent_rounds.items() if n >= 2}
+
+    # --- grow -----------------------------------------------------------------------------
+
+    def grow(self, step: _Round) -> list[ConceptNode]:
+        """Grow concepts from newly grounded terms; the node budget is the ceiling."""
+        new: list[ConceptNode] = []
+        for term in step.terms:
+            parent = self._placement(term, step)
+            if parent is None:
+                continue
+            if len(self.concepts) >= self.policy.max_nodes:
+                break
+            new.append(self._add_concept(term, parent))
+        return sorted(new, key=lambda c: c.weight, reverse=True)
+
+    def _placement(self, term: Term, step: _Round) -> ConceptNode | None:
+        if not self._admissible(term, step.topic_filter):
+            return None
+        parent = self._parent_for(term, step.expandable)
+        if parent.depth + 1 > self.policy.max_depth:
+            return None
+        if step.number > 1 and len(term.paper_ids) < self.policy.support_threshold:
+            return None
+        return parent
+
+    def _admissible(self, term: Term, topic_filter: set[str] | None) -> bool:
+        if term.confidence not in GROUNDED or normalize(term.text) in self.visited:
+            return False
+        if is_redundant(term.text, self.taken_keys):
+            return False  # paraphrase of a concept already holding a node
+        return topic_filter is None or bool(set(term.paper_ids) & topic_filter)  # else drifted
+
+    def _parent_for(self, term: Term, expandable: list[ConceptNode]) -> ConceptNode:
+        """The highest-weight expandable parent that shares a paper."""
+        shared = (c for c in expandable if set(c.paper_ids) & set(term.paper_ids))
+        return next(shared, expandable[0] if expandable else self.root)
+
+    def _add_concept(self, term: Term, parent: ConceptNode) -> ConceptNode:
+        depth = parent.depth + 1
+        direction = relation_to_direction(term.relation, "term")
+        weight = term.score * self.policy.direction_weight(direction) * (self.policy.decay ** depth)
+        node = ConceptNode(f"c{self.counter}", term.text, direction, depth, round(weight, 4),
+                           list(term.paper_ids[:8]), parent.node_id, parent.label, len(term.paper_ids))
+        self.counter += 1
+        self.concepts[node.node_id] = node
+        self.visited.add(normalize(term.text))
+        self.taken_keys.add(concept_key(term.text))
+        return node
+
+    # --- judge ----------------------------------------------------------------------------
+
+    def record(self, step: _Round) -> dict[str, bool]:
+        checks = self._checks(step)
+        new_grounded = len(step.grounded - self.previous_grounded)
+        self.rounds.append(RoundStats(step.number, [q for _, q in step.queries], step.added,
+                                      len(self.papers), new_grounded, len(step.grounded), step.gaps,
+                                      checks, gap_queries=list(step.gap_queries),
+                                      new_on_topic=step.new_on_topic, on_topic_papers=len(self.on_topic)))
+        self.previous_grounded = step.grounded
+        self.frontier = step.new_frontier
+        return checks
+
+    def _checks(self, step: _Round) -> dict[str, bool]:
+        top = step.terms[:20]
+        grounded = [t for t in top if t.confidence in GROUNDED]
+        return {"minimum_rounds": step.number >= 2,
+                "enough_papers": len(step.corpus) >= 12,
+                "relations_covered": not step.gaps,
+                "grounded_top_terms": len(grounded) / max(len(top), 1) >= 0.70,
+                "multiple_search_paths": len({q for p in step.corpus for q in p.found_by}) >= 4,
+                "saturated": self._saturated(step),
+                "node_budget": len(self.concepts) < self.policy.max_nodes,
+                "has_frontier": bool(step.new_frontier)}
+
+    def _saturated(self, step: _Round) -> bool:
+        # Saturation counts on-topic arrivals only: a run that has drifted into a neighbouring
+        # literature keeps returning new papers forever and would never look saturated.
+        fresh = step.new_on_topic if len(self.on_topic) >= MIN_TOPICAL_CORPUS else step.added
+        return step.number >= 2 and fresh <= 2 and len(step.grounded - self.previous_grounded) <= 2
+
+    def decide(self, step: _Round, checks: dict[str, bool]) -> bool:
+        if not self.papers and self.provider_errors:
+            return self._stop("failed", "live providers were unreachable or returned no evidence")
+        if all(checks.values()):
+            return self._stop("ready", "all usability checks passed")
+        if step.added == 0 and not step.new_frontier:
+            return self._stop("partial", "search produced no new evidence")
+        return False
+
+    # --- finish ---------------------------------------------------------------------------
+
+    def finish(self) -> None:
+        self.topic_filter: set[str] | None = None
+        if not self.papers:
+            self.terms: list[Term] = []
+            self.covered, self.gaps = {r: [] for r in REQUIRED_RELATIONS}, list(REQUIRED_RELATIONS)
+            self._stop("failed", "no papers could be retrieved")
+            return
+        self.on_topic, self.topic_filter, _, self.terms = self.read_evidence()
+        self.covered, self.gaps = coverage(self.terms)
+        # `ready` demands all five relations; a run that repaired every gap it could and
+        # still misses one was reported as plain `partial`, which read as failure.
+        if self.status != "ready" and len(self.gaps) <= 1:
+            self._grade_usable()
+        # `few` and `none` are not the same signal. MIN_TOPICAL_CORPUS exists so a small
+        # bundle with few literal matches is not starved, but at zero it was converting
+        # "no evidence of relevance" into "every paper may vote": `topic_filter` became
+        # None, and `_guard_relation` skips its on-topic check entirely when on_topic is
+        # None. Measured 2026-09-16 on a live run: 0 of 60 papers on topic, status
+        # `partial`, and the brief named quality control as the mechanism from papers
+        # about neuroimaging QC and health-system care quality.
+        if not self.on_topic and len(self.papers) >= MIN_TOPICAL_CORPUS:
+            self._stop("failed", f"{len(self.papers)} papers retrieved, none about the question")
+
+    def _grade_usable(self) -> None:
+        grounded = len(REQUIRED_RELATIONS) - len(self.gaps)
+        repaired = {q for r in self.rounds for q in (r.gap_queries or [])}
+        if grounded >= 4 and (repaired or not self.gaps):
+            suffix = " after gap repair" if repaired else ""
+            self._stop("usable", f"{grounded}/5 relations grounded{suffix}")
+
+    # --- output ---------------------------------------------------------------------------
+
+    def result(self) -> dict:
+        kept = sorted(self.papers, key=lambda p: _keep_score(p, self.on_topic), reverse=True)[:50]
+        return {**self._summary(), **self._evidence(kept), **self._diagnostics(kept)}
+
+    def _summary(self) -> dict:
+        return {"version": 5, "question": self.question, "root_topic": self.root_label,
+                "status": self.status, "stop_reason": self.stop_reason,
+                "coverage": self.covered, "gaps": self.gaps, "dormant_relations": sorted(self.dormant),
+                # Every paper retrieved this run, not the kept 50. The artifact shows 50; the
+                # store learns from all of them. Capping the store at what a reader sees threw
+                # away ~90% of each run's evidence before the next run could reuse it.
+                "corpus_papers": [p.to_dict() for p in self.papers],
+                "calls_saved_by_corpus": self.corpus_saved,
+                # Only sentences a paper actually wrote. Title n-grams containing "failure"
+                # were being quoted here as stated limitations.
+                "limitations": [t.to_dict() for t in top_terms(self.terms, "failure_mode", 5, grounded_only=True)
+                                if t.stated_limitation],
+                "recommended_queries": next_queries(self.question, self.terms, self.gaps, set()),
+                "query_expansion": {
+                    "enabled": self.equivalence is not None and self.expansion_slots > 0,
+                    "max_slots": self.expansion_slots,
+                    "slots_used": len(self.expanded_queries),
+                    "rejected_for_budget": 0,
+                    "expanded_queries": list(self.expanded_queries)}}
+
+    def _evidence(self, kept: list[Paper]) -> dict:
+        home = self.on_topic | (self.topic_filter or set())
+        distant = rank_distant_papers(self.terms, self.papers, home, home_ids=self.on_topic) if self.papers else []
+        return {"on_topic_paper_ids": sorted(self.on_topic),
+                # Capture histories of the on-topic papers: how much these queries can still reach.
+                "unseen": estimate_coverage(self.papers, self.on_topic),
+                # Off-gate papers carrying the question's grounded shape: the distant fields.
+                "harvest": distant,
+                "distant_queries": distant_queries(distant),
+                "terms": [t.to_dict() for t in self.terms[:30]],
+                "concepts": [c.to_dict() for c in sorted(self.concepts.values(), key=lambda c: (c.depth, -c.weight))],
+                "policy": self.policy.to_dict(),
+                "on_topic_papers": len(self.on_topic),
+                "retrieved_papers": len(self.papers),
+                "papers": [p.to_dict() for p in kept]}
+
+    def _diagnostics(self, kept: list[Paper]) -> dict:
+        # A provider that answered nothing all run changes what the map can contain, so the
+        # brief says so instead of quietly reading as a Crossref-only result.
+        down = sorted(n for n, calls in self.provider_calls.items() if calls and self.provider_failures[n] == calls)
+        now = time.time()
+        return {"rounds": [r.to_dict() for r in self.rounds],
+                "provider_errors": list(dict.fromkeys(self.provider_errors)),
+                "providers_down": down,
+                "providers_blocked": sorted(n for n, st in self.states.states.items() if not st.available(now)),
+                "graph": build_graph(self.question, self.terms[:30], kept)}
 
 
 def run_search(
@@ -168,298 +554,9 @@ def run_search(
     One root topic; the settings bound depth and direction.
     Concepts accumulate until max_nodes / max_depth / max_rounds / saturation.
     """
-    policy = policy or SearchSettings()
-    root_label = canonical_root(question)
-    concepts: dict[str, ConceptNode] = {}
-    root = ConceptNode("c0", root_label, "root", 0, 1.0, [], "", root_label, 0)
-    concepts[root.node_id] = root
-    visited = {normalize(root_label)}
-    papers: list[Paper] = []
-    searched: set[str] = set()
-    rounds: list[RoundStats] = []
-    states = states if states is not None else ProviderStates()
-    provider_errors: list[str] = []
-    provider_calls: Counter[str] = Counter()
-    provider_failures: Counter[str] = Counter()
-    frontier: list[ConceptNode] = [root]
-    counter = 1
-    previous_grounded: set[str] = set()
-    last_terms: list[Term] = []
-    last_gaps: list[str] = []
-    # A relation the literature never mentions is not a gap to chase. Tracked per round so
-    # two rounds of silence is the evidence, not one unlucky query.
-    silent_rounds: Counter = Counter()
-    corpus_saved = 0  # paid calls the local store made unnecessary
-    dormant: set[str] = set()
-    taken_keys: set[frozenset[str]] = {concept_key(root_label)}
-    on_topic: set[str] = set()
-    previous_on_topic = 0
-    expansion_slots = max(0, int(query_expansion_slots or 0))
-    expansion_remaining = expansion_slots
-    expanded_queries: list[str] = []
-    expansion_rejected = 0
-    status = "partial"
-    stop_reason = "no additional distinct queries"
-
-    for round_number in range(1, max(1, policy.max_rounds) + 1):
-        if len(concepts) >= policy.max_nodes:
-            status, stop_reason = "partial", "node budget reached"
-            break
-        expandable = [c for c in sorted(frontier, key=lambda c: c.weight, reverse=True)
-                      if c.depth < policy.max_depth]
-        query_budget = max(1, policy.per_direction_cap) if policy.per_direction_cap is not None else 5
-        # Gaps were computed, printed, and never searched. Reserve slots for them.
-        gap_queries = []
-        if last_gaps:
-            for variant in range(len(GAP_CUES["failure_mode"])):
-                for q in next_queries(question, last_terms, last_gaps, searched, variant):
-                    if normalize(q) not in {normalize(x) for x in searched} and q not in gap_queries:
-                        gap_queries.append(q)
-                if len(gap_queries) >= GAP_QUERY_SLOTS:
-                    break
-            gap_queries = gap_queries[:GAP_QUERY_SLOTS]
-        # One conservative equivalence alias may use a query slot. It never replaces the
-        # original query, so the run still searches what the question literally asked.
-        expansion_reserve = min(expansion_remaining, max(0, query_budget - len(gap_queries)))
-        expandable = expandable[: max(1, query_budget - len(gap_queries) - expansion_reserve)]
-        round_queries = []
-        for node in expandable:
-            q = _query_for_node(node)
-            if normalize(q) not in {normalize(x) for x in searched}:
-                round_queries.append((node, q))
-        for gq in gap_queries:
-            round_queries.append((root, gq))
-        round_expansions: list[tuple[ConceptNode, str]] = []
-        expand = getattr(equivalence, "expand_query", None) if equivalence is not None else None
-        if callable(expand) and expansion_remaining > 0:
-            seen_expansions = {normalize(q) for q in expanded_queries}
-            for node, query in list(round_queries):
-                if expansion_remaining <= 0:
-                    break
-                if len(round_queries) + len(round_expansions) >= query_budget:
-                    break
-                candidates = expand(query, max_aliases=1)
-                for candidate in candidates:
-                    marker = normalize(candidate)
-                    if marker in {normalize(x) for x in searched} or marker in seen_expansions:
-                        continue
-                    round_expansions.append((node, candidate))
-                    seen_expansions.add(marker)
-                    expanded_queries.append(candidate)
-                    expansion_remaining -= 1
-                    break
-            if round_expansions and len(round_queries) + len(round_expansions) > query_budget:
-                dropped = (len(round_queries) + len(round_expansions)) - query_budget
-                for _ in range(dropped):
-                    round_expansions.pop()
-                    expanded_queries.pop()
-                    expansion_remaining += 1
-                    expansion_rejected += 1
-        round_queries.extend(round_expansions)
-        if not round_queries:
-            status, stop_reason = "partial", "no additional distinct queries"
-            break
-        incoming: list[Paper] = []
-        # Ask the source that carries what this round is missing, and skip one that is
-        # rate limited until its window passes -- including a window set by an earlier run.
-        by_name = {p.name: p for p in providers}
-        ordered_names = order_for([p.name for p in providers], last_gaps, states)
-        # The local store answers before paid providers. Ranking by metadata richness
-        # otherwise puts DOAJ/OpenAlex first and spends a call a held paper could answer.
-        if "corpus" in by_name and "corpus" in ordered_names:
-            ordered_names = ["corpus", *[name for name in ordered_names if name != "corpus"]]
-        ordered = [by_name[n] for n in ordered_names]
-        for node, query in round_queries:
-            searched.add(query)
-            local_hits = 0
-            for provider in ordered:
-                # v0.6 ordered the providers and then called every one of them, so a paper
-                # already held cost exactly as much as a paper fetched. The store only pays
-                # off if it can end the query: a full local answer stops the paid calls.
-                if local_hits >= results_per_query and provider.name != "corpus":
-                    corpus_saved += 1
-                    continue
-                provider_calls[provider.name] += 1
-                try:
-                    found = provider.search(query, results_per_query)
-                    for p in found:
-                        p.found_by = list(dict.fromkeys([*p.found_by, query]))
-                    incoming.extend(found)
-                    if provider.name == "corpus":
-                        local_hits = len(found)
-                    states.observe(provider.name, True)
-                except ProviderUnavailable as exc:
-                    provider_failures[provider.name] += 1
-                    states.observe(provider.name, False)
-                    states.block(provider.name, getattr(exc, "retry_after", 0.0) or 0.0, str(exc))
-                    provider_errors.append(f"{provider.name}: {exc}")
-                except ProviderError as exc:
-                    provider_failures[provider.name] += 1
-                    states.observe(provider.name, False)
-                    provider_errors.append(f"{provider.name}: {exc}")
-        papers, added = _dedupe_papers(papers, incoming)
-        for node, query in round_queries:
-            for p in papers:
-                if query in p.found_by and p.paper_id not in node.paper_ids:
-                    node.paper_ids.append(p.paper_id)
-            node.support = len(node.paper_ids)
-        on_topic = concept_gate(question, papers, topical_papers(question, papers))
-        # A small bundle can legitimately have few literal matches; do not starve it, but
-        # top it up with the closest papers rather than letting the whole corpus vote.
-        topic_filter = grounding_papers(question, papers, on_topic)
-        new_on_topic = max(0, len(on_topic) - previous_on_topic)
-        previous_on_topic = len(on_topic)
-        # Concepts are read from the on-topic corpus only. Letting drifted papers vote
-        # produced `protein structure and dynamics` as a mechanism for a question about
-        # stopping criteria: one on-topic supporter was enough to launder the rest.
-        corpus = [p for p in papers if p.paper_id in topic_filter] if topic_filter is not None else papers
-        terms = extract_terms(question, corpus, topic_filter, background)
-        covered, gaps = coverage(terms)
-        for relation in REQUIRED_RELATIONS:
-            if any(t.relation == relation for t in terms):
-                silent_rounds[relation] = 0
-            else:
-                silent_rounds[relation] += 1
-        # Two full rounds with not one candidate term: the question does not have this
-        # facet in this literature. Chasing it spends the query budget on cue words.
-        dormant = {r for r, n in silent_rounds.items() if n >= 2}
-        gaps = [g for g in gaps if g not in dormant]
-        last_terms, last_gaps = terms, gaps
-        grounded_now = {t.text for t in terms if t.confidence in {"high", "medium"}}
-        # Grow concepts from newly grounded terms; the node budget is the ceiling.
-        new_frontier: list[ConceptNode] = []
-        for term in terms:
-            if term.confidence not in {"high", "medium"}:
-                continue
-            key = normalize(term.text)
-            if key in visited:
-                continue
-            if is_redundant(term.text, taken_keys):
-                continue  # paraphrase of a concept already holding a node
-            if topic_filter is not None and not (set(term.paper_ids) & topic_filter):
-                continue  # grounded only in drifted papers
-            direction = relation_to_direction(term.relation, "term")
-            depth = 1
-            # Attach to highest-weight expandable parent that shares a paper.
-            parent = expandable[0] if expandable else root
-            for cand in expandable:
-                if set(cand.paper_ids) & set(term.paper_ids):
-                    parent = cand
-                    break
-            depth = parent.depth + 1
-            if depth > policy.max_depth:
-                continue
-            if round_number > 1 and len(term.paper_ids) < policy.support_threshold:
-                continue
-            if len(concepts) >= policy.max_nodes:
-                break
-            weight = term.score * policy.direction_weight(direction) * (policy.decay ** depth)
-            node_id = f"c{counter}"
-            counter += 1
-            node = ConceptNode(node_id, term.text, direction, depth, round(weight, 4),
-                               list(term.paper_ids[:8]), parent.node_id, parent.label,
-                               len(term.paper_ids))
-            concepts[node_id] = node
-            visited.add(key)
-            taken_keys.add(concept_key(term.text))
-            new_frontier.append(node)
-        new_frontier.sort(key=lambda c: c.weight, reverse=True)
-        checks = _stop_checks(round_number, corpus, terms, gaps,
-                              new_papers=added,
-                              new_grounded_terms=len(grounded_now - previous_grounded),
-                              new_on_topic=new_on_topic if len(on_topic) >= MIN_TOPICAL_CORPUS else None)
-        checks["node_budget"] = len(concepts) < policy.max_nodes
-        checks["has_frontier"] = bool(new_frontier)
-        rounds.append(RoundStats(round_number, [q for _, q in round_queries], added,
-                                 len(papers), len(grounded_now - previous_grounded),
-                                 len(grounded_now), gaps, checks,
-                                 gap_queries=list(gap_queries),
-                                 new_on_topic=new_on_topic,
-                                 on_topic_papers=len(on_topic)))
-        previous_grounded = grounded_now
-        frontier = new_frontier
-        if not papers and provider_errors:
-            status, stop_reason = "failed", "live providers were unreachable or returned no evidence"
-            break
-        if all(checks.values()):
-            status, stop_reason = "ready", "all usability checks passed"
-            break
-        if added == 0 and not new_frontier:
-            status, stop_reason = "partial", "search produced no new evidence"
-            break
-    else:
-        status, stop_reason = "partial", "maximum rounds reached"
-
-    if not papers:
-        terms: list[Term] = []
-        covered, gaps = {r: [] for r in REQUIRED_RELATIONS}, list(REQUIRED_RELATIONS)
-        status, stop_reason = "failed", "no papers could be retrieved"
-    else:
-        on_topic = concept_gate(question, papers, topical_papers(question, papers))
-        topic_filter = grounding_papers(question, papers, on_topic)
-        corpus = [p for p in papers if p.paper_id in topic_filter] if topic_filter is not None else papers
-        terms = extract_terms(question, corpus, topic_filter, background)
-        covered, gaps = coverage(terms)
-        # `ready` demands all five relations; a run that repaired every gap it could and
-        # still misses one was reported as plain `partial`, which read as failure.
-        if status != "ready" and len(gaps) <= 1 and len(REQUIRED_RELATIONS) - len(gaps) >= 4:
-            searched_gap_queries = {q for r in rounds for q in (r.gap_queries or [])}
-            if searched_gap_queries or not gaps:
-                status = "usable"
-                repaired = " after gap repair" if searched_gap_queries else ""
-                stop_reason = f"{len(REQUIRED_RELATIONS) - len(gaps)}/5 relations grounded{repaired}"
-        # `few` and `none` are not the same signal. MIN_TOPICAL_CORPUS exists so a small
-        # bundle with few literal matches is not starved, but at zero it was converting
-        # "no evidence of relevance" into "every paper may vote": `topic_filter` became
-        # None, and `_guard_relation` skips its on-topic check entirely when on_topic is
-        # None. Measured 2026-09-16 on a live run: 0 of 60 papers on topic, status
-        # `partial`, and the brief named quality control as the mechanism from papers
-        # about neuroimaging QC and health-system care quality.
-        if not on_topic and len(papers) >= MIN_TOPICAL_CORPUS:
-            status = "failed"
-            stop_reason = f"{len(papers)} papers retrieved, none about the question"
-    # A provider that answered nothing all run changes what the map can contain, so the
-    # brief says so instead of quietly reading as a Crossref-only result.
-    down_providers = sorted(n for n, calls in provider_calls.items() if calls and provider_failures[n] == calls)
-    top = terms[:30]
-    harvested = rank_distant_papers(terms, papers, on_topic | (topic_filter or set()), home_ids=on_topic) if papers else []
-    concept_list = sorted(concepts.values(), key=lambda c: (c.depth, -c.weight))
-    kept_papers = sorted(papers, key=lambda p: _keep_score(p, on_topic), reverse=True)[:50]
-    return {"version": 5, "question": question, "root_topic": root_label,
-            "status": status, "stop_reason": stop_reason,
-            "coverage": covered, "gaps": gaps, "dormant_relations": sorted(dormant),
-            # Every paper retrieved this run, not the kept 50. The artifact shows 50; the
-            # store learns from all of them. Capping the store at what a reader sees threw
-            # away ~90% of each run's evidence before the next run could reuse it.
-            "corpus_papers": [p.to_dict() for p in papers],
-            "calls_saved_by_corpus": corpus_saved,
-            # kept separately: these rank below the top 30 but carry the quoted sentence
-            # Only sentences a paper actually wrote. Title n-grams containing "failure"
-            # were being quoted here as stated limitations.
-            "limitations": [t.to_dict() for t in top_terms(terms, "failure_mode", 5, grounded_only=True)
-                            if t.stated_limitation],
-            "recommended_queries": next_queries(question, terms, gaps, set()),
-            "query_expansion": {
-                "enabled": equivalence is not None and expansion_slots > 0,
-                "max_slots": expansion_slots,
-                "slots_used": len(expanded_queries),
-                "rejected_for_budget": expansion_rejected,
-                "expanded_queries": list(expanded_queries),
-            },
-            "on_topic_paper_ids": sorted(on_topic),
-            # Capture histories of the on-topic papers: how much these queries can still reach.
-            "unseen": estimate_coverage(papers, on_topic),
-            # Off-gate papers carrying the question's grounded shape: the distant fields.
-            "harvest": harvested,
-            "distant_queries": distant_queries(harvested),
-            "terms": [t.to_dict() for t in top],
-            "concepts": [c.to_dict() for c in concept_list],
-            "policy": policy.to_dict(),
-            "on_topic_papers": len(on_topic),
-            "retrieved_papers": len(papers),
-            "papers": [p.to_dict() for p in kept_papers],
-            "rounds": [r.to_dict() for r in rounds],
-            "provider_errors": list(dict.fromkeys(provider_errors)),
-            "providers_down": down_providers,
-            "providers_blocked": sorted(n for n, st in states.states.items() if not st.available(time.time())),
-            "graph": build_graph(question, top, kept_papers)}
+    search = _Search(question, providers, policy or SearchSettings(), results_per_query, background,
+                     states if states is not None else ProviderStates(), equivalence,
+                     max(0, int(query_expansion_slots or 0)))
+    search.run_rounds()
+    search.finish()
+    return search.result()
