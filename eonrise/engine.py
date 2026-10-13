@@ -22,13 +22,13 @@ from .evidence import (
     GAP_CUE_TOKENS,
     GAP_QUERY_SLOTS,
     GENERIC_FIELDS,
+    GROUNDED,
     LIMITATION_CUES,
     MIN_TOPICAL_CORPUS,
     RELATION_MARKERS,
     REQUIRED_RELATIONS,
     STOPWORDS,
     WEAK_EDGE,
-    _add_candidate,
     _content_runs,
     _dedupe_papers,
     _guard_relation,
@@ -138,8 +138,6 @@ def relation_to_direction(relation: str, source_kind: str) -> str:
         return DOWN
     return SIDEWAYS
 
-
-GROUNDED = {"high", "medium"}
 
 
 @dataclass

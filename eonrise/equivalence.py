@@ -19,12 +19,12 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from .evidence import (
-    FILLER,
     GENERIC_FIELDS,
     MIN_TOPICAL_CORPUS,
-    WEAK_EDGE,
+    GROUNDED,
     _sentences,
     concept_key,
+    is_clean_label,
     is_redundant,
     normalize,
 )
@@ -49,10 +49,7 @@ EXPANSION_MIN_CONFIDENCE = 0.75
 # A component that keeps growing is usually polysemy, not one shared concept.
 MAX_ACTIVE_COMPONENT = 8
 MAX_EXAMPLES = 3
-MAX_LABEL_TOKENS = 6
-MAX_LABEL_CHARS = 80
 EXAMPLE_CHARS = 240
-GROUNDED = {"high", "medium"}
 
 EXPLICIT_CUES = (
     "also known as",
@@ -114,18 +111,9 @@ def _identity_key(paper: Paper | None = None, *, paper_id: Any = "", paper_key: 
     return f"id:{key}" if key else ""
 
 
-def _short_and_specific(key: str) -> bool:
-    return len(key.split()) <= MAX_LABEL_TOKENS and len(key) <= MAX_LABEL_CHARS and key not in GENERIC_FIELDS
-
-
-def _well_formed(key: str) -> bool:
-    parts = key.split()
-    return not {parts[0], parts[-1]} & WEAK_EDGE and FILLER.isdisjoint(parts) and bool(concept_key(key))
-
-
 def _is_plausible_label(label: Any) -> bool:
     key = _canonical_label(label)
-    return bool(key) and _short_and_specific(key) and _well_formed(key)
+    return is_clean_label(key) and bool(concept_key(key))
 
 
 def _relation_bucket(relation: Any) -> str:

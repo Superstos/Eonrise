@@ -9,7 +9,8 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from itertools import dropwhile, groupby, islice, takewhile
 from typing import Iterable
 
 from .models import Paper, Term
@@ -27,6 +28,7 @@ RELATION_MARKERS = {
     "failure_mode": {"failure","failures","limitation","limitations","bias","confound","confounding","artifact","error","errors","weakness","risk","vulnerability","interference","hallucination","stale","obsolete","invalid","fragility","degradation","drift","collapse","forgetting","injection","noise","misalignment"},
     "method": {"experiment","experimental","randomized","controlled","trial","ablation","longitudinal","cross-sectional","simulation","survey","interview","cohort","case-control","meta-analysis","systematic review","protocol","replication","baseline","comparison","comparative","observational","ethnography","factorial","blinded","sampling","evaluation protocol","controlled evaluation","controlled experiment","comparative testing","component assessment","component-level assessment","human annotation","prediction-powered inference","reproducible workflow","metric validation"},
 }
+GROUNDED = {"high", "medium"}
 GENERIC_FIELDS = {"science", "social sciences", "physical sciences", "life sciences", "health sciences", "computer science", "artificial intelligence", "mathematics", "engineering", "medicine"}
 GAP_CUES = {
     "mechanism": ["mechanism", "causal process", "architecture"],
@@ -50,6 +52,19 @@ class CandidateEvidence:
     def __post_init__(self) -> None:
         if self.relation_votes is None:
             self.relation_votes = Counter()
+
+    def see(self, paper: Paper, example: str, kind: str) -> None:
+        """Count one sighting of the term in a paper; `kind` says where it was read."""
+        explicit, in_title, stated_limitation, from_abstract = _SIGHTINGS[kind]
+        self.papers.add(paper.paper_id)
+        self.providers.add(paper.provider)
+        self.queries.update(paper.found_by)
+        if example and example not in self.examples and len(self.examples) < 3:
+            self.examples.append(example)
+        self.explicit_count += int(explicit)
+        self.title_count += int(in_title)
+        self.stated_limitation = self.stated_limitation or stated_limitation
+        self.abstract_count += int(from_abstract)
 
 def normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
@@ -81,16 +96,15 @@ WEAK_EDGE = {"between", "through", "via", "within", "among", "toward", "towards"
              "provide", "provides", "including", "include", "includes", "however"}
 
 
+# -ies -> -y; -es after s, x, z, ch, sh; any other final s except -ss.
+_PLURAL = re.compile(r"ies$|(?:(?<=[sxz])|(?<=[cs]h))es$|(?<!s)s$")
+
+
 def to_singular(token: str) -> str:
     """Crude singulariser so `similarity measure` and `similarity measures` collapse."""
-    if len(token) > 4:
-        if token.endswith("ies"):
-            return token[:-3] + "y"
-        if token.endswith(("ses", "xes", "zes", "ches", "shes")):
-            return token[:-2]
-        if token.endswith("s") and not token.endswith("ss"):
-            return token[:-1]
-    return token
+    if len(token) <= 4:
+        return token
+    return _PLURAL.sub(lambda match: "y" if match.group() == "ies" else "", token, count=1)
 
 
 # Derivational endings, longest first. `to_singular` only folds plurals, so a question asking for
@@ -109,15 +123,24 @@ def word_family(token: str) -> str:
     """
     # `to_singular` would read the s of -ous as a plural: `analogous` -> `analogou`.
     token = token if token.endswith("ous") else to_singular(token)
-    for ending in _FAMILY_ENDINGS:
-        if token.endswith(ending) and len(token) - len(ending) >= 4:
-            base = token[:-len(ending)]
-            if ending == "al" and base.endswith("er"):
-                return token
-            if ending in ("ing", "ed") and base[-1] == base[-2] and base[-1] not in "lsz":
-                base = base[:-1]  # stopping -> stop
-            return base
-    return token
+    ending = next((ending for ending in _FAMILY_ENDINGS if _strippable(token, ending)), "")
+    return _strip_ending(token, ending) if ending else token
+
+
+def _strippable(token: str, ending: str) -> bool:
+    return token.endswith(ending) and len(token) - len(ending) >= 4
+
+
+def _undouble(base: str) -> str:
+    """stopping -> stopp -> stop; `-ll`, `-ss` and `-zz` stems keep both letters."""
+    return base[:-1] if base[-1] == base[-2] and base[-1] not in "lsz" else base
+
+
+def _strip_ending(token: str, ending: str) -> str:
+    base = token[:-len(ending)]
+    if ending == "al" and base.endswith("er"):
+        return token
+    return _undouble(base) if ending in ("ing", "ed") else base
 
 
 def concept_key(label: str) -> frozenset[str]:
@@ -147,14 +170,39 @@ def is_redundant(label: str, existing: Iterable[frozenset[str]]) -> bool:
     return any(key <= other or other <= key for other in existing)
 
 
+MAX_LABEL_WORDS = 6
+MAX_LABEL_CHARS = 80
+
+
+def is_clean_label(key: str) -> bool:
+    """A normalized label short and specific enough to be a concept, with no filler in it.
+
+    `computer science` reached the top ten of 8/8 runs because the generic-field list was
+    only checked on paper.fields, while the same label also arrives as an OpenAlex keyword,
+    as a topic, and as a title n-gram. One gate, all sources.
+    """
+    parts = key.split()
+    return (0 < len(parts) <= MAX_LABEL_WORDS and len(key) <= MAX_LABEL_CHARS and key not in GENERIC_FIELDS
+            and not {parts[0], parts[-1]} & WEAK_EDGE and FILLER.isdisjoint(parts))
+
+
 def canonical_root(question: str, max_tokens: int = 6) -> str:
     """Single root topic for the whole run. One question -> one canonical node."""
     selected = split_words(question)
     return " ".join(selected[:max_tokens]) or question.strip().lower()
 
-def paper_word_families(paper: Paper) -> set[str]:
-    text = " ".join([paper.title, " ".join(paper.keywords), " ".join(paper.topic_path), " ".join(paper.fields)])
+def _families(text: str) -> set[str]:
     return {word_family(t) for t in split_words(text)}
+
+
+def paper_word_families(paper: Paper) -> set[str]:
+    return _families(" ".join([paper.title, " ".join(paper.keywords), " ".join(paper.topic_path), " ".join(paper.fields)]))
+
+
+def _belongs(found: set[str], root: set[str], rest: set[str]) -> bool:
+    hits, extra = len(root & found), len(rest & found)
+    single_word_question = len(root) == 1 and not rest
+    return hits >= 2 or (hits >= 1 and (extra >= 1 or single_word_question))
 
 
 def topical_papers(question: str, papers: list[Paper]) -> set[str]:
@@ -168,15 +216,9 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
     root words ("search", "process") survives. Corpus-frequency weighting was tried and
     could not separate those cases without starving on-topic papers too.
     """
-    root = {word_family(t) for t in split_words(canonical_root(question))}
-    rest = {word_family(t) for t in split_words(question)} - root
-    keep: set[str] = set()
-    for paper in papers:
-        found = paper_word_families(paper)
-        hits, extra = len(root & found), len(rest & found)
-        if hits >= 2 or (hits >= 1 and (extra >= 1 or (len(root) == 1 and not rest))):
-            keep.add(paper.paper_id)
-    return keep
+    root = _families(canonical_root(question))
+    rest = _families(question) - root
+    return {paper.paper_id for paper in papers if _belongs(paper_word_families(paper), root, rest)}
 
 
 def grounding_papers(question: str, papers: list[Paper], on_topic: set[str]) -> set[str] | None:
@@ -191,31 +233,27 @@ def grounding_papers(question: str, papers: list[Paper], on_topic: set[str]) -> 
     """
     if len(on_topic) >= MIN_TOPICAL_CORPUS:
         return on_topic
-    words = {word_family(t) for t in split_words(question)}
-    scored = []
-    for paper in papers:
-        own = len(words & paper_word_families(paper))
-        body = len(words & {word_family(t) for t in split_words(paper.abstract)})
-        if paper.paper_id in on_topic or own or body:
-            scored.append(((paper.paper_id in on_topic, own, body), paper.paper_id))
-    scored.sort(reverse=True)
-    core = {pid for _, pid in scored[:MIN_TOPICAL_CORPUS]}
-    return core or None
+    return set(_best_voters(_families(question), papers, on_topic)) or None
+
+
+def _vote_rank(paper: Paper, words: set[str], on_topic: set[str]) -> tuple[bool, int, int]:
+    """Gate first, then question words in title and labels, then in the abstract."""
+    return (paper.paper_id in on_topic, len(words & paper_word_families(paper)),
+            len(words & _families(paper.abstract)))
+
+
+def _best_voters(words: set[str], papers: list[Paper], on_topic: set[str]) -> list[str]:
+    ranked = sorted(((_vote_rank(paper, words, on_topic), paper.paper_id) for paper in papers), reverse=True)
+    return [paper_id for rank, paper_id in ranked if any(rank)][:MIN_TOPICAL_CORPUS]
+
+
+_RUN_BREAKS = STOPWORDS | set(".!?;,:()")
 
 
 def _content_runs(text: str) -> list[list[str]]:
-    runs, current = [], []
-    for raw in re.findall(r"[a-z][a-z0-9-]+|[.!?;,:()]", text.lower()):
-        if raw in ".!?;,:()" or raw in STOPWORDS:
-            if current:
-                runs.append(current)
-                current = []
-            continue
-        if len(raw) > 1:
-            current.append(raw)
-    if current:
-        runs.append(current)
-    return runs
+    """Unbroken runs of content words; punctuation and stopwords end a run."""
+    tokens = re.findall(r"[a-z][a-z0-9-]+|[.!?;,:()]", text.lower())
+    return [list(run) for is_break, run in groupby(tokens, key=lambda token: token in _RUN_BREAKS) if not is_break]
 
 def _ngrams(text: str, min_n: int = 2, max_n: int = 4) -> Iterable[str]:
     for run in _content_runs(text):
@@ -252,13 +290,67 @@ def _sentences(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"(?<=[.!?])\s+|;\s+", text or "") if part.strip()]
 
 
+_LIMITATION_WORDS = set(LIMITATION_CUES) | LIMITATION_META
+
+
+def _is_edge_word(word: str) -> bool:
+    return word in WEAK_EDGE or word in FILLER or word.endswith("ly")
+
+
 def _phrase_edge(run: list[str]) -> list[str]:
-    run = [w for w in run if w not in LIMITATION_CUES and w not in LIMITATION_META]
-    while run and (run[0] in WEAK_EDGE or run[0] in FILLER or run[0].endswith("ly")):
-        run = run[1:]
-    while run and (run[-1] in WEAK_EDGE or run[-1] in FILLER or run[-1].endswith("ly")):
-        run = run[:-1]
-    return run
+    run = list(dropwhile(_is_edge_word, [w for w in run if w not in _LIMITATION_WORDS]))
+    return list(dropwhile(_is_edge_word, reversed(run)))[::-1]
+
+
+def _limitation_body(sentence: str) -> str:
+    """The sentence without a leading header that announces a limitation."""
+    head = sentence.split(":", 1)[0].lower()
+    announces = _HEADER.match(sentence) and set(re.findall(r"[a-z]+", head)) & LIMITATION_META
+    return _HEADER.sub("", sentence) if announces else sentence
+
+
+def _is_content(word: str) -> bool:
+    return word[0].isalpha() and word not in STOPWORDS
+
+
+def _is_skipped(word: str) -> bool:
+    return word in STOPWORDS or word in LIMITATION_CUES or word.endswith("ly")
+
+
+def _words_after(words: list[str], index: int) -> list[str]:
+    """Up to four content words after the cue, past up to three stopwords, cues or adverbs."""
+    j = index + 1
+    while j < min(len(words), index + 5) and _is_skipped(words[j]):
+        j += 1
+    return list(islice(takewhile(_is_content, words[j:]), 4))
+
+
+def _words_before(words: list[str], index: int) -> list[str]:
+    """Up to four content words before the cue, past up to two stopwords."""
+    k = index - 1
+    while k > index - 3 and k >= 0 and words[k] in STOPWORDS:
+        k -= 1
+    return list(islice(takewhile(_is_content, reversed(words[:k + 1])), 4))[::-1]
+
+
+def _pick(after: list[str], before: list[str]) -> list[str]:
+    """The run after the cue names the condition; a one-word run defers to the subject before."""
+    after, before = _phrase_edge(after), _phrase_edge(before)
+    return after if len(after) >= 2 else before if len(before) >= 2 else after or before
+
+
+def _first_limitation(words: list[str]) -> str:
+    for index in (i for i, word in enumerate(words) if word in LIMITATION_CUES):
+        phrase = " ".join(_pick(_words_after(words, index), _words_before(words, index)))
+        if len(phrase) >= 5:
+            return phrase
+    return ""
+
+
+def _about_question(words: list[str], root_tokens: set[str] | None) -> bool:
+    # The sentence has to be talking about the question. `current chemical libraries`
+    # was a real grounded limitation for a question about stopping criteria.
+    return not root_tokens or bool({word_family(w) for w in words} & root_tokens)
 
 
 def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> list[tuple[str, str]]:
@@ -275,35 +367,11 @@ def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> li
     """
     found: list[tuple[str, str]] = []
     for sentence in _sentences(abstract):
-        body = sentence
-        head = sentence.split(":", 1)[0].lower()
-        if _HEADER.match(sentence) and set(re.findall(r"[a-z]+", head)) & LIMITATION_META:
-            body = _HEADER.sub("", sentence)
         # Single letters kept: dropping "a" joined "stop a trial" into `stop trial`.
-        words = re.findall(r"[a-z][a-z0-9-]*|[.,;:()!?]", body.lower())
-        # The sentence has to be talking about the question. `current chemical libraries`
-        # was a real grounded limitation for a question about stopping criteria.
-        if root_tokens and not ({word_family(w) for w in words} & root_tokens):
-            continue
-        for index, word in enumerate(words):
-            if word not in LIMITATION_CUES:
-                continue
-            after, j = [], index + 1
-            while j < min(len(words), index + 5) and (words[j] in STOPWORDS or words[j] in LIMITATION_CUES
-                                                      or words[j].endswith("ly")):
-                j += 1
-            while j < len(words) and words[j][0].isalpha() and words[j] not in STOPWORDS and len(after) < 4:
-                after.append(words[j]); j += 1
-            before, k = [], index - 1
-            while k > index - 3 and k >= 0 and words[k] in STOPWORDS:
-                k -= 1
-            while k >= 0 and words[k][0].isalpha() and words[k] not in STOPWORDS and len(before) < 4:
-                before.insert(0, words[k]); k -= 1
-            after, before = _phrase_edge(after), _phrase_edge(before)
-            pick = after if len(after) >= 2 else before if len(before) >= 2 else after or before
-            if pick and len(" ".join(pick)) >= 5:
-                found.append((" ".join(pick), sentence[:200]))
-                break
+        words = re.findall(r"[a-z][a-z0-9-]*|[.,;:()!?]", _limitation_body(sentence).lower())
+        phrase = _first_limitation(words) if _about_question(words, root_tokens) else ""
+        if phrase:
+            found.append((phrase, sentence[:200]))
     return found
 
 
@@ -319,50 +387,46 @@ MEASUREMENT_WORDS = {"accuracy", "accurate", "metric", "metrics", "score", "scor
                      "coverage", "completeness", "index"}
 
 
-def _relation_for(term: str, context: str, source_kind: str, question_tokens: set[str]) -> str:
-    key = normalize(term)
-    term_tokens = set(split_words(term))
-    if any(x in key for x in ("fault injection", "ablation", "controlled trial", "randomized trial", "controlled comparison", "systematic review", "meta analysis", "stress testing", "trace analysis", "controlled evaluation", "controlled experiment", "evaluation protocol", "comparative testing", "component-level assessment", "metric validation")):
+_METHOD_PHRASES = ("fault injection", "ablation", "controlled trial", "randomized trial", "controlled comparison", "systematic review", "meta analysis", "stress testing", "trace analysis", "controlled evaluation", "controlled experiment", "evaluation protocol", "comparative testing", "component-level assessment", "metric validation")
+# First match wins, in this order.
+_WORD_RELATIONS = (
+    ("failure_mode", {"failure", "failures", "stale", "obsolete", "invalid", "fragility", "bias", "confound", "vulnerability", "degradation", "interference", "hallucination"}),
+    ("measurement", MEASUREMENT_WORDS),
+    ("method", {"experiment", "experimental", "randomized", "controlled", "trial", "ablation", "longitudinal", "simulation", "survey", "cohort", "replication", "baseline", "sampling", "comparative", "annotation", "validation", "protocol"}),
+    ("mechanism", RELATION_MARKERS["mechanism"]),
+)
+_ALL_MARKERS = set().union(*RELATION_MARKERS.values())
+
+
+def _marked_relation(term: str) -> str:
+    if any(phrase in normalize(term) for phrase in _METHOD_PHRASES):
         return "method"
-    if term_tokens & {"failure", "failures", "stale", "obsolete", "invalid", "fragility", "bias", "confound", "vulnerability", "degradation", "interference", "hallucination"}:
-        return "failure_mode"
-    if term_tokens & MEASUREMENT_WORDS:
-        return "measurement"
-    if term_tokens & {"experiment", "experimental", "randomized", "controlled", "trial", "ablation", "longitudinal", "simulation", "survey", "cohort", "replication", "baseline", "sampling", "comparative", "annotation", "validation", "protocol"}:
-        return "method"
-    if term_tokens & RELATION_MARKERS["mechanism"]:
-        return "mechanism"
+    words = set(split_words(term))
+    return next((relation for relation, markers in _WORD_RELATIONS if words & markers), "")
+
+
+def _relation_for(term: str, source_kind: str, question_tokens: set[str]) -> str:
+    marked = _marked_relation(term)
+    if marked:
+        return marked
     if source_kind == "broader_topic":
         return "neighbor_field"
-    if term_tokens & question_tokens:
-        return "core"
-    return "topic"
+    return "core" if set(split_words(term)) & question_tokens else "topic"
 
-def _add_candidate(bucket: dict[str, CandidateEvidence], term: str, paper: Paper, relation: str, example: str, explicit: bool = False, in_title: bool = False, stated_limitation: bool = False, from_abstract: bool = False) -> None:
-    key = normalize(term)
-    if not key or len(key.split()) > 6 or len(key) > 80:
-        return
-    # `computer science` reached the top ten of 8/8 runs because the generic-field list
-    # was only checked on paper.fields, while the same label also arrives as an OpenAlex
-    # keyword, as a topic, and as a title n-gram. One gate, all sources.
-    if key in GENERIC_FIELDS:
-        return
-    parts = key.split()
-    if parts[0] in WEAK_EDGE or parts[-1] in WEAK_EDGE:
-        return
-    if any(part in FILLER for part in parts):
-        return
-    item = bucket.setdefault(key, CandidateEvidence(set(), set(), set(), []))
-    item.papers.add(paper.paper_id)
-    item.providers.add(paper.provider)
-    item.queries.update(paper.found_by)
-    if example and example not in item.examples and len(item.examples) < 3:
-        item.examples.append(example)
-    item.explicit_count += int(explicit)
-    item.title_count += int(in_title)
-    item.stated_limitation = item.stated_limitation or stated_limitation
-    item.abstract_count += int(from_abstract)
-    item.relation_votes[relation] += 1
+
+# Where a term was read -> (explicit, in_title, stated_limitation, from_abstract).
+# Explicit: the paper names the term itself, as a label or in a limitation sentence.
+_SIGHTINGS = {
+    "keyword": (True, False, False, False),
+    "label": (True, False, False, False),
+    "title": (False, True, False, False),
+    "limitation": (True, False, True, True),
+    "abstract": (False, False, False, True),
+}
+# A provider's topic hierarchy names the neighbourhood, not the finding.
+_FIXED_RELATIONS = {"label": "neighbor_field", "limitation": "failure_mode"}
+_GAP_CUE_SINGULARS = {relation: {to_singular(t) for t in tokens} for relation, tokens in GAP_CUE_TOKENS.items()}
+
 
 def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[str] | None, abstract_backed: bool = True) -> str:
     """Keep a down-relation label only when it is about the question.
@@ -371,71 +435,96 @@ def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[
     measurement because it contains "performance", and `kidney failure` scored as a
     failure mode because it contains "failure". A third is the gap cue itself
     (`failure mode`) becoming the finding when a gap query goes out.
+
+    A provider's subject label is free and infinite; a sentence costs a real paper. Without
+    the abstract check the cheapest evidence outranks the truest, and a brief reports
+    `service oriented architecture and web services` as the question's mechanism with a
+    paper title as its proof. Measured on 7 saved runs: 13 of 30 down-relation terms had
+    never been read out of an abstract, and every obvious junk label was among them.
     """
     if relation not in DOWN_RELATIONS:
         return relation
-    term_tokens = {to_singular(t) for t in key.split()}
-    if term_tokens <= {to_singular(t) for t in GAP_CUE_TOKENS.get(relation, set())}:
-        return "topic"
-    if on_topic is not None and not (paper_ids & on_topic):
-        return "topic"
-    if not abstract_backed:
-        # A provider's subject label is free and infinite; a sentence costs a real paper.
-        # Without this the cheapest evidence outranks the truest, and a brief reports
-        # `service oriented architecture and web services` as the question's mechanism
-        # with a paper title as its proof. Measured on 7 saved runs: 13 of 30 down-relation
-        # terms had never been read out of an abstract, and every obvious junk label was
-        # among them.
-        return "topic"
-    return relation
+    is_gap_cue = {to_singular(t) for t in key.split()} <= _GAP_CUE_SINGULARS[relation]
+    on_question = on_topic is None or bool(paper_ids & on_topic)
+    return relation if abstract_backed and on_question and not is_gap_cue else "topic"
+
+
+def _confidence(key: str, ev: CandidateEvidence) -> str:
+    """Two papers make a labelled term high, three an unlabelled one; a lone named phrase is medium."""
+    support = len(ev.papers)
+    labelled = bool(ev.explicit_count or ev.title_count)
+    if support >= 3 - labelled:
+        return "high"
+    return "medium" if support >= 2 or len(key.split()) >= 2 else "low"
+
+
+@dataclass
+class _TermReader:
+    """Reads candidate terms out of papers, then grades them into Terms."""
+
+    question: str
+    on_topic: set[str] | None
+    background: set[str] | None
+    found: dict[str, CandidateEvidence] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        self.question_words = set(split_words(self.question))
+        self.root_families = _families(canonical_root(self.question))
+
+    def add(self, term: str, paper: Paper, kind: str, example: str = "") -> None:
+        key = normalize(term)
+        if not is_clean_label(key):
+            return
+        relation = _FIXED_RELATIONS.get(kind) or _relation_for(term, kind, self.question_words)
+        item = self.found.setdefault(key, CandidateEvidence(set(), set(), set(), []))
+        item.see(paper, example or paper.title, kind)
+        item.relation_votes[relation] += 1
+
+    def read(self, paper: Paper) -> None:
+        for keyword in paper.keywords:
+            self.add(keyword, paper, "keyword")
+        for label in (*paper.fields, *paper.topic_path):
+            self.add(label, paper, "label")
+        for phrase in _ngrams(paper.title, 2, 4):
+            self.add(phrase, paper, "title")
+        self.read_abstract(paper)
+
+    def read_abstract(self, paper: Paper) -> None:
+        for phrase, sentence in limitation_phrases(paper.abstract, self.root_families):
+            # Every paper words its limitation differently, so demanding two papers agree
+            # on the wording left `failure_mode` empty on 4/4 live runs.
+            self.add(phrase, paper, "limitation", sentence)
+        for phrase in _ngrams(paper.abstract, 2, 4):
+            if set(split_words(phrase)) & _ALL_MARKERS:
+                self.add(phrase, paper, "abstract")
+
+    def _score(self, key: str, ev: CandidateEvidence) -> float:
+        words = set(key.split())
+        score = (1.25 * math.log1p(len(ev.papers)) + 0.34 * min(ev.explicit_count, 3) + 0.18 * min(ev.title_count, 3)
+                 + 0.16 * min(len(ev.queries), 4) + 0.20 * min(len(ev.providers), 2)
+                 + 0.35 * (len(words & self.question_words) / max(len(words), 1)) + 0.08 * min(len(key.split()), 4))
+        # Background labels ranked highly on unrelated past questions: wallpaper, halved.
+        return score * (0.5 if self.background and key in self.background else 1.0)
+
+    def term(self, key: str, ev: CandidateEvidence) -> Term:
+        voted = ev.relation_votes.most_common(1)[0][0]
+        relation = _guard_relation(key, voted, ev.papers, self.on_topic, ev.abstract_count > 0)
+        return Term(key, relation, round(self._score(key, ev), 3), _confidence(key, ev), sorted(ev.papers),
+                    sorted(ev.providers), sorted(ev.queries), ev.examples, stated_limitation=ev.stated_limitation)
+
+    def terms(self) -> list[Term]:
+        # One paper is enough only when the paper names the term itself.
+        return [self.term(key, ev) for key, ev in self.found.items() if len(ev.papers) > 1 or ev.explicit_count]
 
 
 def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None = None,
                   background: set[str] | None = None) -> list[Term]:
     """`background` holds labels that ranked highly on unrelated past questions. They are
     the field's wallpaper, not this question's answer, so their score is halved."""
-    q_tokens = set(split_words(question))
-    root_tokens = {word_family(t) for t in split_words(canonical_root(question))}
-    candidates: dict[str, CandidateEvidence] = {}
+    reader = _TermReader(question, on_topic, background)
     for paper in papers:
-        context = f"{paper.title}. {paper.abstract}"
-        for keyword in paper.keywords:
-            _add_candidate(candidates, keyword, paper, _relation_for(keyword, context, "keyword", q_tokens), paper.title, explicit=True)
-        for field_name in paper.fields:
-            _add_candidate(candidates, field_name, paper, "neighbor_field", paper.title, explicit=True)
-        for topic in paper.topic_path:
-            # A provider's topic hierarchy names the neighbourhood, not the finding.
-            _add_candidate(candidates, topic, paper, "neighbor_field", paper.title, explicit=True)
-        for phrase in _ngrams(paper.title, 2, 4):
-            _add_candidate(candidates, phrase, paper, _relation_for(phrase, context, "title", q_tokens), paper.title, in_title=True)
-        for phrase, sentence in limitation_phrases(paper.abstract, root_tokens):
-            # explicit: the paper says this itself, in a sentence kept as the example.
-            # Every paper words its limitation differently, so demanding two papers agree
-            # on the wording left `failure_mode` empty on 4/4 live runs.
-            _add_candidate(candidates, phrase, paper, "failure_mode", sentence, explicit=True, stated_limitation=True, from_abstract=True)
-        for phrase in _ngrams(paper.abstract, 2, 4):
-            phrase_tokens = set(split_words(phrase))
-            if any(phrase_tokens & marker_set for marker_set in RELATION_MARKERS.values()):
-                _add_candidate(candidates, phrase, paper, _relation_for(phrase, context, "abstract", q_tokens), paper.title, from_abstract=True)
-    terms: list[Term] = []
-    for key, ev in candidates.items():
-        support = len(ev.papers)
-        relation = _guard_relation(key, ev.relation_votes.most_common(1)[0][0], ev.papers, on_topic, ev.abstract_count > 0)
-        background_penalty = 0.5 if background and key in background else 1.0
-        score = 1.25 * math.log1p(support) + 0.34 * min(ev.explicit_count, 3) + 0.18 * min(ev.title_count, 3) + 0.16 * min(len(ev.queries), 4) + 0.20 * min(len(ev.providers), 2) + 0.35 * (len(set(key.split()) & q_tokens) / max(len(set(key.split())), 1)) + 0.08 * min(len(key.split()), 4)
-        score *= background_penalty
-        if support >= 3 or (support >= 2 and (ev.explicit_count or ev.title_count)):
-            confidence = "high"
-        elif support >= 2 or ((ev.explicit_count >= 1 or ev.title_count >= 1) and len(key.split()) >= 2 and relation in {*REQUIRED_RELATIONS, "core", "topic"}):
-            confidence = "medium"
-        else:
-            confidence = "low"
-        if support == 1 and ev.explicit_count == 0:
-            continue
-        terms.append(Term(key, relation, round(score, 3), confidence, sorted(ev.papers),
-                          sorted(ev.providers), sorted(ev.queries), ev.examples,
-                          stated_limitation=ev.stated_limitation))
-    ranked = sorted(terms, key=lambda t: (t.confidence == "high", t.score), reverse=True)
+        reader.read(paper)
+    ranked = sorted(reader.terms(), key=lambda t: (t.confidence == "high", t.score), reverse=True)
     return dedupe_terms(ranked)
 
 
@@ -455,27 +544,36 @@ def dedupe_terms(ranked: list[Term]) -> list[Term]:
         taken.append(key)
     return kept
 
+def _merged(old: list[str], new: list[str]) -> list[str]:
+    return list(dict.fromkeys([*old, *new]))
+
+
+def _absorb(old: Paper, new: Paper) -> None:
+    """Fold a duplicate's provenance and labels into the copy already kept."""
+    old.found_by = _merged(old.found_by, new.found_by)
+    old.keywords = _merged(old.keywords, new.keywords)
+    old.fields = _merged(old.fields, new.fields)
+    old.topic_path = _merged(old.topic_path, new.topic_path)
+    if not old.venue and new.venue: old.venue = new.venue
+    if not old.abstract and new.abstract: old.abstract = new.abstract
+
+
 def _dedupe_papers(existing: list[Paper], incoming: Iterable[Paper]) -> tuple[list[Paper], int]:
     by_key = {_paper_dedupe_key(p): p for p in existing}
     added = 0
     for paper in incoming:
         key = _paper_dedupe_key(paper)
         if key in by_key:
-            old = by_key[key]
-            old.found_by = list(dict.fromkeys([*old.found_by, *paper.found_by]))
-            old.keywords = list(dict.fromkeys([*old.keywords, *paper.keywords]))
-            old.fields = list(dict.fromkeys([*old.fields, *paper.fields]))
-            old.topic_path = list(dict.fromkeys([*old.topic_path, *paper.topic_path]))
-            if not old.venue and paper.venue: old.venue = paper.venue
-            if not old.abstract and paper.abstract: old.abstract = paper.abstract
+            _absorb(by_key[key], paper)
             continue
         by_key[key] = paper
         added += 1
     return list(by_key.values()), added
 
 def top_terms(terms: list[Term], relation: str | None = None, limit: int = 5, grounded_only: bool = False) -> list[Term]:
-    selected = [t for t in terms if relation is None or t.relation == relation]
-    if grounded_only: selected = [t for t in selected if t.confidence in {"high", "medium"}]
+    selected = [t for t in terms if relation in (None, t.relation)]
+    if grounded_only:
+        selected = [t for t in selected if t.confidence in GROUNDED]
     return selected[:limit]
 
 def coverage(terms: list[Term], minimum_per_relation: int = 2) -> tuple[dict[str, list[str]], list[str]]:
