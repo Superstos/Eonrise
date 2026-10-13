@@ -26,7 +26,7 @@ launch. Source: 2026-10-12 audit. Detail lives in commits and `CHANGELOG.md`, no
 - [x] Source package tests pass (CI unpacks the sdist and runs them)
 - [x] Release workflow runs the tests and checks tag == `__version__`
 - [x] `eonrise --demo`: offline sample bundle shipped in the wheel, full report in a second
-- [ ] TestPyPI dry run: workflow ready (`release.yml`, manual run); waits on the owner's TestPyPI publisher
+- [x] TestPyPI dry run: 0.9.0 uploaded, installed from test.pypi.org, `--demo` ran
 
 ## Agent: product
 
@@ -44,7 +44,7 @@ launch. Source: 2026-10-12 audit. Detail lives in commits and `CHANGELOG.md`, no
 - [ ] Buy a domain (`eonrise.dev` / `eonrise.app` free on 2026-10-12)
 - [ ] Pick a logo direction from the drafts
 - [ ] Approve deleting 23 old branches and 65+ probe workflow runs
-- [ ] Register the trusted publisher on TestPyPI, then PyPI (agent gives the clicks)
+- [ ] Register the trusted publisher on PyPI (TestPyPI done; same five fields, environment `pypi`)
 - [ ] Make the repo public, then turn on private vulnerability reporting and protect `main`
 - [ ] Tag the first release
 
