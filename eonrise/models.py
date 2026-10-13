@@ -61,7 +61,6 @@ class RoundStats:
     on_topic_papers: int = 0
     def to_dict(self) -> dict[str, Any]: return asdict(self)
 
-# --- v0.1: single-root agent traversal ---
 
 # Run outcomes. `usable` sits between: every gap that could be repaired was searched,
 # at least 4 of 5 relations grounded, one may remain honestly empty.
@@ -73,8 +72,8 @@ SIDEWAYS = "sideways"
 DIRECTIONS = (UP, DOWN, SIDEWAYS)
 
 @dataclass
-class AgentPolicy:
-    """One agent, one root topic, agent-owned recursion budget."""
+class SearchSettings:
+    """Limits and weights for one search from one root topic."""
     name: str = "default"
     max_nodes: int = 400
     max_depth: int = 4
@@ -84,7 +83,7 @@ class AgentPolicy:
     sideways_weight: float = 1.0
     support_threshold: int = 2
     decay: float = 0.6
-    per_direction_cap: int | None = None  # None = unbounded, agent decides
+    per_direction_cap: int | None = None  # None = unbounded
     def direction_weight(self, direction: str) -> float:
         return {
             UP: self.up_weight,
@@ -93,7 +92,7 @@ class AgentPolicy:
         }.get(direction, 1.0)
     def to_dict(self) -> dict[str, Any]: return asdict(self)
     @classmethod
-    def from_dict(cls, raw: dict[str, Any]) -> "AgentPolicy":
+    def from_dict(cls, raw: dict[str, Any]) -> "SearchSettings":
         allowed = {f.name for f in cls.__dataclass_fields__.values()}
         return cls(**{k: v for k, v in raw.items() if k in allowed})
 

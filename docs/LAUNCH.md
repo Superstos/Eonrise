@@ -61,7 +61,7 @@ as they land. Remove or archive this file once the launch is done.
 - [ ] Do a dry run on TestPyPI.
 - [ ] Add `--version` (the bug template asks for the version, and the CLI cannot print it).
 - [ ] Add the three gold fixtures to `MANIFEST.in`. Tests run from the source package fail with 5 errors today.
-- [ ] Add `CHANGELOG.md` with user-facing changes; `docs/SPEC.md` keeps the engineering history.
+- [x] Add `CHANGELOG.md` with user-facing changes; `docs/SPEC.md` keeps the engineering history.
 
 ## 6. Go public
 

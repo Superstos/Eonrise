@@ -4,9 +4,9 @@ import json
 import unittest
 from pathlib import Path
 
-from eonrise.engine import run_agent
-from eonrise.evidence import family, topical_papers
-from eonrise.models import AgentPolicy, Paper
+from eonrise.engine import run_search
+from eonrise.evidence import word_family, topical_papers
+from eonrise.models import SearchSettings, Paper
 from eonrise.providers import EvidenceBundleProvider
 
 GOLD = Path(__file__).parent / "fixtures" / "crossfield_gold.json"
@@ -18,12 +18,12 @@ class WordFamilyTests(unittest.TestCase):
                       ("retrieve", "retrieval", "retrieving", "retrieved"),
                       ("discover", "discovery", "discoveries"),
                       ("stop", "stopping"), ("structure", "structural")):
-            self.assertEqual(len({family(w) for w in group}), 1, group)
+            self.assertEqual(len({word_family(w) for w in group}), 1, group)
 
     def test_distinct_words_stay_apart(self):
-        self.assertNotEqual(family("general"), family("generation"))
-        self.assertNotEqual(family("memory"), family("memo"))
-        self.assertEqual(family("gene"), "gene")  # too short to lose an ending
+        self.assertNotEqual(word_family("general"), word_family("generation"))
+        self.assertNotEqual(word_family("memory"), word_family("memo"))
+        self.assertEqual(word_family("gene"), "gene")  # too short to lose an ending
 
     def test_adjective_question_finds_noun_papers(self):
         papers = [Paper("a", "Accelerating innovation through analogy mining",
@@ -56,8 +56,8 @@ class CrossFieldGoldTests(unittest.TestCase):
         self.assertEqual(self._kept("off"), 0)
 
     def test_run_on_its_own_literature_is_not_failed(self):
-        result = run_agent(self.question, [EvidenceBundleProvider(GOLD)],
-                           AgentPolicy(max_rounds=3, max_nodes=80), results_per_query=25)
+        result = run_search(self.question, [EvidenceBundleProvider(GOLD)],
+                           SearchSettings(max_rounds=3, max_nodes=80), results_per_query=25)
         self.assertNotEqual(result["status"], "failed")
         self.assertGreater(result["on_topic_papers"], 0)
 
@@ -92,7 +92,7 @@ class LimitationGoldTests(unittest.TestCase):
 
 class ConceptGateTests(unittest.TestCase):
     def test_second_stage_on_gold(self):
-        from eonrise.harvest import concept_gate
+        from eonrise.distant_fields import concept_gate
         raw = json.loads(GOLD.read_text(encoding="utf-8"))
         papers = EvidenceBundleProvider(GOLD).papers
         keep = concept_gate(raw["question"], papers, topical_papers(raw["question"], papers))
@@ -101,7 +101,7 @@ class ConceptGateTests(unittest.TestCase):
         self.assertEqual(kept("off"), 0)
 
     def test_empty_gate_is_not_bootstrapped(self):
-        from eonrise.harvest import concept_gate
+        from eonrise.distant_fields import concept_gate
         self.assertEqual(concept_gate("volcano", EvidenceBundleProvider(GOLD).papers, set()), set())
 
 
@@ -113,7 +113,7 @@ class HeldOutBatteryTests(unittest.TestCase):
         raw = json.loads(path.read_text(encoding="utf-8"))
         provider = EvidenceBundleProvider(path)
         label = {p.paper_id: raw["labels"].get(p.title) for p in provider.papers}
-        result = run_agent(raw["question"], [provider], AgentPolicy(max_rounds=6, max_nodes=160), results_per_query=25)
+        result = run_search(raw["question"], [provider], SearchSettings(max_rounds=6, max_nodes=160), results_per_query=25)
         kept = [label.get(pid) for pid in result["on_topic_paper_ids"]]
         self.assertGreaterEqual(kept.count("on"), 23)
         self.assertLessEqual(kept.count("off"), 1)

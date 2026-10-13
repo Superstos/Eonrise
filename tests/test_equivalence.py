@@ -5,14 +5,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from eonrise.engine import run_agent
+from eonrise.engine import run_search
 from eonrise.equivalence import (
     ConceptEquivalenceGraph,
     ConceptEquivalenceStore,
     discover_observations,
 )
-from eonrise.equivalence_benchmark import run_benchmark
-from eonrise.models import AgentPolicy, Paper
+from benchmarks.equivalence import run_benchmark
+from eonrise.models import SearchSettings, Paper
 
 
 def evidence(pid: str, kind: str = "explicit_alias", field: str = "Machine Learning") -> dict:
@@ -187,7 +187,7 @@ class QueryExpansionTests(unittest.TestCase):
                 return []
 
         provider = Recording()
-        result = run_agent("concept drift", [provider], AgentPolicy(max_rounds=1),
+        result = run_search("concept drift", [provider], SearchSettings(max_rounds=1),
                            equivalence=self.graph, query_expansion_slots=0)
         self.assertEqual(provider.queries, ["concept drift"])
         self.assertEqual(result["query_expansion"]["slots_used"], 0)
@@ -207,7 +207,7 @@ class QueryExpansionTests(unittest.TestCase):
                 return [paper]
 
         provider = Recording()
-        result = run_agent("concept drift", [provider], AgentPolicy(max_rounds=1),
+        result = run_search("concept drift", [provider], SearchSettings(max_rounds=1),
                            equivalence=self.graph, query_expansion_slots=1)
         self.assertIn("distribution shift", provider.queries)
         self.assertEqual(result["query_expansion"]["slots_used"], 1)
@@ -221,7 +221,7 @@ class QueryExpansionTests(unittest.TestCase):
             def search(self, query, limit=20):
                 return []
 
-        result = run_agent("concept drift", [Empty()], AgentPolicy(max_rounds=1),
+        result = run_search("concept drift", [Empty()], SearchSettings(max_rounds=1),
                            equivalence=self.graph, query_expansion_slots=1)
         self.assertEqual(set(result["graph"].keys()), {"nodes", "edges"})
 

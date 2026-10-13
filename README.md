@@ -91,8 +91,8 @@ The installable package targets Python 3.11+. CI also runs the source tests on P
 
 ```bash
 python -m unittest discover -s tests -v
-python -m gauntlet.run --quick
-python -m gauntlet.run
+python -m benchmarks.run --quick
+python -m benchmarks.run
 ```
 
 Build the package with:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from eonrise.harvest import harvest, signature
+from eonrise.distant_fields import rank_distant_papers, question_shape
 from eonrise.models import Paper, Term
 from eonrise.report import render_compact_markdown
 
@@ -30,11 +30,11 @@ def corpus():
 
 class HarvestTests(unittest.TestCase):
     def test_signature_is_grounded_concepts_not_fields(self):
-        labels = [label for label, _, _ in signature(TERMS)]
+        labels = [label for label, _, _ in question_shape(TERMS)]
         self.assertEqual(labels, ["accumulation curve", "sampling completeness", "premature stopping"])
 
     def test_shape_match_ranks_first_and_on_topic_is_excluded(self):
-        hits = harvest(TERMS, corpus(), {"on1", "on2"})
+        hits = rank_distant_papers(TERMS, corpus(), {"on1", "on2"})
         ids = [h["paper_id"] for h in hits]
         self.assertEqual(ids[0], "eco")
         self.assertNotIn("on1", ids)
@@ -44,17 +44,17 @@ class HarvestTests(unittest.TestCase):
     def test_words_scattered_across_a_paper_are_not_a_shared_concept(self):
         # `accumulation` and `curve` both occur in the snow paper, which is about neither
         # the concept nor the question; it shares no down-relation concept as a whole.
-        ids = [h["paper_id"] for h in harvest(TERMS, corpus(), {"on1", "on2"})]
+        ids = [h["paper_id"] for h in rank_distant_papers(TERMS, corpus(), {"on1", "on2"})]
         self.assertNotIn("surf", ids)
 
     def test_one_field_cannot_fill_the_list(self):
         many = corpus() + [Paper(f"e{i}", "Richness", fields=["Ecology"],
                                  abstract="accumulation curve and premature stopping") for i in range(5)]
-        fields = [h["field"] for h in harvest(TERMS, many, {"on1", "on2"})]
+        fields = [h["field"] for h in rank_distant_papers(TERMS, many, {"on1", "on2"})]
         self.assertLessEqual(fields.count("Ecology"), 2)
 
     def test_no_grounded_concepts_no_harvest(self):
-        self.assertEqual(harvest([term("x y", confidence="low")], corpus(), set()), [])
+        self.assertEqual(rank_distant_papers([term("x y", confidence="low")], corpus(), set()), [])
 
     def test_brief_separates_other_fields_from_gate_misses(self):
         result = {"question": "q", "status": "partial", "stop_reason": "r", "papers": [], "coverage": {},
@@ -74,27 +74,27 @@ class VotingCoreTests(unittest.TestCase):
     """Below the gate minimum the closest papers vote, not the whole corpus."""
 
     def test_small_gate_is_topped_up_by_closeness_not_by_everything(self):
-        from eonrise.evidence import MIN_TOPICAL_CORPUS, voting_core
+        from eonrise.evidence import MIN_TOPICAL_CORPUS, grounding_papers
         q = "when should a literature search stop"
         close = [Paper(f"c{i}", "Stopping rules for screening", abstract="When to stop a literature search.")
                  for i in range(MIN_TOPICAL_CORPUS)]
         far = [Paper(f"f{i}", "Analogy mining for product design") for i in range(20)]
-        core = voting_core(q, far + close, {"c0"})
+        core = grounding_papers(q, far + close, {"c0"})
         self.assertEqual(core, {p.paper_id for p in close})
 
     def test_large_gate_is_used_as_is(self):
-        from eonrise.evidence import MIN_TOPICAL_CORPUS, voting_core
+        from eonrise.evidence import MIN_TOPICAL_CORPUS, grounding_papers
         on = {f"p{i}" for i in range(MIN_TOPICAL_CORPUS)}
-        self.assertEqual(voting_core("q", [], on), on)
+        self.assertEqual(grounding_papers("q", [], on), on)
 
     def test_no_question_word_anywhere_means_no_core(self):
-        from eonrise.evidence import voting_core
-        self.assertIsNone(voting_core("volcano eruptions", [Paper("x", "Analogy mining")], set()))
+        from eonrise.evidence import grounding_papers
+        self.assertIsNone(grounding_papers("volcano eruptions", [Paper("x", "Analogy mining")], set()))
 
 
 class DistantQueryTests(unittest.TestCase):
     def test_other_fields_first_no_duplicates(self):
-        from eonrise.harvest import distant_queries
+        from eonrise.distant_fields import distant_queries
         hits = [{"distant": False, "shares": ["target recall", "systematic reviews"]},
                 {"distant": True, "shares": ["stopping criteria", "active learning"]},
                 {"distant": True, "shares": ["stopping criteria", "active learning"]}]

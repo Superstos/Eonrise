@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Any
 
 
-def _tokens(text: str) -> set[str]:
+def _words(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", text.lower()))
 
 
-class MemoryStore:
+class QuestionLog:
     """Append-only JSONL memory so runs compound instead of restarting."""
 
     def __init__(self, path: str | Path) -> None:
@@ -75,7 +75,7 @@ class MemoryStore:
     def recall(self, question: str, limit: int = 3) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
-        qt = _tokens(question)
+        qt = _words(question)
         scored: list[tuple[int, dict[str, Any]]] = []
         for line in self.path.read_text(encoding="utf-8").splitlines():
             try:
@@ -84,7 +84,7 @@ class MemoryStore:
                 continue
             text = " ".join([str(rec.get("question", "")), str(rec.get("root_topic", "")),
                              *[str(c.get("label", "")) for c in rec.get("concepts", [])]])
-            overlap = len(qt & _tokens(text))
+            overlap = len(qt & _words(text))
             if overlap:
                 scored.append((overlap, rec))
         scored.sort(key=lambda x: x[0], reverse=True)

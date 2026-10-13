@@ -1,6 +1,6 @@
 """Stop rules against a literature whose size is known.
 
-`python -m eonrise.unseen_benchmark`
+`python -m benchmarks.coverage_stop_rules`
 
 Each scenario is a population of papers with heterogeneous findability: every query finds
 paper i with probability p_i, drawn log-normal, so a few papers turn up everywhere and many
@@ -26,8 +26,8 @@ import math
 import random
 import statistics
 
-from .models import Paper
-from .unseen import WARN_BELOW, estimate
+from eonrise.models import Paper
+from eonrise.literature_coverage import WARN_BELOW, estimate_coverage
 
 ROUND = 5
 SCENARIOS = [  # (name, population, log-mean findability, log-sd)
@@ -59,7 +59,7 @@ def simulate(population: int, mu: float, sd: float, seed: int, max_rounds: int =
                     found.setdefault(i, []).append(query)
         new = len(found) - before
         papers = [Paper(str(i), str(i), found_by=qs) for i, qs in found.items()]
-        est = estimate(papers)
+        est = estimate_coverage(papers)
         for name, rule in RULES.items():
             if name not in stops and round_number >= 2 and rule(est, new):
                 stops[name] = {"round": round_number, "recall": len(found) / population,

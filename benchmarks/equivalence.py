@@ -16,11 +16,11 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from .engine import run_agent
-from .equivalence import ConceptEquivalenceGraph, ConceptEquivalenceStore
-from .evidence import extract_terms, topical_papers
-from .models import AgentPolicy, Paper
-from .scheduling import ProviderStates
+from eonrise.engine import run_search
+from eonrise.equivalence import ConceptEquivalenceGraph, ConceptEquivalenceStore
+from eonrise.evidence import extract_terms, topical_papers
+from eonrise.models import SearchSettings, Paper
+from eonrise.scheduling import ProviderStates
 
 TOP_K = 20
 
@@ -250,10 +250,10 @@ def _precision(question: str, result: dict) -> float:
 
 
 def _run(question: str, papers: list[Paper], graph: ConceptEquivalenceGraph, slots: int) -> dict:
-    return run_agent(
+    return run_search(
         question,
         [BenchmarkProvider(papers)],
-        AgentPolicy(name="benchmark", max_nodes=30, max_depth=1, max_rounds=1, support_threshold=1),
+        SearchSettings(name="benchmark", max_nodes=30, max_depth=1, max_rounds=1, support_threshold=1),
         results_per_query=TOP_K,
         background=set(),
         states=ProviderStates(),

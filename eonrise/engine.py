@@ -7,9 +7,9 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Iterable
 
-from .models import DOWN, SIDEWAYS, UP, AgentPolicy, ConceptNode, Paper, RoundStats, Term
-from .harvest import concept_gate, distant_queries, harvest
-from .unseen import estimate as estimate_unseen
+from .models import DOWN, SIDEWAYS, UP, SearchSettings, ConceptNode, Paper, RoundStats, Term
+from .distant_fields import concept_gate, distant_queries, rank_distant_papers
+from .literature_coverage import estimate_coverage
 from .providers import ProviderError, ProviderUnavailable, SearchProvider
 from .scheduling import ProviderStates, order_for
 
@@ -44,19 +44,19 @@ from .evidence import (
     is_redundant,
     limitation_phrases,
     normalize,
-    paper_tokens,
-    stem,
-    tokens,
+    paper_word_families,
+    to_singular,
+    split_words,
     top_terms,
     topical_papers,
-    voting_core,
+    grounding_papers,
 )
 
 
 def seed_queries(question: str) -> list[str]:
     compact = compact_question(question)
-    q_tokens = tokens(question)
-    phrases = sorted(_ngrams(question, 2, 4), key=lambda x: (len(set(tokens(x))), len(x)), reverse=True)
+    q_tokens = split_words(question)
+    phrases = sorted(_ngrams(question, 2, 4), key=lambda x: (len(set(split_words(x))), len(x)), reverse=True)
     queries = [compact]
     for phrase in phrases:
         if len(queries) >= 3: break
@@ -152,10 +152,10 @@ def _query_for_node(node: ConceptNode) -> str:
     return node.label
 
 
-def run_agent(
+def run_search(
     question: str,
     providers: list[SearchProvider],
-    policy: AgentPolicy | None = None,
+    policy: SearchSettings | None = None,
     *,
     results_per_query: int = 20,
     background: set[str] | None = None,
@@ -163,12 +163,12 @@ def run_agent(
     equivalence: object | None = None,
     query_expansion_slots: int = 0,
 ) -> dict:
-    """Single-root, agent-budget traversal.
+    """Single-root, budgeted traversal.
 
-    One root topic; the agent decides depth/direction via policy.
+    One root topic; the settings bound depth and direction.
     Concepts accumulate until max_nodes / max_depth / max_rounds / saturation.
     """
-    policy = policy or AgentPolicy()
+    policy = policy or SearchSettings()
     root_label = canonical_root(question)
     concepts: dict[str, ConceptNode] = {}
     root = ConceptNode("c0", root_label, "root", 0, 1.0, [], "", root_label, 0)
@@ -203,7 +203,7 @@ def run_agent(
 
     for round_number in range(1, max(1, policy.max_rounds) + 1):
         if len(concepts) >= policy.max_nodes:
-            status, stop_reason = "partial", "agent node budget reached"
+            status, stop_reason = "partial", "node budget reached"
             break
         expandable = [c for c in sorted(frontier, key=lambda c: c.weight, reverse=True)
                       if c.depth < policy.max_depth]
@@ -306,7 +306,7 @@ def run_agent(
         on_topic = concept_gate(question, papers, topical_papers(question, papers))
         # A small bundle can legitimately have few literal matches; do not starve it, but
         # top it up with the closest papers rather than letting the whole corpus vote.
-        topic_filter = voting_core(question, papers, on_topic)
+        topic_filter = grounding_papers(question, papers, on_topic)
         new_on_topic = max(0, len(on_topic) - previous_on_topic)
         previous_on_topic = len(on_topic)
         # Concepts are read from the on-topic corpus only. Letting drifted papers vote
@@ -326,7 +326,7 @@ def run_agent(
         gaps = [g for g in gaps if g not in dormant]
         last_terms, last_gaps = terms, gaps
         grounded_now = {t.text for t in terms if t.confidence in {"high", "medium"}}
-        # Grow concepts from newly grounded terms; agent budget is the ceiling.
+        # Grow concepts from newly grounded terms; the node budget is the ceiling.
         new_frontier: list[ConceptNode] = []
         for term in terms:
             if term.confidence not in {"high", "medium"}:
@@ -396,7 +396,7 @@ def run_agent(
         status, stop_reason = "failed", "no papers could be retrieved"
     else:
         on_topic = concept_gate(question, papers, topical_papers(question, papers))
-        topic_filter = voting_core(question, papers, on_topic)
+        topic_filter = grounding_papers(question, papers, on_topic)
         corpus = [p for p in papers if p.paper_id in topic_filter] if topic_filter is not None else papers
         terms = extract_terms(question, corpus, topic_filter, background)
         covered, gaps = coverage(terms)
@@ -422,7 +422,7 @@ def run_agent(
     # brief says so instead of quietly reading as a Crossref-only result.
     down_providers = sorted(n for n, calls in provider_calls.items() if calls and provider_failures[n] == calls)
     top = terms[:30]
-    harvested = harvest(terms, papers, on_topic | (topic_filter or set()), home_ids=on_topic) if papers else []
+    harvested = rank_distant_papers(terms, papers, on_topic | (topic_filter or set()), home_ids=on_topic) if papers else []
     concept_list = sorted(concepts.values(), key=lambda c: (c.depth, -c.weight))
     kept_papers = sorted(papers, key=lambda p: _keep_score(p, on_topic), reverse=True)[:50]
     return {"version": 5, "question": question, "root_topic": root_label,
@@ -448,7 +448,7 @@ def run_agent(
             },
             "on_topic_paper_ids": sorted(on_topic),
             # Capture histories of the on-topic papers: how much these queries can still reach.
-            "unseen": estimate_unseen(papers, on_topic),
+            "unseen": estimate_coverage(papers, on_topic),
             # Off-gate papers carrying the question's grounded shape: the distant fields.
             "harvest": harvested,
             "distant_queries": distant_queries(harvested),
@@ -463,9 +463,3 @@ def run_agent(
             "providers_down": down_providers,
             "providers_blocked": sorted(n for n, st in states.states.items() if not st.available(time.time())),
             "graph": build_graph(question, top, kept_papers)}
-
-
-def run_router(question: str, providers: list[SearchProvider], *, max_rounds: int = 6, results_per_query: int = 20) -> dict:
-    """Backward-compat wrapper: default policy, single root."""
-    return run_agent(question, providers, AgentPolicy(max_rounds=max(1, max_rounds)),
-                     results_per_query=results_per_query)

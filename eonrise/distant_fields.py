@@ -20,43 +20,39 @@ from __future__ import annotations
 import math
 from collections import Counter
 
-from .evidence import DOWN_RELATIONS, GENERIC_FIELDS, extract_terms, family, normalize, tokens
+from .evidence import DOWN_RELATIONS, GENERIC_FIELDS, extract_terms, word_family, normalize, split_words
 from .models import Paper, Term
 
-HARVEST_SIZE = 8
+DISTANT_PAPER_LIMIT = 8
 
 
-def _seq(text: str) -> list[str]:
+def _families_in_order(text: str) -> list[str]:
     # Hyphens split: `capture-recapture` must meet `capture mark recapture`.
-    return [family(t) for t in tokens(text.replace("-", " "))]
+    return [word_family(t) for t in split_words(text.replace("-", " "))]
 
 
-def _families(text: str) -> set[str]:
-    return set(_seq(text))
-
-
-def _windows(text: str, widths: set[int]) -> set[frozenset[str]]:
+def _adjacent_families(text: str, widths: set[int]) -> set[frozenset[str]]:
     """Word families that sit next to each other, per sentence-free run of words.
 
     A concept is shared when its words appear together. Bag-of-words containment matched
     `accumulation curve` in "Curve fitting for accumulation of snow"."""
-    seq = _seq(text)
+    seq = _families_in_order(text)
     return {frozenset(seq[i:i + n]) for n in widths for i in range(len(seq) - n + 1)}
 
 
-def _field(paper: Paper) -> str:
+def _field_label(paper: Paper) -> str:
     for label in (*paper.fields, *paper.topic_path, paper.venue):
         if label and normalize(label) not in GENERIC_FIELDS:
             return label
     return "unlabelled"
 
 
-def signature(terms: list[Term]) -> list[tuple[str, frozenset[str], str]]:
+def question_shape(terms: list[Term]) -> list[tuple[str, frozenset[str], str]]:
     """(label, word families, relation) for every grounded concept that is not a field."""
     out = []
     for term in terms:
         if term.confidence in {"high", "medium"} and term.relation != "neighbor_field":
-            seq = _seq(term.text)
+            seq = _families_in_order(term.text)
             if len(set(seq)) < 2:
                 continue  # one word is a vocabulary hit, not a concept
             out.append((term.text, frozenset(seq), term.relation))
@@ -68,12 +64,7 @@ def signature(terms: list[Term]) -> list[tuple[str, frozenset[str], str]]:
     return out
 
 
-def _has(windows: set[frozenset[str]], fams: frozenset[str]) -> bool:
-    # Adjacent only. Allowing one word between let "curve fitting accumulation" through.
-    return fams in windows
-
-
-def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: int = HARVEST_SIZE,
+def rank_distant_papers(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: int = DISTANT_PAPER_LIMIT,
             home_ids: set[str] | None = None) -> list[dict]:
     """Off-gate papers ranked by how much of the question's grounded shape they carry.
 
@@ -81,19 +72,20 @@ def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: i
     gate's own papers, decide which fields count as home. A paper topped up into the voting
     core is not evidence that its field is the question's: a biostatistics trial paper was
     labelled "same field" for a question about literature search."""
-    sig = signature(terms)
+    sig = question_shape(terms)
     if not sig:
         return []
     widths = {len(fams) for _, fams, _ in sig}
-    texts = {p.paper_id: set().union(*(_windows(part, widths) for part in (p.title, p.abstract, *p.keywords)))
+    texts = {p.paper_id: set().union(*(_adjacent_families(part, widths) for part in (p.title, p.abstract, *p.keywords)))
              for p in papers}
     # A concept every paper mentions ranks nothing; weight by rarity across the run.
+    # Adjacent only. Allowing one word between let "curve fitting accumulation" through.
     def matches(pid: str) -> dict[str, str]:  # label -> relation, once per concept
-        return {label: rel for label, fams, rel in sig if _has(texts[pid], fams)}
+        return {label: rel for label, fams, rel in sig if fams in texts[pid]}
     found = {pid: matches(pid) for pid in texts}
     df = Counter(label for hits in found.values() for label in hits)
     home_ids = on_topic if home_ids is None else home_ids
-    home = {_field(p) for p in papers if p.paper_id in home_ids}
+    home = {_field_label(p) for p in papers if p.paper_id in home_ids}
     ranked = []
     for paper in papers:
         if paper.paper_id in on_topic:
@@ -106,7 +98,7 @@ def harvest(terms: list[Term], papers: list[Paper], on_topic: set[str], limit: i
                     for label, rel in shared)
         if len(shared) < 2 and not kinds & {"down"}:
             continue  # one shared topic label is surface similarity, not shape
-        field = _field(paper)
+        field = _field_label(paper)
         ranked.append({"paper_id": paper.paper_id, "title": paper.title, "year": paper.year,
                        "url": paper.url or paper.doi, "field": field,
                        "distant": field not in home,
@@ -153,7 +145,7 @@ def concept_gate(question: str, papers: list[Paper], on_topic: set[str], rounds:
     for _ in range(rounds):
         if not keep:
             break
-        sig = signature(extract_terms(question, [p for p in papers if p.paper_id in keep], keep))
+        sig = question_shape(extract_terms(question, [p for p in papers if p.paper_id in keep], keep))
         widths = {len(fams) for _, fams, _ in sig}
         if not widths:
             break
@@ -161,8 +153,8 @@ def concept_gate(question: str, papers: list[Paper], on_topic: set[str], rounds:
         for paper in papers:
             if paper.paper_id in keep:
                 continue
-            windows = set().union(*(_windows(part, widths) for part in (paper.title, paper.abstract, *paper.keywords)))
-            if len({label for label, fams, _ in sig if _has(windows, fams)}) >= min_shared:
+            windows = set().union(*(_adjacent_families(part, widths) for part in (paper.title, paper.abstract, *paper.keywords)))
+            if len({label for label, fams, _ in sig if fams in windows}) >= min_shared:
                 added.add(paper.paper_id)
         if not added:
             break

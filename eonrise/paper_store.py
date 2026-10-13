@@ -22,7 +22,7 @@ STOP = {"a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "how", "
         "is", "it", "of", "on", "or", "that", "the", "to", "what", "when", "which", "with"}
 
 
-def _tokens(text: str) -> set[str]:
+def _search_words(text: str) -> set[str]:
     return {t for t in re.findall(r"[a-z0-9]+", (text or "").lower()) if len(t) > 2 and t not in STOP}
 
 
@@ -30,7 +30,7 @@ def _key(paper: Paper) -> str:
     return (paper.doi or paper.title or paper.paper_id or "").strip().lower()
 
 
-class CorpusStore:
+class PaperStore:
     """A local paper store that answers searches like any other provider."""
 
     name = "corpus"
@@ -101,12 +101,12 @@ class CorpusStore:
 
     def search(self, query: str, limit: int = 20) -> list[Paper]:
         """Rank stored papers against the query. A stored paper costs no API credit."""
-        wanted = _tokens(query)
+        wanted = _search_words(query)
         if not wanted:
             return []
         ranked: list[tuple[float, Paper]] = []
         for paper in self.load().values():
-            found = _tokens(f"{paper.title} {paper.abstract} {' '.join(paper.keywords)} "
+            found = _search_words(f"{paper.title} {paper.abstract} {' '.join(paper.keywords)} "
                            f"{' '.join(paper.fields)} {' '.join(paper.topic_path)}")
             hits = wanted & found
             if len(hits) < min(2, len(wanted)):

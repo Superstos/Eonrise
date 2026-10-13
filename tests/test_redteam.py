@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from eonrise.engine import run_agent
-from eonrise.models import STATUSES, AgentPolicy, Paper
+from eonrise.engine import run_search
+from eonrise.models import STATUSES, SearchSettings, Paper
 from eonrise.providers import EvidenceBundleProvider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
@@ -15,12 +15,12 @@ FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
 def run(q: str, **kw) -> dict:
     policy_kw = {k: v for k, v in kw.items() if k in
                  {"max_nodes", "max_depth", "max_rounds", "support_threshold"}}
-    return run_agent(q, [EvidenceBundleProvider(str(FIXTURE))],
-                     AgentPolicy(**{"max_nodes": 40, "max_depth": 3, "max_rounds": 3, **policy_kw}))
+    return run_search(q, [EvidenceBundleProvider(str(FIXTURE))],
+                     SearchSettings(**{"max_nodes": 40, "max_depth": 3, "max_rounds": 3, **policy_kw}))
 
 
 class RedteamTests(unittest.TestCase):
-    """Gauntlet redteam: 6 offline attacks. None may crash; gaps must stay honest."""
+    """Redteam: 6 offline attacks. None may crash; gaps must stay honest."""
 
     def test_vague_query(self):
         r = run("stuff about thinking and things")
@@ -42,7 +42,7 @@ class RedteamTests(unittest.TestCase):
             fh.write("[]")
             path = fh.name
         try:
-            r = run_agent("memory", [EvidenceBundleProvider(path)], AgentPolicy(max_rounds=2))
+            r = run_search("memory", [EvidenceBundleProvider(path)], SearchSettings(max_rounds=2))
             self.assertEqual(r["status"], "failed")
             self.assertEqual(r["papers"], [])
             self.assertTrue(r["gaps"])
@@ -56,8 +56,8 @@ class RedteamTests(unittest.TestCase):
             json.dump(doubled, fh)
             path = fh.name
         try:
-            r = run_agent("memory retention", [EvidenceBundleProvider(path)],
-                          AgentPolicy(max_nodes=60, max_depth=2, max_rounds=2))
+            r = run_search("memory retention", [EvidenceBundleProvider(path)],
+                          SearchSettings(max_nodes=60, max_depth=2, max_rounds=2))
             titles = [p["title"] for p in r["papers"]]
             self.assertEqual(len(titles), len(set(titles)))
         finally:
@@ -76,7 +76,7 @@ class RedteamTests(unittest.TestCase):
             json.dump(rows, fh)
             path = fh.name
         try:
-            r = run_agent("memory", [EvidenceBundleProvider(path)], AgentPolicy(max_rounds=2))
+            r = run_search("memory", [EvidenceBundleProvider(path)], SearchSettings(max_rounds=2))
             by_id = {p["paper_id"]: p for p in r["papers"]}
             if "p1" in by_id:
                 self.assertEqual(by_id["p1"]["url"], "https://example.com/p1")

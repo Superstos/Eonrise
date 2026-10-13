@@ -35,7 +35,7 @@ Research deeply internally; answer compactly externally.
 
 ## Working on this repo
 
-- Run `python -m unittest discover -s tests` and `python -m gauntlet.run` before proposing a change; both must pass.
+- Run `python -m unittest discover -s tests` and `python -m benchmarks.run` before proposing a change; both must pass.
 - The package has no runtime dependencies. Keep it that way unless a maintainer agrees otherwise.
 - Never put API keys, email addresses or other personal data in code, tests, fixtures or reports.
 

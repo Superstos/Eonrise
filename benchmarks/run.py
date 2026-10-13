@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-"""Gauntlet: builder -> redteam loop runner (stdlib only).
+"""Release checks: unit tests, attack tests and offline runs (stdlib only).
 
 Usage:
-  python -m gauntlet.run            # full loop: unit tests + redteam + live smoke note
-  python -m gauntlet.run --quick    # unit tests only
+  python -m benchmarks.run            # full loop: unit tests + redteam + live smoke note
+  python -m benchmarks.run --quick    # unit tests only
 """
 import subprocess
 import sys
@@ -27,17 +27,17 @@ def main() -> None:
         import json
         import tempfile
         from pathlib import Path
-        from eonrise.engine import run_agent
-        from eonrise.models import AgentPolicy
+        from eonrise.engine import run_search
+        from eonrise.models import SearchSettings
         from eonrise.providers import EvidenceBundleProvider
         from eonrise.report import write_outputs
 
         try:
             with tempfile.TemporaryDirectory() as tmp:
-                result = run_agent(
+                result = run_search(
                     "how does spaced repetition improve memory retention",
                     [EvidenceBundleProvider("tests/fixtures/papers.json")],
-                    AgentPolicy(name="gauntlet", max_nodes=50, max_depth=3, max_rounds=3),
+                    SearchSettings(name="benchmark", max_nodes=50, max_depth=3, max_rounds=3),
                     results_per_query=10,
                 )
                 result["mode"] = "assistant"
@@ -48,18 +48,18 @@ def main() -> None:
                 ok = ok and bool(result.get("root_topic")) and len(result.get("concepts", [])) >= 1
                 gates.append(("assistant smoke emits 4 artifacts + root", ok,
                               f"root={result.get('root_topic')} concepts={len(result.get('concepts', []))} papers={len(result.get('papers', []))}"))
-        except Exception as exc:  # noqa: BLE001 - gauntlet must report, not crash
+        except Exception as exc:  # noqa: BLE001 - the runner must report, not crash
             gates.append(("assistant smoke emits 4 artifacts + root", False, f"{type(exc).__name__}: {exc}"))
 
     if not quick:
         # Offline drift gate: a corpus that is half on-topic and half a neighbouring
         # literature must not put the neighbour in the map.
         try:
-            from eonrise.engine import run_agent as _run
-            from eonrise.models import AgentPolicy as _Policy, Paper as _Paper
+            from eonrise.engine import run_search as _run
+            from eonrise.models import SearchSettings as _Policy, Paper as _Paper
 
             class _Mixed:
-                name = "gauntlet-mixed"
+                name = "benchmark-mixed"
 
                 def search(self, query, limit=20):
                     on = [_Paper(f"on{i}", f"Saturation criteria for iterative exploration, study {i}",
@@ -69,7 +69,7 @@ def main() -> None:
                     return on + off
 
             drift = _run("when should an iterative search or exploration process stop using saturation",
-                         [_Mixed()], _Policy(name="gauntlet", max_nodes=60, max_depth=3, max_rounds=2))
+                         [_Mixed()], _Policy(name="benchmark", max_nodes=60, max_depth=3, max_rounds=2))
             labels = " ".join(c["label"] for c in drift["concepts"]) + " " +                      " ".join(t["text"] for t in drift["terms"])
             ok = "protein" not in labels and bool(drift["terms"])
             gates.append(("drift guard keeps a neighbouring literature out", ok,
@@ -78,7 +78,7 @@ def main() -> None:
             gates.append(("drift guard keeps a neighbouring literature out", False,
                           f"{type(exc).__name__}: {exc}"))
 
-    print("# Gauntlet report")
+    print("# Release check report")
     failed = 0
     for name, passed, detail in gates:
         print(f"- [{'PASS' if passed else 'FAIL'}] {name}")

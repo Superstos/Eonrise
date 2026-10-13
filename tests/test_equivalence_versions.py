@@ -5,10 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from eonrise.engine import run_agent
+from eonrise.engine import run_search
 from eonrise.equivalence import ConceptEquivalenceStore
-from eonrise.evolution import evolve_equivalence_state
-from eonrise.models import AgentPolicy, Paper
+from eonrise.equivalence_versions import evolve_equivalence_state
+from eonrise.models import SearchSettings, Paper
 from eonrise.scheduling import ProviderStates
 
 
@@ -121,10 +121,10 @@ class EvolutionTests(unittest.TestCase):
             }
 
             def score(graph):
-                result = run_agent(
+                result = run_search(
                     "concept drift",
                     [ReplayProvider(papers)],
-                    AgentPolicy(
+                    SearchSettings(
                         name="evolution-test",
                         max_nodes=30,
                         max_depth=1,

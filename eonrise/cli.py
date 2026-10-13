@@ -5,11 +5,11 @@ import json
 import os
 from pathlib import Path
 
-from .corpus import CorpusStore
-from .engine import canonical_root, run_agent
+from .paper_store import PaperStore
+from .engine import canonical_root, run_search
 from .equivalence import ConceptEquivalenceStore
-from .memory import MemoryStore
-from .models import AgentPolicy, Paper
+from .question_log import QuestionLog
+from .models import SearchSettings, Paper
 from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
                          EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
                          ProviderError, SemanticScholarProvider)
@@ -35,10 +35,9 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--results", type=int, default=20, help="Results per query/provider")
     p.add_argument("--http-timeout", type=int, default=12, help="Seconds per live API request")
     p.add_argument("--http-retries", type=int, default=2, help="Attempts per live API request")
-    # Single-root agent policy: the agent decides depth and direction.
-    p.add_argument("--agent-name", default="default")
-    p.add_argument("--max-nodes", type=int, default=400, help="Agent concept budget (unbounded if large)")
-    p.add_argument("--max-depth", type=int, default=4, help="How deep one agent may recurse")
+    # One root topic; these settings bound how far the search grows from it.
+    p.add_argument("--max-nodes", type=int, default=400, help="Most concepts the map may hold")
+    p.add_argument("--max-depth", type=int, default=4, help="How many steps a concept may sit from the root")
     p.add_argument("--up-weight", type=float, default=0.5)
     p.add_argument("--down-weight", type=float, default=1.0)
     p.add_argument("--sideways-weight", type=float, default=1.0)
@@ -56,7 +55,7 @@ def main() -> None:
     args = parser().parse_args()
     cache = Path.home() / ".cache" / "eonrise"
     http = CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
-    corpus = None if args.no_corpus else CorpusStore(args.corpus or (cache / "corpus.jsonl"))
+    corpus = None if args.no_corpus else PaperStore(args.corpus or (cache / "corpus.jsonl"))
     bundle_path = args.bundle or ([args.fixture] if args.fixture else None)
     if args.mode == "assistant" or bundle_path:
         if not bundle_path:
@@ -96,8 +95,7 @@ def main() -> None:
         if corpus is not None:
             providers.insert(0, corpus)
         mode = "live"
-    policy = AgentPolicy(
-        name=args.agent_name,
+    policy = SearchSettings(
         max_nodes=max(1, args.max_nodes),
         max_depth=max(1, args.max_depth),
         max_rounds=max(1, args.max_rounds),
@@ -106,7 +104,7 @@ def main() -> None:
         sideways_weight=args.sideways_weight,
         support_threshold=max(1, args.support_threshold),
     )
-    store = MemoryStore(cache / "memory.jsonl")
+    store = QuestionLog(cache / "memory.jsonl")
     try:
         background = store.background_labels(canonical_root(args.question))
     except OSError:
@@ -123,7 +121,7 @@ def main() -> None:
         except OSError:
             equivalence_store = None
             equivalence_graph = None
-    result = run_agent(args.question, providers, policy, results_per_query=max(1, args.results),
+    result = run_search(args.question, providers, policy, results_per_query=max(1, args.results),
                        background=background, states=states, equivalence=equivalence_graph,
                        query_expansion_slots=max(0, args.query_expansion_slots) if equivalence_graph is not None else 0)
     try:
@@ -173,7 +171,6 @@ def main() -> None:
         "status": result["status"],
         "stop_reason": result["stop_reason"],
         "root_topic": result.get("root_topic", ""),
-        "agent": policy.name,
         "concepts": len(result.get("concepts", [])),
         "papers": len(result["papers"]),
         "corpus": result.get("corpus_size", 0),

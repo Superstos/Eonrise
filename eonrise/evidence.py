@@ -54,11 +54,11 @@ class CandidateEvidence:
 def normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
-def tokens(text: str) -> list[str]:
+def split_words(text: str) -> list[str]:
     return [t for t in re.findall(r"[a-z][a-z0-9-]+", text.lower()) if t not in STOPWORDS and len(t) > 1]
 
 def compact_question(question: str, max_tokens: int = 8) -> str:
-    selected = tokens(question)
+    selected = split_words(question)
     return " ".join(selected[:max_tokens]) or question.strip()
 
 GAP_CUE_TOKENS = {rel: {t for cue in cues for t in re.findall(r"[a-z]+", cue)} for rel, cues in GAP_CUES.items()}
@@ -81,7 +81,7 @@ WEAK_EDGE = {"between", "through", "via", "within", "among", "toward", "towards"
              "provide", "provides", "including", "include", "includes", "however"}
 
 
-def stem(token: str) -> str:
+def to_singular(token: str) -> str:
     """Crude singulariser so `similarity measure` and `similarity measures` collapse."""
     if len(token) > 4:
         if token.endswith("ies"):
@@ -93,22 +93,22 @@ def stem(token: str) -> str:
     return token
 
 
-# Derivational endings, longest first. `stem` only folds plurals, so a question asking for
+# Derivational endings, longest first. `to_singular` only folds plurals, so a question asking for
 # "analogous" solutions shared no word with papers titled "analogy" or "analogical", and
 # "retrieve" missed "retrieval": 67 papers on exactly the question scored 0 on topic.
 _FAMILY_ENDINGS = ("ically", "ical", "ation", "ition", "ously", "ous", "ive", "ness", "ment",
                    "ity", "ing", "ed", "al", "ic", "y", "e")
 
 
-def family(token: str) -> str:
+def word_family(token: str) -> str:
     """Word family for topical matching: `analogy`, `analogous` and `analogical` -> `analog`.
 
     One ending is removed and at least four letters must remain. `-er` is never stripped
     (`discover`/`discovery` must meet), and `-al` is kept after `er` so that `general`
     does not join `generation`.
     """
-    # `stem` would read the s of -ous as a plural: `analogous` -> `analogou`.
-    token = token if token.endswith("ous") else stem(token)
+    # `to_singular` would read the s of -ous as a plural: `analogous` -> `analogou`.
+    token = token if token.endswith("ous") else to_singular(token)
     for ending in _FAMILY_ENDINGS:
         if token.endswith(ending) and len(token) - len(ending) >= 4:
             base = token[:-len(ending)]
@@ -122,7 +122,7 @@ def family(token: str) -> str:
 
 def concept_key(label: str) -> frozenset[str]:
     """Order- and plural-insensitive identity for a concept label."""
-    return frozenset(stem(t) for t in tokens(label))
+    return frozenset(to_singular(t) for t in split_words(label))
 
 
 def _doi_key(value: str) -> str:
@@ -149,12 +149,12 @@ def is_redundant(label: str, existing: Iterable[frozenset[str]]) -> bool:
 
 def canonical_root(question: str, max_tokens: int = 6) -> str:
     """Single root topic for the whole run. One question -> one canonical node."""
-    selected = tokens(question)
+    selected = split_words(question)
     return " ".join(selected[:max_tokens]) or question.strip().lower()
 
-def paper_tokens(paper: Paper) -> set[str]:
+def paper_word_families(paper: Paper) -> set[str]:
     text = " ".join([paper.title, " ".join(paper.keywords), " ".join(paper.topic_path), " ".join(paper.fields)])
-    return {family(t) for t in tokens(text)}
+    return {word_family(t) for t in split_words(text)}
 
 
 def topical_papers(question: str, papers: list[Paper]) -> set[str]:
@@ -168,18 +168,18 @@ def topical_papers(question: str, papers: list[Paper]) -> set[str]:
     root words ("search", "process") survives. Corpus-frequency weighting was tried and
     could not separate those cases without starving on-topic papers too.
     """
-    root = {family(t) for t in tokens(canonical_root(question))}
-    rest = {family(t) for t in tokens(question)} - root
+    root = {word_family(t) for t in split_words(canonical_root(question))}
+    rest = {word_family(t) for t in split_words(question)} - root
     keep: set[str] = set()
     for paper in papers:
-        found = paper_tokens(paper)
+        found = paper_word_families(paper)
         hits, extra = len(root & found), len(rest & found)
         if hits >= 2 or (hits >= 1 and (extra >= 1 or (len(root) == 1 and not rest))):
             keep.add(paper.paper_id)
     return keep
 
 
-def voting_core(question: str, papers: list[Paper], on_topic: set[str]) -> set[str] | None:
+def grounding_papers(question: str, papers: list[Paper], on_topic: set[str]) -> set[str] | None:
     """Papers allowed to ground concepts. The gate's set when it is big enough.
 
     Below MIN_TOPICAL_CORPUS every retrieved paper used to vote, so one gate miss handed
@@ -191,11 +191,11 @@ def voting_core(question: str, papers: list[Paper], on_topic: set[str]) -> set[s
     """
     if len(on_topic) >= MIN_TOPICAL_CORPUS:
         return on_topic
-    words = {family(t) for t in tokens(question)}
+    words = {word_family(t) for t in split_words(question)}
     scored = []
     for paper in papers:
-        own = len(words & paper_tokens(paper))
-        body = len(words & {family(t) for t in tokens(paper.abstract)})
+        own = len(words & paper_word_families(paper))
+        body = len(words & {word_family(t) for t in split_words(paper.abstract)})
         if paper.paper_id in on_topic or own or body:
             scored.append(((paper.paper_id in on_topic, own, body), paper.paper_id))
     scored.sort(reverse=True)
@@ -283,7 +283,7 @@ def limitation_phrases(abstract: str, root_tokens: set[str] | None = None) -> li
         words = re.findall(r"[a-z][a-z0-9-]*|[.,;:()!?]", body.lower())
         # The sentence has to be talking about the question. `current chemical libraries`
         # was a real grounded limitation for a question about stopping criteria.
-        if root_tokens and not ({family(w) for w in words} & root_tokens):
+        if root_tokens and not ({word_family(w) for w in words} & root_tokens):
             continue
         for index, word in enumerate(words):
             if word not in LIMITATION_CUES:
@@ -321,7 +321,7 @@ MEASUREMENT_WORDS = {"accuracy", "accurate", "metric", "metrics", "score", "scor
 
 def _relation_for(term: str, context: str, source_kind: str, question_tokens: set[str]) -> str:
     key = normalize(term)
-    term_tokens = set(tokens(term))
+    term_tokens = set(split_words(term))
     if any(x in key for x in ("fault injection", "ablation", "controlled trial", "randomized trial", "controlled comparison", "systematic review", "meta analysis", "stress testing", "trace analysis", "controlled evaluation", "controlled experiment", "evaluation protocol", "comparative testing", "component-level assessment", "metric validation")):
         return "method"
     if term_tokens & {"failure", "failures", "stale", "obsolete", "invalid", "fragility", "bias", "confound", "vulnerability", "degradation", "interference", "hallucination"}:
@@ -374,8 +374,8 @@ def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[
     """
     if relation not in DOWN_RELATIONS:
         return relation
-    term_tokens = {stem(t) for t in key.split()}
-    if term_tokens <= {stem(t) for t in GAP_CUE_TOKENS.get(relation, set())}:
+    term_tokens = {to_singular(t) for t in key.split()}
+    if term_tokens <= {to_singular(t) for t in GAP_CUE_TOKENS.get(relation, set())}:
         return "topic"
     if on_topic is not None and not (paper_ids & on_topic):
         return "topic"
@@ -394,8 +394,8 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
                   background: set[str] | None = None) -> list[Term]:
     """`background` holds labels that ranked highly on unrelated past questions. They are
     the field's wallpaper, not this question's answer, so their score is halved."""
-    q_tokens = set(tokens(question))
-    root_tokens = {family(t) for t in tokens(canonical_root(question))}
+    q_tokens = set(split_words(question))
+    root_tokens = {word_family(t) for t in split_words(canonical_root(question))}
     candidates: dict[str, CandidateEvidence] = {}
     for paper in papers:
         context = f"{paper.title}. {paper.abstract}"
@@ -414,7 +414,7 @@ def extract_terms(question: str, papers: list[Paper], on_topic: set[str] | None 
             # on the wording left `failure_mode` empty on 4/4 live runs.
             _add_candidate(candidates, phrase, paper, "failure_mode", sentence, explicit=True, stated_limitation=True, from_abstract=True)
         for phrase in _ngrams(paper.abstract, 2, 4):
-            phrase_tokens = set(tokens(phrase))
+            phrase_tokens = set(split_words(phrase))
             if any(phrase_tokens & marker_set for marker_set in RELATION_MARKERS.values()):
                 _add_candidate(candidates, phrase, paper, _relation_for(phrase, context, "abstract", q_tokens), paper.title, from_abstract=True)
     terms: list[Term] = []

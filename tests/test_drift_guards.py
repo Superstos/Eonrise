@@ -14,11 +14,11 @@ from eonrise.engine import (
     concept_key,
     extract_terms,
     is_redundant,
-    run_agent,
+    run_search,
     topical_papers,
 )
 from eonrise import cli
-from eonrise.models import STATUSES, AgentPolicy, Paper
+from eonrise.models import STATUSES, SearchSettings, Paper
 from eonrise import providers, report
 from eonrise.providers import CachedHttpClient, OpenAlexProvider
 
@@ -104,16 +104,16 @@ class _MixedProvider:
 
 class DriftedCorpusTests(unittest.TestCase):
     def test_drifted_cluster_cannot_ground_a_concept(self):
-        result = run_agent("when should an iterative search or exploration process stop using saturation",
-                           [_MixedProvider()], AgentPolicy(max_nodes=60, max_depth=3, max_rounds=2))
+        result = run_search("when should an iterative search or exploration process stop using saturation",
+                           [_MixedProvider()], SearchSettings(max_nodes=60, max_depth=3, max_rounds=2))
         labels = " ".join(c["label"] for c in result["concepts"])
         terms = " ".join(t["text"] for t in result["terms"])
         self.assertNotIn("protein", labels)
         self.assertNotIn("protein", terms)
 
     def test_on_topic_cluster_still_grounds(self):
-        result = run_agent("when should an iterative search or exploration process stop using saturation",
-                           [_MixedProvider()], AgentPolicy(max_nodes=60, max_depth=3, max_rounds=2))
+        result = run_search("when should an iterative search or exploration process stop using saturation",
+                           [_MixedProvider()], SearchSettings(max_nodes=60, max_depth=3, max_rounds=2))
         self.assertTrue(result["terms"], "on-topic evidence produced no terms at all")
         self.assertGreater(result["on_topic_papers"], 0)
 
@@ -170,14 +170,14 @@ class BackgroundPenaltyTests(unittest.TestCase):
     def test_memory_only_counts_unrelated_roots(self):
         import json
         import tempfile
-        from eonrise.memory import MemoryStore
+        from eonrise.question_log import QuestionLog
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "memory.jsonl"
             rows = [{"root_topic": f"root {i}", "concepts": [{"label": "computer science"},
                                                              {"label": f"unique {i}"}]}
                     for i in range(4)]
             path.write_text(chr(10).join(json.dumps(r) for r in rows), encoding="utf-8")
-            store = MemoryStore(path)
+            store = QuestionLog(path)
             self.assertIn("computer science", store.background_labels("other root"))
             self.assertNotIn("unique 1", store.background_labels("other root"))
             # a label seen under only two other roots is not yet background
@@ -276,8 +276,8 @@ class RedundancyTests(unittest.TestCase):
 
     def test_run_produces_no_paraphrase_pairs(self):
         from eonrise.providers import EvidenceBundleProvider
-        result = run_agent("memory retention", [EvidenceBundleProvider(str(FIXTURE))],
-                           AgentPolicy(max_nodes=60, max_depth=3, max_rounds=3))
+        result = run_search("memory retention", [EvidenceBundleProvider(str(FIXTURE))],
+                           SearchSettings(max_nodes=60, max_depth=3, max_rounds=3))
         keys = [concept_key(c["label"]) for c in result["concepts"]]
         for i, a in enumerate(keys):
             for b in keys[i + 1:]:
@@ -305,8 +305,8 @@ class _GappyProvider:
 class GapRepairTests(unittest.TestCase):
     def test_gap_queries_are_actually_searched(self):
         provider = _GappyProvider()
-        result = run_agent("how does spaced repetition improve memory retention", [provider],
-                           AgentPolicy(max_nodes=80, max_depth=3, max_rounds=4))
+        result = run_search("how does spaced repetition improve memory retention", [provider],
+                           SearchSettings(max_nodes=80, max_depth=3, max_rounds=4))
         rounds = result["rounds"]
         self.assertTrue(any(r["gaps"] for r in rounds), "fixture no longer produces a gap")
         issued = [q for r in rounds for q in (r["gap_queries"] or [])]
@@ -319,21 +319,21 @@ class GapRepairTests(unittest.TestCase):
 
     def test_gap_queries_do_not_crowd_out_the_frontier(self):
         provider = _GappyProvider()
-        run_agent("how does spaced repetition improve memory retention", [provider],
-                  AgentPolicy(max_nodes=80, max_depth=3, max_rounds=3))
+        run_search("how does spaced repetition improve memory retention", [provider],
+                  SearchSettings(max_nodes=80, max_depth=3, max_rounds=3))
         self.assertTrue(provider.queries)
 
     def test_status_vocabulary_is_closed(self):
         from eonrise.providers import EvidenceBundleProvider
-        result = run_agent("memory", [EvidenceBundleProvider(str(FIXTURE))],
-                           AgentPolicy(max_nodes=40, max_depth=2, max_rounds=3))
+        result = run_search("memory", [EvidenceBundleProvider(str(FIXTURE))],
+                           SearchSettings(max_nodes=40, max_depth=2, max_rounds=3))
         self.assertIn(result["status"], STATUSES)
 
     def test_usable_requires_four_of_five_relations(self):
         from eonrise.providers import EvidenceBundleProvider
-        result = run_agent("spaced repetition memory retention",
+        result = run_search("spaced repetition memory retention",
                            [EvidenceBundleProvider(str(FIXTURE))],
-                           AgentPolicy(max_nodes=80, max_depth=3, max_rounds=4))
+                           SearchSettings(max_nodes=80, max_depth=3, max_rounds=4))
         if result["status"] == "usable":
             self.assertLessEqual(len(result["gaps"]), 1)
 
@@ -527,9 +527,9 @@ class ClaimMemoryTests(unittest.TestCase):
     def test_grounded_down_relations_are_written_as_claims(self):
         import json
         import tempfile
-        from eonrise.memory import MemoryStore
+        from eonrise.question_log import QuestionLog
         with tempfile.TemporaryDirectory() as tmp:
-            store = MemoryStore(Path(tmp) / "memory.jsonl")
+            store = QuestionLog(Path(tmp) / "memory.jsonl")
             store.append_run({
                 "question": "how does query reuse work",
                 "root_topic": "query reuse",
@@ -619,12 +619,12 @@ class ZeroTopicalCorpusTests(unittest.TestCase):
             name = "fixture"
             def search(self, query, limit=20):
                 return [Paper.from_dict(p.to_dict()) for p in papers]
-        policy = AgentPolicy(name="t", max_nodes=40, max_depth=3, max_rounds=2,
+        policy = SearchSettings(name="t", max_nodes=40, max_depth=3, max_rounds=2,
                              up_weight=0.5, down_weight=1.0, sideways_weight=1.0,
                              support_threshold=2)
         with tempfile.TemporaryDirectory() as tmp:
             from eonrise.scheduling import ProviderStates
-            return run_agent("how are transformer attention heads pruned", [Bundle()], policy,
+            return run_search("how are transformer attention heads pruned", [Bundle()], policy,
                              results_per_query=20, background=set(),
                              states=ProviderStates(Path(tmp) / "p.json"))
 

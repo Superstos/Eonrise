@@ -14,8 +14,8 @@ pip install .
 
 ```bash
 python -m unittest discover -s tests -v
-python -m gauntlet.run --quick
-python -m gauntlet.run
+python -m benchmarks.run --quick
+python -m benchmarks.run
 ```
 
 ## PR scope

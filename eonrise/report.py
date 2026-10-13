@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .unseen import WARN_BELOW
+from .literature_coverage import WARN_BELOW
 
 
 def render_compact_markdown(result: dict) -> str:

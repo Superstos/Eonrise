@@ -25,7 +25,7 @@ MIN_PAPERS = 5  # below this an estimate is noise, and the brief says nothing
 WARN_BELOW = 0.70
 
 
-def estimate(papers: list[Paper], ids: set[str] | None = None) -> dict | None:
+def estimate_coverage(papers: list[Paper], ids: set[str] | None = None) -> dict | None:
     pool = [p for p in papers if ids is None or p.paper_id in ids]
     counts = [len(set(p.found_by)) for p in pool if p.found_by]
     queries = {q for p in pool for q in p.found_by}
