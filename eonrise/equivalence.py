@@ -14,6 +14,7 @@ import json
 import re
 import time
 from dataclasses import dataclass, field
+from itertools import combinations
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -51,6 +52,7 @@ MAX_EXAMPLES = 3
 MAX_LABEL_TOKENS = 6
 MAX_LABEL_CHARS = 80
 EXAMPLE_CHARS = 240
+GROUNDED = {"high", "medium"}
 
 EXPLICIT_CUES = (
     "also known as",
@@ -88,39 +90,42 @@ def _pair_key(left: str, right: str) -> tuple[str, str] | None:
     return tuple(sorted((left_key, right_key)))
 
 
+def _doi_key(doi: Any) -> str:
+    doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", _clean_text(doi).lower())
+    doi = re.sub(r"^doi:", "", doi).strip().strip("/")
+    return "doi:" + re.sub(r"\s+", "", doi) if doi else ""
+
+
+def _paper_identity(paper: Paper) -> str:
+    title = normalize(getattr(paper, "title", ""))
+    return _doi_key(getattr(paper, "doi", "")) or (f"title:{title}" if title else "")
+
+
 def _identity_key(paper: Paper | None = None, *, paper_id: Any = "", paper_key: Any = "") -> str:
     supplied = _clean_text(paper_key).lower()
     if supplied:
         return supplied
     if paper is not None:
-        doi = _clean_text(getattr(paper, "doi", "")).lower()
-        if doi:
-            doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", doi)
-            doi = re.sub(r"^doi:", "", doi).strip().strip("/")
-            if doi:
-                return "doi:" + re.sub(r"\s+", "", doi)
-        title = normalize(getattr(paper, "title", ""))
-        if title:
-            return "title:" + title
+        found = _paper_identity(paper)
+        if found:
+            return found
         paper_id = getattr(paper, "paper_id", paper_id)
     key = normalize(paper_id)
     return f"id:{key}" if key else ""
 
 
+def _short_and_specific(key: str) -> bool:
+    return len(key.split()) <= MAX_LABEL_TOKENS and len(key) <= MAX_LABEL_CHARS and key not in GENERIC_FIELDS
+
+
+def _well_formed(key: str) -> bool:
+    parts = key.split()
+    return not {parts[0], parts[-1]} & WEAK_EDGE and FILLER.isdisjoint(parts) and bool(concept_key(key))
+
+
 def _is_plausible_label(label: Any) -> bool:
     key = _canonical_label(label)
-    if not key:
-        return False
-    parts = key.split()
-    if len(parts) > MAX_LABEL_TOKENS or len(key) > MAX_LABEL_CHARS:
-        return False
-    if key in GENERIC_FIELDS:
-        return False
-    if parts[0] in WEAK_EDGE or parts[-1] in WEAK_EDGE:
-        return False
-    if any(part in FILLER for part in parts):
-        return False
-    return bool(concept_key(key))
+    return bool(key) and _short_and_specific(key) and _well_formed(key)
 
 
 def _relation_bucket(relation: Any) -> str:
@@ -131,19 +136,16 @@ def _relation_bucket(relation: Any) -> str:
     return "topic"
 
 
-def _can_pair(left: Any, right: Any, relation: str) -> bool:
-    if relation not in RELATIONS:
-        return False
-    if not _is_plausible_label(left) or not _is_plausible_label(right):
-        return False
-    if _pair_key(left, right) is None:
-        return False
+def _distinct_labels(left: Any, right: Any) -> bool:
     # A label and its own reordering are the same concept label, not an equivalence.
-    if concept_key(left) == concept_key(right):
+    return (_is_plausible_label(left) and _is_plausible_label(right)
+            and _pair_key(left, right) is not None and concept_key(left) != concept_key(right))
+
+
+def _can_pair(left: Any, right: Any, relation: str) -> bool:
+    if relation not in RELATIONS or not _distinct_labels(left, right):
         return False
-    if relation != EQUIVALENT and is_redundant(right, [concept_key(left)]):
-        return False
-    return True
+    return relation == EQUIVALENT or not is_redundant(right, [concept_key(left)])
 
 
 def _unique(values: Iterable[str]) -> list[str]:
@@ -177,6 +179,31 @@ def _clean_evidence(item: Any) -> dict[str, Any] | None:
         "example": _clean_text(item.get("example", ""))[:EXAMPLE_CHARS],
         "query": _clean_text(item.get("query", "")),
     }
+
+
+def _clean_all(items: Iterable[Any] | None) -> list[dict[str, Any]]:
+    return [item for item in map(_clean_evidence, items or []) if item is not None]
+
+
+def _new_evidence(items: Iterable[Any], seen: set[tuple[str, str, str, str]]) -> list[dict[str, Any]]:
+    fresh = []
+    for item in _clean_all(items):
+        key = _evidence_key(item)
+        if key not in seen:
+            seen.add(key)
+            fresh.append(item)
+    return fresh
+
+
+def _evidence_order(item: Mapping[str, Any]) -> tuple[str, ...]:
+    return item["paper_key"], item["kind"], item["paper_id"], item["example"], item["query"]
+
+
+def _relation_from(evidence: Iterable[Mapping[str, Any]]) -> str:
+    # Co-occurrence alone is never promoted to equivalence, even if a caller labels it
+    # that way. Only explicit terminology evidence upgrades the edge.
+    explicit = any(item["kind"] in {EXPLICIT_ALIAS, COUNTERPART} for item in evidence)
+    return EQUIVALENT if explicit else CLOSELY_RELATED
 
 
 def _support_count(edge: "ConceptEquivalence") -> int:
@@ -221,33 +248,19 @@ class ConceptEquivalence:
         return _pair_key(self.a, self.b)
 
     def merge_evidence(self, items: Iterable[Mapping[str, Any]]) -> bool:
-        seen = {_evidence_key(item) for item in self.evidence}
-        changed = False
-        for raw in items:
-            item = _clean_evidence(raw)
-            if item is None:
-                continue
-            key = _evidence_key(item)
-            if key in seen:
-                continue
-            seen.add(key)
-            self.evidence.append(item)
-            changed = True
-        if changed:
-            self.evidence.sort(key=lambda item: (
-                item["paper_key"], item["kind"], item["paper_id"], item["example"], item["query"]
-            ))
-            self.support = _unique([item["paper_id"] for item in self.evidence])
-            self.fields = _unique([item["field"] for item in self.evidence if item["field"]])
-            self.queries = _unique([item["query"] for item in self.evidence if item["query"]])[:8]
-            # Co-occurrence alone is never promoted to equivalence, even if a caller
-            # labels it that way. Only explicit terminology evidence upgrades the edge.
-            if any(item["kind"] in {EXPLICIT_ALIAS, COUNTERPART} for item in self.evidence):
-                self.relation = EQUIVALENT
-            else:
-                self.relation = CLOSELY_RELATED
-            self.confidence = _confidence_for(self)
-        return changed
+        fresh = _new_evidence(items, {_evidence_key(item) for item in self.evidence})
+        if fresh:
+            self.evidence.extend(fresh)
+            self._refresh()
+        return bool(fresh)
+
+    def _refresh(self) -> None:
+        self.evidence.sort(key=_evidence_order)
+        self.support = _unique(item["paper_id"] for item in self.evidence)
+        self.fields = _unique(item["field"] for item in self.evidence)
+        self.queries = _unique(item["query"] for item in self.evidence)[:8]
+        self.relation = _relation_from(self.evidence)
+        self.confidence = _confidence_for(self)
 
     def examples(self) -> list[str]:
         seen: list[str] = []
@@ -271,6 +284,22 @@ class ConceptEquivalence:
             "queries": list(self.queries),
             "examples": self.examples(),
         }
+
+
+def _label_pattern(label: Any) -> re.Pattern[str]:
+    return re.compile(r"(?:^| )" + re.escape(_canonical_label(label)) + r"(?=$| )")
+
+
+def _mentions(text: str, label: Any) -> bool:
+    return bool(_canonical_label(label)) and bool(_label_pattern(label).search(text))
+
+
+def _swap_first(text: str, edge: ConceptEquivalence) -> str:
+    """Replace whichever side of the edge the text names, a first, with the other side."""
+    source, replacement = (edge.a, edge.b) if _mentions(text, edge.a) else (edge.b, edge.a)
+    swapped = _label_pattern(source).sub(f" {replacement} ", text, count=1)
+    swapped = re.sub(r"\s+", " ", swapped).strip()
+    return swapped if normalize(swapped) != text else ""
 
 
 class ConceptEquivalenceGraph:
@@ -316,14 +345,7 @@ class ConceptEquivalenceGraph:
             return None
         key = _pair_key(left, right)
         assert key is not None
-        left_label = _clean_text(left)
-        right_label = _clean_text(right)
-        if key[0] != _canonical_label(left_label):
-            left_label, right_label = right_label, left_label
-        edge = self._edges.get(key)
-        if edge is None:
-            edge = ConceptEquivalence(a=left_label, b=right_label, relation=relation)
-            self._edges[key] = edge
+        edge = self._edges.get(key) or self._new_edge(key, left, right, relation)
         # The stored relation follows the evidence, not the caller's label: `merge_evidence`
         # upgrades an edge only when new explicit terminology evidence actually arrives.
         edge.merge_evidence(evidence or [])
@@ -332,21 +354,22 @@ class ConceptEquivalenceGraph:
             return None
         return edge.to_dict()
 
+    def _new_edge(self, key: tuple[str, str], left: Any, right: Any, relation: str) -> ConceptEquivalence:
+        labels = (_clean_text(left), _clean_text(right))
+        if key[0] != _canonical_label(labels[0]):
+            labels = labels[::-1]
+        self._edges[key] = ConceptEquivalence(a=labels[0], b=labels[1], relation=relation)
+        return self._edges[key]
+
+    def _active(self) -> list[tuple[tuple[str, str], ConceptEquivalence]]:
+        return [(key, edge) for key, edge in self._edges.items() if key not in self._revoked]
+
     def _eligible_edges(
         self, relation: str = EQUIVALENT, min_confidence: float = EXPANSION_MIN_CONFIDENCE
     ) -> list[ConceptEquivalence]:
-        eligible: list[ConceptEquivalence] = []
-        for key, edge in self._edges.items():
-            if key in self._revoked:
-                continue
-            if edge.relation != relation:
-                continue
-            if edge.confidence < min_confidence:
-                continue
-            if _support_count(edge) < MIN_EQUIVALENCE_SUPPORT:
-                continue
-            eligible.append(edge)
-        return eligible
+        return [edge for _, edge in self._active()
+                if edge.relation == relation and edge.confidence >= min_confidence
+                and _support_count(edge) >= MIN_EQUIVALENCE_SUPPORT]
 
     def aliases_for(
         self,
@@ -365,24 +388,29 @@ class ConceptEquivalenceGraph:
                 found.append(edge.a)
         return tuple(sorted(set(found)))
 
+    def _linked(self, label: str) -> list[str]:
+        return [key[1 - key.index(label)] for key, _ in self._active() if label in key]
+
     def component_size(self, label: Any) -> int:
+        """Labels reachable from this one, counted exactly up to one past MAX_ACTIVE_COMPONENT."""
         start = _canonical_label(label)
-        if not start:
-            return 0
-        seen = {start}
-        frontier = [start]
-        while frontier and len(seen) <= MAX_ACTIVE_COMPONENT:
-            current = frontier.pop()
-            for key in self._edges:
-                if key in self._revoked:
-                    continue
-                if current not in key:
-                    continue
-                other = key[1] if key[0] == current else key[0]
-                if other not in seen:
-                    seen.add(other)
-                    frontier.append(other)
+        seen = [start] if start else []
+        for current in seen:  # `seen` grows while it is walked: a breadth-first search
+            if len(seen) > MAX_ACTIVE_COMPONENT:
+                break
+            seen += [other for other in self._linked(current) if other not in seen]
         return len(seen)
+
+    def _directed(self, relation: str, min_confidence: float) -> list[tuple[ConceptEquivalence, str, str]]:
+        return [(edge, source, target) for edge in self._eligible_edges(relation, min_confidence)
+                for source, target in ((edge.a, edge.b), (edge.b, edge.a))]
+
+    def _expandable(self, text: str, relation: str, min_confidence: float) -> list[ConceptEquivalence]:
+        rows = [(edge.confidence, _support_count(edge), target, edge)
+                for edge, source, target in self._directed(relation, min_confidence) if _mentions(text, source)]
+        # Highest-confidence evidence first so the choice is deterministic.
+        rows.sort(key=lambda row: (-row[0], -row[1], row[2]))
+        return [edge for *_, edge in rows if self.component_size(edge.a) <= MAX_ACTIVE_COMPONENT]
 
     def expand_query(
         self,
@@ -392,39 +420,11 @@ class ConceptEquivalenceGraph:
         min_confidence: float = EXPANSION_MIN_CONFIDENCE,
     ) -> list[str]:
         """Return up to one alternate phrasing for a query, without recursion."""
-        text = _clean_text(query)
-        if not text or max_aliases <= 0:
+        normalized = normalize(_clean_text(query))
+        if not normalized or max_aliases <= 0:
             return []
-        normalized = normalize(text)
-        if not normalized:
-            return []
-        candidates: list[tuple[float, int, str, ConceptEquivalence]] = []
-        for edge in self._eligible_edges(relation, min_confidence):
-            for source, target in ((edge.a, edge.b), (edge.b, edge.a)):
-                marker = _canonical_label(source)
-                if not marker:
-                    continue
-                pattern = re.compile(r"(?:^| )" + re.escape(marker) + r"(?=$| )")
-                if pattern.search(normalized):
-                    candidates.append((edge.confidence, _support_count(edge), target, edge))
-        # Highest-confidence evidence first so the choice is deterministic.
-        candidates.sort(key=lambda row: (-row[0], -row[1], row[2]))
-        expanded: list[str] = []
-        for _, _, _, edge in candidates:
-            if len(expanded) >= max_aliases:
-                break
-            if self.component_size(edge.a) > MAX_ACTIVE_COMPONENT:
-                continue
-            for source, replacement in ((edge.a, edge.b), (edge.b, edge.a)):
-                marker = _canonical_label(source)
-                pattern = re.compile(r"(?:^| )" + re.escape(marker) + r"(?=$| )")
-                if pattern.search(normalized):
-                    candidate = pattern.sub(f" {replacement} ", normalized, count=1)
-                    candidate = re.sub(r"\s+", " ", candidate).strip()
-                    if candidate and normalize(candidate) != normalized and candidate not in expanded:
-                        expanded.append(candidate)
-                    break
-        return expanded
+        found = [_swap_first(normalized, edge) for edge in self._expandable(normalized, relation, min_confidence)]
+        return list(dict.fromkeys(filter(None, found)))[:max_aliases]
 
     def stats(self) -> dict[str, Any]:
         eligible = self._eligible_edges()
@@ -437,6 +437,26 @@ class ConceptEquivalenceGraph:
         }
 
 
+def _parse_line(line: str) -> dict[str, Any]:
+    try:
+        raw = json.loads(line)
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return {}  # malformed lines must not lose earlier evidence
+    return raw if isinstance(raw, dict) else {}
+
+
+def _read_records(path: Path) -> list[dict[str, Any]]:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    except OSError:
+        lines = []
+    return [raw for raw in map(_parse_line, lines) if raw.get("schema_version") == SCHEMA_VERSION]
+
+
+def _stamped(kind: str, **fields: Any) -> dict[str, Any]:
+    return {"schema_version": SCHEMA_VERSION, "type": kind, **fields, "observed_at": time.time()}
+
+
 class ConceptEquivalenceStore:
     """Append-only JSONL persistence beside the paper corpus and run memory."""
 
@@ -447,39 +467,21 @@ class ConceptEquivalenceStore:
         self._records = 0
 
     def load(self) -> ConceptEquivalenceGraph:
-        if self._graph is not None:
-            return self._graph
-        graph = ConceptEquivalenceGraph()
-        records = 0
-        if self.path.exists():
-            try:
-                lines = self.path.read_text(encoding="utf-8").splitlines()
-            except OSError:
-                lines = []
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    raw = json.loads(line)
-                except (json.JSONDecodeError, TypeError, ValueError):
-                    continue  # malformed lines must not lose earlier evidence
-                if not isinstance(raw, dict) or raw.get("schema_version") != SCHEMA_VERSION:
-                    continue
-                kind = raw.get("type")
-                if kind == "observation":
-                    records += 1
-                    graph.add_observation(
-                        raw.get("a", ""),
-                        raw.get("b", ""),
-                        raw.get("relation", EQUIVALENT),
-                        raw.get("evidence", []),
-                    )
-                elif kind == "revocation":
-                    graph.revoke(raw.get("a", ""), raw.get("b", ""), raw.get("reason", ""))
-        self._graph = graph
-        self._records = records
-        return graph
+        if self._graph is None:
+            self._graph = ConceptEquivalenceGraph()
+            self._records = sum(self._replay(self._graph, raw) for raw in _read_records(self.path))
+        return self._graph
+
+    @staticmethod
+    def _replay(graph: ConceptEquivalenceGraph, raw: dict[str, Any]) -> int:
+        """Apply one stored record; count it when it is an observation."""
+        if raw.get("type") == "revocation":
+            graph.revoke(raw.get("a", ""), raw.get("b", ""), raw.get("reason", ""))
+        if raw.get("type") != "observation":
+            return 0
+        graph.add_observation(raw.get("a", ""), raw.get("b", ""), raw.get("relation", EQUIVALENT),
+                              raw.get("evidence", []))
+        return 1
 
     def _append_record(self, record: dict[str, Any]) -> None:
         with self.path.open("a", encoding="utf-8") as handle:
@@ -493,24 +495,13 @@ class ConceptEquivalenceStore:
         evidence: Iterable[Mapping[str, Any]] | None = None,
     ) -> dict[str, Any] | None:
         relation = _clean_text(relation).lower()
-        if not _can_pair(left, right, relation):
+        cleaned = _clean_all(evidence)
+        if not cleaned or not _can_pair(left, right, relation):
             return None
-        cleaned = [_clean_evidence(item) for item in (evidence or [])]
-        cleaned = [item for item in cleaned if item is not None]
-        if not cleaned:
-            return None
-        record = {
-            "schema_version": SCHEMA_VERSION,
-            "type": "observation",
-            "a": _clean_text(left),
-            "b": _clean_text(right),
-            "relation": relation,
-            "evidence": cleaned,
-            "support": _unique([item["paper_id"] for item in cleaned]),
-            "fields": _unique([item["field"] for item in cleaned if item["field"]]),
-            "observed_at": time.time(),
-        }
-        self._append_record(record)
+        self._append_record(_stamped(
+            "observation", a=_clean_text(left), b=_clean_text(right), relation=relation, evidence=cleaned,
+            support=_unique(item["paper_id"] for item in cleaned), fields=_unique(item["field"] for item in cleaned),
+        ))
         self._records += 1
         return self.load().add_observation(left, right, relation, cleaned)
 
@@ -534,15 +525,8 @@ class ConceptEquivalenceStore:
     def revoke(self, left: Any, right: Any, reason: Any = "") -> bool:
         if _pair_key(left, right) is None:
             return False
-        record = {
-            "schema_version": SCHEMA_VERSION,
-            "type": "revocation",
-            "a": _clean_text(left),
-            "b": _clean_text(right),
-            "reason": _clean_text(reason) or "revoked",
-            "observed_at": time.time(),
-        }
-        self._append_record(record)
+        self._append_record(_stamped("revocation", a=_clean_text(left), b=_clean_text(right),
+                                     reason=_clean_text(reason) or "revoked"))
         return self.load().revoke(left, right, reason)
 
     def expand_query(self, query: Any, max_aliases: int = 1) -> list[str]:
@@ -556,26 +540,31 @@ class ConceptEquivalenceStore:
         return data
 
 
-def _term_view(term: Term | Mapping[str, Any] | Any) -> dict[str, Any] | None:
+def _term_parts(term: Term | Mapping[str, Any] | Any) -> tuple[Any, Any, Any, list[Any]] | None:
     if isinstance(term, Term):
-        text = term.text
-        relation = term.relation
-        confidence = term.confidence
-        paper_ids = list(term.paper_ids)
-    elif isinstance(term, Mapping):
-        text = term.get("text", "")
-        relation = term.get("relation", "topic")
-        confidence = term.get("confidence", "")
-        paper_ids = list(term.get("paper_ids", []) or [])
-    else:
+        return term.text, term.relation, term.confidence, list(term.paper_ids)
+    if isinstance(term, Mapping):
+        return (term.get("text", ""), term.get("relation", "topic"), term.get("confidence", ""),
+                list(term.get("paper_ids", []) or []))
+    return None
+
+
+def _id_set(paper_ids: Iterable[Any]) -> set[str]:
+    return {str(paper_id) for paper_id in paper_ids if str(paper_id)}
+
+
+def _term_view(term: Term | Mapping[str, Any] | Any) -> dict[str, Any] | None:
+    parts = _term_parts(term)
+    if parts is None:
         return None
-    if confidence not in {"high", "medium"} or not _is_plausible_label(text):
+    text, relation, confidence, paper_ids = parts
+    if confidence not in GROUNDED or not _is_plausible_label(text):
         return None
     return {
         "label": _clean_text(text),
         "relation": relation,
         "bucket": _relation_bucket(relation),
-        "papers": {str(paper_id) for paper_id in paper_ids if str(paper_id)},
+        "papers": _id_set(paper_ids),
     }
 
 
@@ -595,21 +584,100 @@ def _label_spans(sentence: str, label: str) -> list[tuple[int, int]]:
     return [(match.start(), match.end()) for match in pattern.finditer(flat)]
 
 
+def _cue_between(flat: str, one: tuple[int, int], other: tuple[int, int]) -> bool:
+    """True when two non-overlapping spans have a terminology cue between them."""
+    (_, first_end), (second_start, _) = sorted((one, other))
+    return first_end <= second_start and bool(_CUE_PATTERN.search(flat[first_end:second_start]))
+
+
 def _explicit_evidence(sentence: str, left: str, right: str) -> bool:
     flat = re.sub(r"[^a-z0-9]+", " ", sentence.lower()).strip()
-    left_spans = _label_spans(flat, left)
-    right_spans = _label_spans(flat, right)
-    for left_start, left_end in left_spans:
-        for right_start, right_end in right_spans:
-            if not (left_end <= right_start or right_end <= left_start):
-                continue
-            if left_end <= right_start:
-                middle = flat[left_end:right_start]
-            else:
-                middle = flat[right_end:left_start]
-            if _CUE_PATTERN.search(middle):
-                return True
-    return False
+    return any(_cue_between(flat, one, other)
+               for one in _label_spans(flat, left) for other in _label_spans(flat, right))
+
+
+def _explicit_example(sentences: list[str], left: str, right: str) -> str:
+    return next((sentence[:EXAMPLE_CHARS] for sentence in sentences if _explicit_evidence(sentence, left, right)), "")
+
+
+def _topical_papers(papers: list[Paper], on_topic: set[str] | None) -> dict[str, Paper]:
+    """On-topic papers by id, in id order; empty when too few for a topical pass."""
+    by_id = {paper.paper_id: paper for paper in papers}
+    wanted = sorted(set(on_topic or ()) & set(by_id))
+    return {paper_id: by_id[paper_id] for paper_id in wanted} if len(wanted) >= MIN_TOPICAL_CORPUS else {}
+
+
+def _term_views(terms: Iterable[Term | Mapping[str, Any]], wanted: set[str]) -> dict[str, dict[str, Any]]:
+    """One view per canonical label: the variant grounded in the most on-topic papers."""
+    views: dict[str, dict[str, Any]] = {}
+    for view in filter(None, map(_term_view, terms or [])):
+        key = _canonical_label(view["label"])
+        current = views.get(key)
+        if current is None or len(view["papers"] & wanted) > len(current["papers"] & wanted):
+            views[key] = view
+    return views
+
+
+def _metadata_labels(paper: Paper) -> set[str]:
+    labels = (*paper.keywords, *paper.fields, *paper.topic_path)
+    return {_canonical_label(label) for label in labels if _is_plausible_label(label)}
+
+
+def _paper_labels(paper: Paper, views: dict[str, dict[str, Any]]) -> dict[str, str]:
+    """Canonical key -> display label for every concept this paper carries, in key order."""
+    grounded = {key for key, view in views.items() if paper.paper_id in view["papers"]}
+    return {key: views.get(key, {"label": key})["label"] for key in sorted(grounded | _metadata_labels(paper))}
+
+
+def _paper_evidence(paper: Paper) -> dict[str, Any]:
+    fields = _paper_fields(paper)
+    return {
+        "paper_id": paper.paper_id,
+        "paper_key": _identity_key(paper),
+        "field": fields[0] if fields else "",
+        "example": "",
+        "query": (paper.found_by or [""])[0],
+    }
+
+
+def _multiword_distinct(pair: tuple[str, str], left: str, right: str) -> bool:
+    return all(len(key.split()) >= 2 for key in pair) and not is_redundant(right, [concept_key(left)])
+
+
+@dataclass
+class _Observer:
+    """Collects one run's observations, paper by paper."""
+
+    views: dict[str, dict[str, Any]]
+    explicit: list[dict[str, Any]] = field(default_factory=list)
+    co_occurrence: dict[tuple[str, str], list[dict[str, Any]]] = field(default_factory=dict)
+
+    def read(self, paper: Paper) -> None:
+        labels = _paper_labels(paper, self.views)
+        evidence = _paper_evidence(paper)
+        sentences = _sentences(f"{paper.title}. {paper.abstract}".strip())
+        for pair in combinations(labels, 2):
+            left, right = labels[pair[0]], labels[pair[1]]
+            example = _explicit_example(sentences, left, right)
+            if example and _can_pair(left, right, EQUIVALENT):
+                self.explicit.append({"a": left, "b": right, "relation": EQUIVALENT,
+                                      "evidence": [{**evidence, "kind": EXPLICIT_ALIAS, "example": example}]})
+            elif self._co_occurs(pair, left, right):
+                self.co_occurrence.setdefault(pair, []).append({**evidence, "kind": CO_OCCURRENCE})
+
+    def _co_occurs(self, pair: tuple[str, str], left: str, right: str) -> bool:
+        views = [self.views.get(key) for key in pair]
+        if None in views or _pair_key(left, right) is None:
+            return False
+        return views[0]["bucket"] == views[1]["bucket"] and _multiword_distinct(pair, left, right)
+
+    def closely_related(self) -> list[dict[str, Any]]:
+        rows = []
+        for (left_key, right_key), items in sorted(self.co_occurrence.items()):
+            left, right = self.views[left_key]["label"], self.views[right_key]["label"]
+            if _can_pair(left, right, CLOSELY_RELATED):
+                rows.append({"a": left, "b": right, "relation": CLOSELY_RELATED, "evidence": items})
+        return rows
 
 
 def discover_observations(
@@ -624,92 +692,10 @@ def discover_observations(
     grounded terms becomes `closely_related` and therefore never expands a query.
     """
     del question  # terms and papers already carry the topical context for this pass
-    papers = [paper for paper in papers if isinstance(paper, Paper)]
-    if not papers or not on_topic or len(on_topic) < MIN_TOPICAL_CORPUS:
+    topical = _topical_papers([paper for paper in papers if isinstance(paper, Paper)], on_topic)
+    if not topical:
         return []
-    by_id = {paper.paper_id: paper for paper in papers}
-    wanted = {paper_id for paper_id in on_topic if paper_id in by_id}
-    if len(wanted) < MIN_TOPICAL_CORPUS:
-        return []
-
-    term_views: dict[str, dict[str, Any]] = {}
-    for term in terms or []:
-        view = _term_view(term)
-        if view is None:
-            continue
-        key = _canonical_label(view["label"])
-        current = term_views.get(key)
-        if current is None or len(view["papers"] & wanted) > len(current["papers"] & wanted):
-            term_views[key] = view
-
-    observations: list[dict[str, Any]] = []
-    co_occurrence: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    for paper_id in sorted(wanted):
-        paper = by_id[paper_id]
-        grounded = sorted(
-            key
-            for key, view in term_views.items()
-            if paper_id in view["papers"]
-        )
-        metadata = sorted(
-            {
-                _canonical_label(label)
-                for label in ([*paper.keywords, *paper.fields, *paper.topic_path])
-                if _is_plausible_label(label)
-            }
-        )
-        candidates = sorted(set(grounded) | set(metadata))
-        if len(candidates) < 2:
-            continue
-        labels = {key: term_views.get(key, {"label": key})["label"] for key in candidates}
-        text = f"{paper.title}. {paper.abstract}".strip()
-        fields = _paper_fields(paper)
-        query = (paper.found_by or [""])[0]
-        for left_index, left_key in enumerate(candidates):
-            for right_key in candidates[left_index + 1:]:
-                left = labels[left_key]
-                right = labels[right_key]
-                if _pair_key(left, right) is None:
-                    continue
-                evidence = {
-                    "paper_id": paper.paper_id,
-                    "paper_key": _identity_key(paper),
-                    "field": fields[0] if fields else "",
-                    "example": "",
-                    "query": query,
-                }
-                explicit = any(
-                    _explicit_evidence(sentence, left, right) for sentence in _sentences(text)
-                )
-                if explicit and _can_pair(left, right, EQUIVALENT):
-                    observations.append({
-                        "a": left,
-                        "b": right,
-                        "relation": EQUIVALENT,
-                        "evidence": [{**evidence, "kind": EXPLICIT_ALIAS,
-                                      "example": next(
-                                          (sentence[:EXAMPLE_CHARS] for sentence in _sentences(text)
-                                           if _explicit_evidence(sentence, left, right)),
-                                          "")}],
-                    })
-                    continue
-                left_view = term_views.get(left_key)
-                right_view = term_views.get(right_key)
-                if left_view is None or right_view is None:
-                    continue
-                if left_view["bucket"] != right_view["bucket"]:
-                    continue
-                if len(left_key.split()) < 2 or len(right_key.split()) < 2:
-                    continue
-                if is_redundant(right, [concept_key(left)]):
-                    continue
-                key = tuple(sorted((left_key, right_key)))
-                co_occurrence.setdefault(key, []).append({**evidence, "kind": CO_OCCURRENCE})
-
-    for (left_key, right_key), items in sorted(co_occurrence.items()):
-        left = term_views[left_key]["label"]
-        right = term_views[right_key]["label"]
-        if not _can_pair(left, right, CLOSELY_RELATED):
-            continue
-        observations.append({"a": left, "b": right, "relation": CLOSELY_RELATED, "evidence": items})
-    return observations
+    observer = _Observer(_term_views(terms, set(topical)))
+    for paper in topical.values():
+        observer.read(paper)
+    return observer.explicit + observer.closely_related()
