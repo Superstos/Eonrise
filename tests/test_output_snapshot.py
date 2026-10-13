@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,6 +20,7 @@ from eonrise.report import render_compact_markdown, render_markdown
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SNAPSHOTS = FIXTURES / "snapshots"
+_PATH_TAIL = re.compile(r'<dir>((?:\\+[^\\\s"]+)+)')
 SCENARIOS = {
     "readme": ("papers.json", "how does spaced repetition improve memory retention"),
     "crossfield": ("crossfield_gold.json", None),
@@ -63,7 +65,8 @@ def _cli_output(extra: list[str]) -> dict:
         def scrub(text: str) -> str:
             for spelling in spellings:
                 text = text.replace(spelling, "<dir>")
-            return text
+            # Windows writes <dir>\home, Linux <dir>/home: pin one spelling for every OS.
+            return _PATH_TAIL.sub(lambda m: "<dir>" + re.sub(r"\\+", "/", m.group(1)), text)
         return {"printed": [scrub(line) for line in printed],
                 "files": {name: scrub(text) for name, text in files.items()}}
 
