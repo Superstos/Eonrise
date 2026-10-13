@@ -38,21 +38,35 @@ not support part of the map, that part stays empty and the brief says so.
 
 ## How it works
 
-Eonrise puts your question at the center and grows a map around it: broader topics above,
-neighboring topics beside it, narrower mechanisms below, and papers from distant fields that
-share its shape. This map is from the [written instructions](examples/written-instructions-new-workers.md) run:
+Eonrise takes one word out of your question and places it in a family tree: parents and
+grandparents above it, siblings beside it, children and grandchildren below. Searching up,
+sideways and down that tree is how it reaches fields that never use your words. Here is the
+word "mistakes" from the [written instructions](examples/written-instructions-new-workers.md) run:
 
 ```mermaid
 flowchart TB
-  L[law] -- parent --> R
-  G[language and linguistics] -- parent --> R
-  R(("written instructions<br/>prevent same mistakes<br/>repeating"))
-  R -- sibling --- J[jury instructions]
-  R -- sibling --- S[second language<br/>acquisition and learning]
-  R -- child --> C[corrective feedback]
-  R -- child --> A[adult learning]
-  R -. distant field .-> N[What Nursing Students Hope<br/>from Clinical Mistakes]
+  D["Health Sciences<br/><i>great-great-grandparent</i>"] --> F["Health Professions<br/><i>great-grandparent</i>"]
+  F --> SF["Emergency Medical Services<br/><i>grandparent</i>"]
+  SF --> T["Patient Safety and Medication Errors<br/><i>parent</i>"]
+  P["how can written instructions prevent the same<br/><b>mistakes</b> from repeating when every worker is new"] -. word taken .-> W
+  T --> W(("<b>mistakes</b>"))
+  T --> S1["near misses<br/><i>sibling</i>"]
+  T --> S2["incident reporting<br/><i>sibling</i>"]
+  T --> S3["error prevention<br/><i>sibling</i>"]
+  T --> S4["patient safety culture<br/><i>sibling</i>"]
+  T --> S5["surgical safety checklist<br/><i>sibling</i>"]
+  W --> C1["medication errors<br/><i>child</i>"]
+  W --> C2["prescribing errors<br/><i>child</i>"]
+  W --> C3["surgical errors<br/><i>child</i>"]
+  W --> C4["nursing errors<br/><i>child</i>"]
+  C1 --> G1["medication administration errors<br/><i>grandchild</i>"]
+  C1 --> G2["high-risk medications<br/><i>grandchild</i>"]
+  C4 --> G3["What Nursing Students Hope<br/>from Clinical Mistakes<br/><i>grandchild, found by Eonrise</i>"]
 ```
+
+The four rows above the word are OpenAlex's topic hierarchy. Siblings, children and the
+medication grandchildren are that topic's own keywords. The nursing paper is what the run
+found by following that branch into another field.
 
 1. The question becomes one root topic, and every later search stays tied to it.
 2. Each round searches the scholarly sources and drops papers about something else.
