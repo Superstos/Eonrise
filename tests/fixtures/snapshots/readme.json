@@ -1,0 +1,2682 @@
+{
+ "compact": "# Eonrise brief\n\n**Question:** how does spaced repetition improve memory retention\n**Root topic:** spaced repetition improve memory retention\n**Status:** partial — search produced no new evidence\n**Evidence:** 14 papers kept of 14 retrieved (1 on topic), 25 concepts\n\n## Grounded map\n\n- **Mechanism:** encoding dynamics\n- **Measurement:** recall accuracy, retention rate, retention robustness\n- **Failure Mode:** not grounded yet\n- **Method:** evaluation protocol, replication baseline\n- **Neighbor Field:** cognitive psychology, sleep and memory, false memory\n\n## Same shape, other fields\n\n- **Retrieval practice protocol with human annotation** (2021, Education) — shares retrieval practice, evaluation protocol\n\n## Concept directions\n\n- **down:** recall accuracy, retention rate\n- **sideways:** memory consolidation, working memory, testing effect, meta analysis\n\n**Gaps:** mechanism, failure mode\n\n**Not in this literature:** failure mode — two full rounds produced no candidate at all, so the run stopped spending queries on it rather than calling it an unfilled gap.\n\n## Next searches\n\n- `memory consolidation encoding dynamics mechanism`\n- `memory consolidation failure mode`\n- `memory consolidation limitation failure mode`\n\n## Searches toward other fields\n\n- `retrieval practice evaluation protocol`\n",
+ "edges": [],
+ "full": "# Eonrise research report\n\n**Question:** how does spaced repetition improve memory retention\n**Root topic:** spaced repetition improve memory retention\n**Agent:** default\n**Mode:** unknown\n**Status:** partial — search produced no new evidence\n\n## Research map\n\n- **Mechanism:** encoding dynamics\n- **Measurement:** recall accuracy, retention rate, retention robustness, error rate\n- **Failure Mode:** not grounded yet\n- **Method:** evaluation protocol, replication baseline\n- **Neighbor Field:** cognitive psychology, sleep and memory, false memory, learning science, study strategies\n\n## Concept tree (single root)\n\n- `spaced repetition improve memory retention` (root, w=1.0, n=14)\n- `  memory consolidation` (sideways, w=1.7568, n=14)\n- `  recall accuracy` (down, w=1.4478, n=14)\n- `  working memory` (sideways, w=1.2486, n=14)\n- `  testing effect` (sideways, w=1.2396, n=1)\n- `  meta analysis` (sideways, w=1.1436, n=1)\n- `  forgetting curve` (sideways, w=1.1436, n=1)\n- `  reproducible workflow` (sideways, w=1.1436, n=1)\n- `  retention rate` (down, w=1.1406, n=1)\n- `  retention robustness` (down, w=1.1406, n=1)\n- `  memory degradation` (sideways, w=1.1406, n=1)\n- `  controlled trial` (sideways, w=1.0356, n=1)\n- `  encoding dynamics` (down, w=1.0356, n=1)\n- `  retrieval practice` (sideways, w=1.0356, n=1)\n- `  error rate` (down, w=1.0356, n=1)\n- `  evaluation protocol` (down, w=1.0356, n=1)\n- `  replication baseline` (down, w=1.0356, n=1)\n- `  cognitive psychology` (up, w=0.9819, n=3)\n- `  sleep and memory` (up, w=0.5769, n=1)\n- `  false memory` (up, w=0.5703, n=1)\n- `  learning science` (up, w=0.5178, n=1)\n- `  study strategies` (up, w=0.5178, n=1)\n- `  educational psychology` (up, w=0.5178, n=1)\n- `  research methods` (up, w=0.5178, n=1)\n- `  open science` (up, w=0.5178, n=1)\n\n## Deep search routes\n\n- `memory consolidation encoding dynamics mechanism`\n- `memory consolidation failure mode`\n- `memory consolidation limitation failure mode`\n\n## Search integrity\n\n| Round | Queries | New papers | On topic (total) | Gap queries | Gaps left |\n|---|---|---|---|---|---|\n| 1 | 1 | 14 | 1 | 0 | mechanism, failure_mode |\n| 2 | 5 | 0 | 1 | 2 | mechanism |\n\n## Evidence\n\n- [Spaced repetition improves long term recall accuracy](10.1/p2) (2020, assistant_bundle)\n- [Catastrophic forgetting in continual learning](10.1/p5) (2023, assistant_bundle)\n- [Hallucination and confabulation as retrieval failures](10.1/p9) (2023, assistant_bundle)\n- [Cache eviction policies mirror forgetting curves](10.1/p4) (2022, assistant_bundle)\n- [Working memory encoding and retrieval dynamics](10.1/p1) (2021, assistant_bundle)\n- [Benchmarking recall fidelity under stress testing](10.1/p8) (2022, assistant_bundle)\n- [Reproducible workflow for memory experiments](10.1/p14) (2022, assistant_bundle)\n- [Retrieval practice protocol with human annotation](10.1/p6) (2021, assistant_bundle)\n- [Distributed caching with trace analysis](10.1/p12) (2021, assistant_bundle)\n- [Interleaving vs blocking: comparative testing](10.1/p10) (2020, assistant_bundle)\n- [Forgetting curve and interference failure modes](10.1/p3) (2019, assistant_bundle)\n- [Attention and encoding limits under cognitive load](10.1/p13) (2019, assistant_bundle)\n- [The testing effect: meta analysis](10.1/p11) (2017, assistant_bundle)\n- [Memory consolidation during sleep: mechanism review](10.1/p7) (2018, assistant_bundle)\n",
+ "learned": [],
+ "result": {
+  "calls_saved_by_corpus": 0,
+  "concepts": [
+   {
+    "depth": 0,
+    "direction": "root",
+    "label": "spaced repetition improve memory retention",
+    "node_id": "c0",
+    "paper_ids": [
+     "p2",
+     "p11",
+     "p7",
+     "p1",
+     "p3",
+     "p9",
+     "p14",
+     "p5",
+     "p10",
+     "p13",
+     "p4",
+     "p6",
+     "p12",
+     "p8"
+    ],
+    "parent_id": "",
+    "query": "spaced repetition improve memory retention",
+    "support": 14,
+    "weight": 1.0
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "memory consolidation",
+    "node_id": "c2",
+    "paper_ids": [
+     "p1",
+     "p7",
+     "p2",
+     "p11",
+     "p3",
+     "p9",
+     "p14",
+     "p5",
+     "p10",
+     "p13",
+     "p4",
+     "p6",
+     "p12",
+     "p8"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 14,
+    "weight": 1.7568
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "recall accuracy",
+    "node_id": "c3",
+    "paper_ids": [
+     "p1",
+     "p2",
+     "p11",
+     "p7",
+     "p3",
+     "p9",
+     "p14",
+     "p5",
+     "p10",
+     "p13",
+     "p4",
+     "p6",
+     "p12",
+     "p8"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 14,
+    "weight": 1.4478
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "working memory",
+    "node_id": "c4",
+    "paper_ids": [
+     "p1",
+     "p2",
+     "p11",
+     "p7",
+     "p3",
+     "p9",
+     "p14",
+     "p5",
+     "p10",
+     "p13",
+     "p4",
+     "p6",
+     "p12",
+     "p8"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 14,
+    "weight": 1.2486
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "testing effect",
+    "node_id": "c5",
+    "paper_ids": [
+     "p11"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.2396
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "meta analysis",
+    "node_id": "c7",
+    "paper_ids": [
+     "p11"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.1436
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "forgetting curve",
+    "node_id": "c8",
+    "paper_ids": [
+     "p3"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.1436
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "reproducible workflow",
+    "node_id": "c9",
+    "paper_ids": [
+     "p14"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.1436
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "retention rate",
+    "node_id": "c10",
+    "paper_ids": [
+     "p2"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.1406
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "retention robustness",
+    "node_id": "c11",
+    "paper_ids": [
+     "p11"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.1406
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "memory degradation",
+    "node_id": "c12",
+    "paper_ids": [
+     "p3"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.1406
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "controlled trial",
+    "node_id": "c14",
+    "paper_ids": [
+     "p2"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.0356
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "encoding dynamics",
+    "node_id": "c18",
+    "paper_ids": [
+     "p7"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.0356
+   },
+   {
+    "depth": 1,
+    "direction": "sideways",
+    "label": "retrieval practice",
+    "node_id": "c19",
+    "paper_ids": [
+     "p1"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.0356
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "error rate",
+    "node_id": "c20",
+    "paper_ids": [
+     "p9"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.0356
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "evaluation protocol",
+    "node_id": "c21",
+    "paper_ids": [
+     "p14"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.0356
+   },
+   {
+    "depth": 1,
+    "direction": "down",
+    "label": "replication baseline",
+    "node_id": "c22",
+    "paper_ids": [
+     "p14"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 1.0356
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "cognitive psychology",
+    "node_id": "c1",
+    "paper_ids": [
+     "p1",
+     "p3",
+     "p9"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 3,
+    "weight": 0.9819
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "sleep and memory",
+    "node_id": "c6",
+    "paper_ids": [
+     "p7"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5769
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "false memory",
+    "node_id": "c13",
+    "paper_ids": [
+     "p9"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5703
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "learning science",
+    "node_id": "c15",
+    "paper_ids": [
+     "p2"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5178
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "study strategies",
+    "node_id": "c16",
+    "paper_ids": [
+     "p2"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5178
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "educational psychology",
+    "node_id": "c17",
+    "paper_ids": [
+     "p11"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5178
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "research methods",
+    "node_id": "c23",
+    "paper_ids": [
+     "p14"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5178
+   },
+   {
+    "depth": 1,
+    "direction": "up",
+    "label": "open science",
+    "node_id": "c24",
+    "paper_ids": [
+     "p14"
+    ],
+    "parent_id": "c0",
+    "query": "spaced repetition improve memory retention",
+    "support": 1,
+    "weight": 0.5178
+   }
+  ],
+  "corpus_papers": [
+   {
+    "abstract": "Randomized trial of spaced repetition schedule measuring retention rate and reliability across weeks.",
+    "cited_by_count": 55,
+    "doi": "10.1/p2",
+    "fields": [
+     "Learning Science"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "spaced repetition",
+     "retention rate",
+     "controlled trial"
+    ],
+    "paper_id": "p2",
+    "provider": "assistant_bundle",
+    "title": "Spaced repetition improves long term recall accuracy",
+    "topic_path": [
+     "Study strategies"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2020
+   },
+   {
+    "abstract": "Meta analysis of testing effect experiments measuring retention robustness across cohorts.",
+    "cited_by_count": 120,
+    "doi": "10.1/p11",
+    "fields": [
+     "Educational Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "testing effect",
+     "meta analysis",
+     "retention robustness"
+    ],
+    "paper_id": "p11",
+    "provider": "assistant_bundle",
+    "title": "The testing effect: meta analysis",
+    "topic_path": [
+     "Testing effect"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2017
+   },
+   {
+    "abstract": "Systematic review of consolidation mechanism linking encoding dynamics to long term storage architecture.",
+    "cited_by_count": 90,
+    "doi": "10.1/p7",
+    "fields": [
+     "Neuroscience"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "memory consolidation",
+     "encoding dynamics"
+    ],
+    "paper_id": "p7",
+    "provider": "assistant_bundle",
+    "title": "Memory consolidation during sleep: mechanism review",
+    "topic_path": [
+     "Sleep and memory"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2018
+   },
+   {
+    "abstract": "We study memory encoding and retrieval process with controlled experiment measuring recall accuracy and robustness.",
+    "cited_by_count": 40,
+    "doi": "10.1/p1",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "working memory",
+     "retrieval practice",
+     "recall accuracy"
+    ],
+    "paper_id": "p1",
+    "provider": "assistant_bundle",
+    "title": "Working memory encoding and retrieval dynamics",
+    "topic_path": [
+     "Memory consolidation"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2021
+   },
+   {
+    "abstract": "Failure analysis of forgetting and interference causing retrieval degradation and memory collapse under load.",
+    "cited_by_count": 30,
+    "doi": "10.1/p3",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "forgetting curve",
+     "interference",
+     "memory degradation"
+    ],
+    "paper_id": "p3",
+    "provider": "assistant_bundle",
+    "title": "Forgetting curve and interference failure modes",
+    "topic_path": [
+     "Forgetting"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2019
+   },
+   {
+    "abstract": "Analysis of hallucination and confabulation bias as failure mode with error rate measurement.",
+    "cited_by_count": 25,
+    "doi": "10.1/p9",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "hallucination",
+     "confabulation",
+     "error rate"
+    ],
+    "paper_id": "p9",
+    "provider": "assistant_bundle",
+    "title": "Hallucination and confabulation as retrieval failures",
+    "topic_path": [
+     "False memory"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2023
+   },
+   {
+    "abstract": "Reproducible workflow and evaluation protocol for memory studies with replication baseline.",
+    "cited_by_count": 9,
+    "doi": "10.1/p14",
+    "fields": [
+     "Research Methods"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "reproducible workflow",
+     "evaluation protocol",
+     "replication baseline"
+    ],
+    "paper_id": "p14",
+    "provider": "assistant_bundle",
+    "title": "Reproducible workflow for memory experiments",
+    "topic_path": [
+     "Open science"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2022
+   },
+   {
+    "abstract": "Neural networks suffer catastrophic forgetting and interference; ablation and controlled comparison measure accuracy degradation.",
+    "cited_by_count": 80,
+    "doi": "10.1/p5",
+    "fields": [
+     "Machine Learning"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "catastrophic forgetting",
+     "continual learning",
+     "accuracy degradation"
+    ],
+    "paper_id": "p5",
+    "provider": "assistant_bundle",
+    "title": "Catastrophic forgetting in continual learning",
+    "topic_path": [
+     "Continual learning"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2023
+   },
+   {
+    "abstract": "Comparative testing and randomized trial of interleaving schedule measuring generalization performance.",
+    "cited_by_count": 33,
+    "doi": "10.1/p10",
+    "fields": [
+     "Learning Science"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "interleaving",
+     "comparative testing",
+     "generalization performance"
+    ],
+    "paper_id": "p10",
+    "provider": "assistant_bundle",
+    "title": "Interleaving vs blocking: comparative testing",
+    "topic_path": [
+     "Practice scheduling"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2020
+   },
+   {
+    "abstract": "Experimental study of attention mediation in encoding with controlled experiment and validity assessment.",
+    "cited_by_count": 28,
+    "doi": "10.1/p13",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "attention mediation",
+     "encoding limits",
+     "controlled experiment"
+    ],
+    "paper_id": "p13",
+    "provider": "assistant_bundle",
+    "title": "Attention and encoding limits under cognitive load",
+    "topic_path": [
+     "Attention"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2019
+   },
+   {
+    "abstract": "Systems study of cache eviction and stale invalidation as failure mode with benchmark evaluation of hit rate.",
+    "cited_by_count": 22,
+    "doi": "10.1/p4",
+    "fields": [
+     "Computer Systems"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "cache eviction",
+     "hit rate benchmark",
+     "ablation study"
+    ],
+    "paper_id": "p4",
+    "provider": "assistant_bundle",
+    "title": "Cache eviction policies mirror forgetting curves",
+    "topic_path": [
+     "Caching"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2022
+   },
+   {
+    "abstract": "Controlled evaluation protocol with human annotation measuring precision and recall of retrieval practice interventions.",
+    "cited_by_count": 18,
+    "doi": "10.1/p6",
+    "fields": [
+     "Education"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "retrieval practice",
+     "controlled evaluation",
+     "metric validation"
+    ],
+    "paper_id": "p6",
+    "provider": "assistant_bundle",
+    "title": "Retrieval practice protocol with human annotation",
+    "topic_path": [
+     "Testing effect"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2021
+   },
+   {
+    "abstract": "Trace analysis of distributed cache behavior measuring hit rate consistency and stale failure modes.",
+    "cited_by_count": 15,
+    "doi": "10.1/p12",
+    "fields": [
+     "Computer Systems"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "distributed caching",
+     "trace analysis",
+     "hit rate consistency"
+    ],
+    "paper_id": "p12",
+    "provider": "assistant_bundle",
+    "title": "Distributed caching with trace analysis",
+    "topic_path": [
+     "Distributed systems"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2021
+   },
+   {
+    "abstract": "Stress testing and component-level assessment of recall fidelity with benchmark validity checks.",
+    "cited_by_count": 12,
+    "doi": "10.1/p8",
+    "fields": [
+     "Psychometrics"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "recall fidelity",
+     "stress testing",
+     "benchmark validity"
+    ],
+    "paper_id": "p8",
+    "provider": "assistant_bundle",
+    "title": "Benchmarking recall fidelity under stress testing",
+    "topic_path": [
+     "Measurement"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2022
+   }
+  ],
+  "coverage": {
+   "failure_mode": [],
+   "measurement": [
+    "recall accuracy",
+    "retention rate",
+    "retention robustness",
+    "error rate"
+   ],
+   "mechanism": [
+    "encoding dynamics"
+   ],
+   "method": [
+    "evaluation protocol",
+    "replication baseline"
+   ],
+   "neighbor_field": [
+    "cognitive psychology",
+    "sleep and memory",
+    "false memory",
+    "learning science",
+    "study strategies"
+   ]
+  },
+  "distant_queries": [
+   "retrieval practice evaluation protocol"
+  ],
+  "dormant_relations": [
+   "failure_mode"
+  ],
+  "gaps": [
+   "mechanism",
+   "failure_mode"
+  ],
+  "graph": {
+   "edges": [
+    {
+     "from": "question",
+     "to": "term:0",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p1",
+     "to": "term:0",
+     "type": "supports"
+    },
+    {
+     "from": "paper:p3",
+     "to": "term:0",
+     "type": "supports"
+    },
+    {
+     "from": "paper:p9",
+     "to": "term:0",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:1",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p1",
+     "to": "term:1",
+     "type": "supports"
+    },
+    {
+     "from": "paper:p7",
+     "to": "term:1",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:2",
+     "type": "measurement"
+    },
+    {
+     "from": "paper:p1",
+     "to": "term:2",
+     "type": "supports"
+    },
+    {
+     "from": "paper:p2",
+     "to": "term:2",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:3",
+     "type": "core"
+    },
+    {
+     "from": "paper:p2",
+     "to": "term:3",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:4",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p1",
+     "to": "term:4",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:5",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p11",
+     "to": "term:5",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:6",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p7",
+     "to": "term:6",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:7",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p11",
+     "to": "term:7",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:8",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p3",
+     "to": "term:8",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:9",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p14",
+     "to": "term:9",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:10",
+     "type": "measurement"
+    },
+    {
+     "from": "paper:p2",
+     "to": "term:10",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:11",
+     "type": "measurement"
+    },
+    {
+     "from": "paper:p11",
+     "to": "term:11",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:12",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p3",
+     "to": "term:12",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:13",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p9",
+     "to": "term:13",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:14",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p2",
+     "to": "term:14",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:15",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p2",
+     "to": "term:15",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:16",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p2",
+     "to": "term:16",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:17",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p11",
+     "to": "term:17",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:18",
+     "type": "mechanism"
+    },
+    {
+     "from": "paper:p7",
+     "to": "term:18",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:19",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p1",
+     "to": "term:19",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:20",
+     "type": "measurement"
+    },
+    {
+     "from": "paper:p9",
+     "to": "term:20",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:21",
+     "type": "method"
+    },
+    {
+     "from": "paper:p14",
+     "to": "term:21",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:22",
+     "type": "method"
+    },
+    {
+     "from": "paper:p14",
+     "to": "term:22",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:23",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p14",
+     "to": "term:23",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:24",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p14",
+     "to": "term:24",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:25",
+     "type": "neighbor_field"
+    },
+    {
+     "from": "paper:p7",
+     "to": "term:25",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:26",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p3",
+     "to": "term:26",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:27",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p9",
+     "to": "term:27",
+     "type": "supports"
+    },
+    {
+     "from": "question",
+     "to": "term:28",
+     "type": "topic"
+    },
+    {
+     "from": "paper:p9",
+     "to": "term:28",
+     "type": "supports"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "question",
+     "label": "how does spaced repetition improve memory retention",
+     "type": "question"
+    },
+    {
+     "confidence": "high",
+     "id": "term:0",
+     "label": "cognitive psychology",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "id": "paper:p1",
+     "label": "Working memory encoding and retrieval dynamics",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "id": "paper:p3",
+     "label": "Forgetting curve and interference failure modes",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "id": "paper:p9",
+     "label": "Hallucination and confabulation as retrieval failures",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "confidence": "high",
+     "id": "term:1",
+     "label": "memory consolidation",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "id": "paper:p7",
+     "label": "Memory consolidation during sleep: mechanism review",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "confidence": "high",
+     "id": "term:2",
+     "label": "recall accuracy",
+     "relation": "measurement",
+     "type": "term"
+    },
+    {
+     "id": "paper:p2",
+     "label": "Spaced repetition improves long term recall accuracy",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "confidence": "medium",
+     "id": "term:3",
+     "label": "spaced repetition",
+     "relation": "core",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:4",
+     "label": "working memory",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:5",
+     "label": "testing effect",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "id": "paper:p11",
+     "label": "The testing effect: meta analysis",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "confidence": "medium",
+     "id": "term:6",
+     "label": "sleep and memory",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:7",
+     "label": "meta analysis",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:8",
+     "label": "forgetting curve",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:9",
+     "label": "reproducible workflow",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "id": "paper:p14",
+     "label": "Reproducible workflow for memory experiments",
+     "type": "paper",
+     "url": ""
+    },
+    {
+     "confidence": "medium",
+     "id": "term:10",
+     "label": "retention rate",
+     "relation": "measurement",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:11",
+     "label": "retention robustness",
+     "relation": "measurement",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:12",
+     "label": "memory degradation",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:13",
+     "label": "false memory",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:14",
+     "label": "controlled trial",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:15",
+     "label": "learning science",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:16",
+     "label": "study strategies",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:17",
+     "label": "educational psychology",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:18",
+     "label": "encoding dynamics",
+     "relation": "mechanism",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:19",
+     "label": "retrieval practice",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:20",
+     "label": "error rate",
+     "relation": "measurement",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:21",
+     "label": "evaluation protocol",
+     "relation": "method",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:22",
+     "label": "replication baseline",
+     "relation": "method",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:23",
+     "label": "research methods",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "medium",
+     "id": "term:24",
+     "label": "open science",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "low",
+     "id": "term:25",
+     "label": "neuroscience",
+     "relation": "neighbor_field",
+     "type": "term"
+    },
+    {
+     "confidence": "low",
+     "id": "term:26",
+     "label": "interference",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "low",
+     "id": "term:27",
+     "label": "hallucination",
+     "relation": "topic",
+     "type": "term"
+    },
+    {
+     "confidence": "low",
+     "id": "term:28",
+     "label": "confabulation",
+     "relation": "topic",
+     "type": "term"
+    }
+   ]
+  },
+  "harvest": [
+   {
+    "distant": true,
+    "field": "Education",
+    "paper_id": "p6",
+    "score": 6.498,
+    "shares": [
+     "retrieval practice",
+     "evaluation protocol"
+    ],
+    "title": "Retrieval practice protocol with human annotation",
+    "url": "10.1/p6",
+    "year": 2021
+   }
+  ],
+  "limitations": [],
+  "on_topic_paper_ids": [
+   "p2"
+  ],
+  "on_topic_papers": 1,
+  "papers": [
+   {
+    "abstract": "Randomized trial of spaced repetition schedule measuring retention rate and reliability across weeks.",
+    "cited_by_count": 55,
+    "doi": "10.1/p2",
+    "fields": [
+     "Learning Science"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "spaced repetition",
+     "retention rate",
+     "controlled trial"
+    ],
+    "paper_id": "p2",
+    "provider": "assistant_bundle",
+    "title": "Spaced repetition improves long term recall accuracy",
+    "topic_path": [
+     "Study strategies"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2020
+   },
+   {
+    "abstract": "Neural networks suffer catastrophic forgetting and interference; ablation and controlled comparison measure accuracy degradation.",
+    "cited_by_count": 80,
+    "doi": "10.1/p5",
+    "fields": [
+     "Machine Learning"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "catastrophic forgetting",
+     "continual learning",
+     "accuracy degradation"
+    ],
+    "paper_id": "p5",
+    "provider": "assistant_bundle",
+    "title": "Catastrophic forgetting in continual learning",
+    "topic_path": [
+     "Continual learning"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2023
+   },
+   {
+    "abstract": "Analysis of hallucination and confabulation bias as failure mode with error rate measurement.",
+    "cited_by_count": 25,
+    "doi": "10.1/p9",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "hallucination",
+     "confabulation",
+     "error rate"
+    ],
+    "paper_id": "p9",
+    "provider": "assistant_bundle",
+    "title": "Hallucination and confabulation as retrieval failures",
+    "topic_path": [
+     "False memory"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2023
+   },
+   {
+    "abstract": "Systems study of cache eviction and stale invalidation as failure mode with benchmark evaluation of hit rate.",
+    "cited_by_count": 22,
+    "doi": "10.1/p4",
+    "fields": [
+     "Computer Systems"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "cache eviction",
+     "hit rate benchmark",
+     "ablation study"
+    ],
+    "paper_id": "p4",
+    "provider": "assistant_bundle",
+    "title": "Cache eviction policies mirror forgetting curves",
+    "topic_path": [
+     "Caching"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2022
+   },
+   {
+    "abstract": "We study memory encoding and retrieval process with controlled experiment measuring recall accuracy and robustness.",
+    "cited_by_count": 40,
+    "doi": "10.1/p1",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "working memory",
+     "retrieval practice",
+     "recall accuracy"
+    ],
+    "paper_id": "p1",
+    "provider": "assistant_bundle",
+    "title": "Working memory encoding and retrieval dynamics",
+    "topic_path": [
+     "Memory consolidation"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2021
+   },
+   {
+    "abstract": "Stress testing and component-level assessment of recall fidelity with benchmark validity checks.",
+    "cited_by_count": 12,
+    "doi": "10.1/p8",
+    "fields": [
+     "Psychometrics"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "recall fidelity",
+     "stress testing",
+     "benchmark validity"
+    ],
+    "paper_id": "p8",
+    "provider": "assistant_bundle",
+    "title": "Benchmarking recall fidelity under stress testing",
+    "topic_path": [
+     "Measurement"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2022
+   },
+   {
+    "abstract": "Reproducible workflow and evaluation protocol for memory studies with replication baseline.",
+    "cited_by_count": 9,
+    "doi": "10.1/p14",
+    "fields": [
+     "Research Methods"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "reproducible workflow",
+     "evaluation protocol",
+     "replication baseline"
+    ],
+    "paper_id": "p14",
+    "provider": "assistant_bundle",
+    "title": "Reproducible workflow for memory experiments",
+    "topic_path": [
+     "Open science"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2022
+   },
+   {
+    "abstract": "Controlled evaluation protocol with human annotation measuring precision and recall of retrieval practice interventions.",
+    "cited_by_count": 18,
+    "doi": "10.1/p6",
+    "fields": [
+     "Education"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "retrieval practice",
+     "controlled evaluation",
+     "metric validation"
+    ],
+    "paper_id": "p6",
+    "provider": "assistant_bundle",
+    "title": "Retrieval practice protocol with human annotation",
+    "topic_path": [
+     "Testing effect"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2021
+   },
+   {
+    "abstract": "Trace analysis of distributed cache behavior measuring hit rate consistency and stale failure modes.",
+    "cited_by_count": 15,
+    "doi": "10.1/p12",
+    "fields": [
+     "Computer Systems"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "distributed caching",
+     "trace analysis",
+     "hit rate consistency"
+    ],
+    "paper_id": "p12",
+    "provider": "assistant_bundle",
+    "title": "Distributed caching with trace analysis",
+    "topic_path": [
+     "Distributed systems"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2021
+   },
+   {
+    "abstract": "Comparative testing and randomized trial of interleaving schedule measuring generalization performance.",
+    "cited_by_count": 33,
+    "doi": "10.1/p10",
+    "fields": [
+     "Learning Science"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "interleaving",
+     "comparative testing",
+     "generalization performance"
+    ],
+    "paper_id": "p10",
+    "provider": "assistant_bundle",
+    "title": "Interleaving vs blocking: comparative testing",
+    "topic_path": [
+     "Practice scheduling"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2020
+   },
+   {
+    "abstract": "Failure analysis of forgetting and interference causing retrieval degradation and memory collapse under load.",
+    "cited_by_count": 30,
+    "doi": "10.1/p3",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "forgetting curve",
+     "interference",
+     "memory degradation"
+    ],
+    "paper_id": "p3",
+    "provider": "assistant_bundle",
+    "title": "Forgetting curve and interference failure modes",
+    "topic_path": [
+     "Forgetting"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2019
+   },
+   {
+    "abstract": "Experimental study of attention mediation in encoding with controlled experiment and validity assessment.",
+    "cited_by_count": 28,
+    "doi": "10.1/p13",
+    "fields": [
+     "Cognitive Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "attention mediation",
+     "encoding limits",
+     "controlled experiment"
+    ],
+    "paper_id": "p13",
+    "provider": "assistant_bundle",
+    "title": "Attention and encoding limits under cognitive load",
+    "topic_path": [
+     "Attention"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2019
+   },
+   {
+    "abstract": "Meta analysis of testing effect experiments measuring retention robustness across cohorts.",
+    "cited_by_count": 120,
+    "doi": "10.1/p11",
+    "fields": [
+     "Educational Psychology"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "testing effect",
+     "meta analysis",
+     "retention robustness"
+    ],
+    "paper_id": "p11",
+    "provider": "assistant_bundle",
+    "title": "The testing effect: meta analysis",
+    "topic_path": [
+     "Testing effect"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2017
+   },
+   {
+    "abstract": "Systematic review of consolidation mechanism linking encoding dynamics to long term storage architecture.",
+    "cited_by_count": 90,
+    "doi": "10.1/p7",
+    "fields": [
+     "Neuroscience"
+    ],
+    "found_by": [
+     "spaced repetition improve memory retention",
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "keywords": [
+     "memory consolidation",
+     "encoding dynamics"
+    ],
+    "paper_id": "p7",
+    "provider": "assistant_bundle",
+    "title": "Memory consolidation during sleep: mechanism review",
+    "topic_path": [
+     "Sleep and memory"
+    ],
+    "url": "",
+    "venue": "",
+    "year": 2018
+   }
+  ],
+  "policy": {
+   "decay": 0.6,
+   "down_weight": 1.0,
+   "max_depth": 4,
+   "max_nodes": 160,
+   "max_rounds": 6,
+   "name": "default",
+   "per_direction_cap": null,
+   "sideways_weight": 1.0,
+   "support_threshold": 2,
+   "up_weight": 0.5
+  },
+  "provider_errors": [],
+  "providers_blocked": [],
+  "providers_down": [],
+  "query_expansion": {
+   "enabled": false,
+   "expanded_queries": [],
+   "max_slots": 0,
+   "rejected_for_budget": 0,
+   "slots_used": 0
+  },
+  "question": "how does spaced repetition improve memory retention",
+  "recommended_queries": [
+   "memory consolidation encoding dynamics mechanism",
+   "memory consolidation failure mode",
+   "memory consolidation limitation failure mode"
+  ],
+  "retrieved_papers": 14,
+  "root_topic": "spaced repetition improve memory retention",
+  "rounds": [
+   {
+    "gap_queries": [],
+    "gaps": [
+     "mechanism",
+     "failure_mode"
+    ],
+    "grounded_terms": 25,
+    "new_grounded_terms": 25,
+    "new_on_topic": 1,
+    "new_papers": 14,
+    "on_topic_papers": 1,
+    "queries": [
+     "spaced repetition improve memory retention"
+    ],
+    "round_number": 1,
+    "stop_checks": {
+     "enough_papers": false,
+     "grounded_top_terms": true,
+     "has_frontier": true,
+     "minimum_rounds": false,
+     "multiple_search_paths": false,
+     "node_budget": true,
+     "relations_covered": false,
+     "saturated": false
+    },
+    "total_papers": 14
+   },
+   {
+    "gap_queries": [
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "gaps": [
+     "mechanism"
+    ],
+    "grounded_terms": 25,
+    "new_grounded_terms": 0,
+    "new_on_topic": 0,
+    "new_papers": 0,
+    "on_topic_papers": 1,
+    "queries": [
+     "memory consolidation",
+     "recall accuracy",
+     "working memory",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode"
+    ],
+    "round_number": 2,
+    "stop_checks": {
+     "enough_papers": false,
+     "grounded_top_terms": true,
+     "has_frontier": false,
+     "minimum_rounds": true,
+     "multiple_search_paths": true,
+     "node_budget": true,
+     "relations_covered": false,
+     "saturated": true
+    },
+    "total_papers": 14
+   }
+  ],
+  "status": "partial",
+  "stop_reason": "search produced no new evidence",
+  "terms": [
+   {
+    "confidence": "high",
+    "examples": [
+     "Working memory encoding and retrieval dynamics",
+     "Forgetting curve and interference failure modes",
+     "Hallucination and confabulation as retrieval failures"
+    ],
+    "paper_ids": [
+     "p1",
+     "p3",
+     "p9"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 3.753,
+    "stated_limitation": false,
+    "support": 3,
+    "text": "cognitive psychology"
+   },
+   {
+    "confidence": "high",
+    "examples": [
+     "Memory consolidation during sleep: mechanism review",
+     "Working memory encoding and retrieval dynamics"
+    ],
+    "paper_ids": [
+     "p1",
+     "p7"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 3.408,
+    "stated_limitation": false,
+    "support": 2,
+    "text": "memory consolidation"
+   },
+   {
+    "confidence": "high",
+    "examples": [
+     "Spaced repetition improves long term recall accuracy",
+     "Working memory encoding and retrieval dynamics"
+    ],
+    "paper_ids": [
+     "p1",
+     "p2"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "measurement",
+    "score": 2.893,
+    "stated_limitation": false,
+    "support": 2,
+    "text": "recall accuracy"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Spaced repetition improves long term recall accuracy"
+    ],
+    "paper_ids": [
+     "p2"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "core",
+    "score": 2.736,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "spaced repetition"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Working memory encoding and retrieval dynamics"
+    ],
+    "paper_ids": [
+     "p1"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.561,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "working memory"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "The testing effect: meta analysis"
+    ],
+    "paper_ids": [
+     "p11"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.546,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "testing effect"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Memory consolidation during sleep: mechanism review"
+    ],
+    "paper_ids": [
+     "p7"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.403,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "sleep and memory"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "The testing effect: meta analysis"
+    ],
+    "paper_ids": [
+     "p11"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.386,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "meta analysis"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Forgetting curve and interference failure modes"
+    ],
+    "paper_ids": [
+     "p3"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.386,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "forgetting curve"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Reproducible workflow for memory experiments"
+    ],
+    "paper_ids": [
+     "p14"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.386,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "reproducible workflow"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Spaced repetition improves long term recall accuracy"
+    ],
+    "paper_ids": [
+     "p2"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "measurement",
+    "score": 2.381,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "retention rate"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "The testing effect: meta analysis"
+    ],
+    "paper_ids": [
+     "p11"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "measurement",
+    "score": 2.381,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "retention robustness"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Forgetting curve and interference failure modes"
+    ],
+    "paper_ids": [
+     "p3"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.381,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "memory degradation"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Hallucination and confabulation as retrieval failures"
+    ],
+    "paper_ids": [
+     "p9"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.381,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "false memory"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Spaced repetition improves long term recall accuracy"
+    ],
+    "paper_ids": [
+     "p2"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "controlled trial"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Spaced repetition improves long term recall accuracy"
+    ],
+    "paper_ids": [
+     "p2"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "learning science"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Spaced repetition improves long term recall accuracy"
+    ],
+    "paper_ids": [
+     "p2"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "study strategies"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "The testing effect: meta analysis"
+    ],
+    "paper_ids": [
+     "p11"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "educational psychology"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Memory consolidation during sleep: mechanism review"
+    ],
+    "paper_ids": [
+     "p7"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "mechanism",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "encoding dynamics"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Working memory encoding and retrieval dynamics"
+    ],
+    "paper_ids": [
+     "p1"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "retrieval practice"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Hallucination and confabulation as retrieval failures"
+    ],
+    "paper_ids": [
+     "p9"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "measurement",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "error rate"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Reproducible workflow for memory experiments"
+    ],
+    "paper_ids": [
+     "p14"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "method",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "evaluation protocol"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Reproducible workflow for memory experiments"
+    ],
+    "paper_ids": [
+     "p14"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "method",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "replication baseline"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Reproducible workflow for memory experiments"
+    ],
+    "paper_ids": [
+     "p14"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "research methods"
+   },
+   {
+    "confidence": "medium",
+    "examples": [
+     "Reproducible workflow for memory experiments"
+    ],
+    "paper_ids": [
+     "p14"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.206,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "open science"
+   },
+   {
+    "confidence": "low",
+    "examples": [
+     "Memory consolidation during sleep: mechanism review"
+    ],
+    "paper_ids": [
+     "p7"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "neighbor_field",
+    "score": 2.126,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "neuroscience"
+   },
+   {
+    "confidence": "low",
+    "examples": [
+     "Forgetting curve and interference failure modes"
+    ],
+    "paper_ids": [
+     "p3"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.126,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "interference"
+   },
+   {
+    "confidence": "low",
+    "examples": [
+     "Hallucination and confabulation as retrieval failures"
+    ],
+    "paper_ids": [
+     "p9"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.126,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "hallucination"
+   },
+   {
+    "confidence": "low",
+    "examples": [
+     "Hallucination and confabulation as retrieval failures"
+    ],
+    "paper_ids": [
+     "p9"
+    ],
+    "providers": [
+     "assistant_bundle"
+    ],
+    "queries": [
+     "memory consolidation",
+     "memory consolidation encoding dynamics mechanism",
+     "memory consolidation failure mode",
+     "recall accuracy",
+     "spaced repetition improve memory retention",
+     "working memory"
+    ],
+    "relation": "topic",
+    "score": 2.126,
+    "stated_limitation": false,
+    "support": 1,
+    "text": "confabulation"
+   }
+  ],
+  "unseen": null,
+  "version": 5
+ }
+}
