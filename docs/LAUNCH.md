@@ -21,7 +21,7 @@ launch. Source: 2026-10-12 audit. Detail lives in commits and `CHANGELOG.md`, no
 
 ## Agent: code
 
-- [ ] Code shape at 4+ stars (`harness quality . --exclude "benchmarks/*"`): started at 1.5
+- [x] Code shape 4.5 stars (was 1.5); inputs per function still 3 stars (17.4% vs 15.4%)
 - [ ] `--version`
 - [ ] Source package tests pass (gold fixtures and `benchmarks/` missing from `MANIFEST.in`)
 - [ ] Release workflow runs the tests and checks tag == `__version__`
