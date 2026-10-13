@@ -26,9 +26,9 @@ WARN_BELOW = 0.70
 
 
 def estimate_coverage(papers: list[Paper], ids: set[str] | None = None) -> dict | None:
-    pool = [p for p in papers if ids is None or p.paper_id in ids]
-    counts = [len(set(p.found_by)) for p in pool if p.found_by]
-    queries = {q for p in pool for q in p.found_by}
+    pool = _coverage_pool(papers, ids)
+    counts = _capture_counts(pool)
+    queries = _capture_queries(pool)
     t, observed, incidences = len(queries), len(counts), sum(counts)
     if observed < MIN_PAPERS or t < 2:
         return None
@@ -38,3 +38,15 @@ def estimate_coverage(papers: list[Paper], ids: set[str] | None = None) -> dict 
     return {"observed": observed, "estimated_total": round(total, 1),
             "found_share": round(observed / total, 3), "sample_coverage": round(max(0.0, covered), 3),
             "singletons": q1, "doubletons": q2, "queries": t}
+
+
+def _coverage_pool(papers, ids):
+    return [p for p in papers if ids is None or p.paper_id in ids]
+
+
+def _capture_counts(papers):
+    return [len(set(p.found_by)) for p in papers if p.found_by]
+
+
+def _capture_queries(papers):
+    return {q for p in papers for q in p.found_by}

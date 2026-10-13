@@ -53,11 +53,14 @@ class ProviderStates:
         self.path = Path(path) if path else None
         self.states: dict[str, ProviderState] = {}
         if self.path and self.path.exists():
-            try:
-                for name, row in json.loads(self.path.read_text(encoding="utf-8")).items():
-                    self.states[name] = ProviderState(**row)
-            except (json.JSONDecodeError, TypeError, OSError):
-                self.states = {}  # a corrupt file must not stop a run
+            self._load()
+
+    def _load(self):
+        try:
+            for name, row in json.loads(self.path.read_text(encoding="utf-8")).items():
+                self.states[name] = ProviderState(**row)
+        except (json.JSONDecodeError, TypeError, OSError):
+            self.states = {}  # a corrupt file must not stop a run
 
     def get(self, name: str) -> ProviderState:
         return self.states.setdefault(name, ProviderState(name))

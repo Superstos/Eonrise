@@ -3,6 +3,13 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+def _split_topic_path(data):
+    path = list(data.get("topic_path") or [])
+    if path and not data.get("fields") and len(path) > 1:
+        data["fields"] = path[:-1]
+        data["topic_path"] = [path[-1]]
+
+
 @dataclass
 class Paper:
     paper_id: str
@@ -23,9 +30,7 @@ class Paper:
     def from_dict(cls, raw: dict[str, Any]) -> "Paper":
         allowed = {f.name for f in cls.__dataclass_fields__.values()}
         data = {k: v for k, v in raw.items() if k in allowed}
-        path = list(data.get("topic_path") or [])
-        if path and not data.get("fields") and len(path) > 1:
-            data["fields"] = path[:-1]; data["topic_path"] = [path[-1]]
+        _split_topic_path(data)
         return cls(**data)
 
 @dataclass

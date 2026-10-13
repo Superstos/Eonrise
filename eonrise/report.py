@@ -25,39 +25,53 @@ def _header(result: dict) -> list[str]:
 def _failure_notes(result: dict) -> list[str]:
     if result["status"] != "failed":
         return []
-    lines = []
     errors = result.get("provider_errors") or []
+    return _off_topic_failure(result) + _provider_failure(result, errors)
+
+
+def _off_topic_failure(result):
     if not result.get("on_topic_papers") and result["papers"]:
-        lines += ["", "**No retrieved paper was about this question. Every term below was "
+        return ["", "**No retrieved paper was about this question. Every term below was "
                       "read out of a different literature — treat the map as a failed "
                       "search, not as a finding.**"]
+    return []
+
+
+def _provider_failure(result, errors):
     if errors and not result.get("papers") and not result.get("retrieved_papers"):
         # Not a thin literature — a broken run. Without the error text the brief blames
         # the field for what a socket timeout did.
-        return lines + ["", "**This run retrieved nothing. The map below is empty because the "
+        return ["", "**This run retrieved nothing. The map below is empty because the "
                             "search failed, not because the literature is silent.**", ""] + _bullets(errors[:5])
     # Retrieved papers do not make provider errors disappear; the search can be both
     # off topic and degraded.
-    return lines + (["", "**Provider errors:**", ""] + _bullets(errors[:5]) if errors else [])
+    return (["", "**Provider errors:**", ""] + _bullets(errors[:5]) if errors else [])
 
 
 def _warnings(result: dict) -> list[str]:
-    lines = []
+    return _degraded_warning(result) + _coverage_warning(result)
+
+
+def _degraded_warning(result):
     down = result.get("providers_down") or []
     if down and result["status"] != "failed":
         # A run that lost OpenAlex has no keywords and few abstracts. Reading the map
         # without knowing that is how a degraded run passes for a thin literature.
-        lines.append(f"**Degraded:** {', '.join(down)} answered nothing this run — "
-                     "expect fewer abstracts, no keywords and no topic hierarchy.")
+        return [f"**Degraded:** {', '.join(down)} answered nothing this run — "
+                     "expect fewer abstracts, no keywords and no topic hierarchy."]
+    return []
+
+
+def _coverage_warning(result):
     unseen = result.get("unseen") or {}
     if unseen and unseen.get("found_share", 1) < WARN_BELOW:
         # Chao2 is a lower bound on what is out there, so this share is an upper bound on
         # what was found. When it is low, the true figure is lower still.
-        lines.append(f"**Unfinished:** {unseen['singletons']} of {unseen['observed']} on-topic papers turned up "
+        return [f"**Unfinished:** {unseen['singletons']} of {unseen['observed']} on-topic papers turned up "
                      f"for one query only, so this run saw at most ~{round(100 * unseen['found_share'])}% of what "
                      f"its queries can reach (Chao2 ≈ {round(unseen['estimated_total'])}). Treat an empty "
-                     "relation as unsearched, not absent.")
-    return lines
+                     "relation as unsearched, not absent."]
+    return []
 
 
 def _grounded_map(result: dict) -> list[str]:
@@ -65,7 +79,16 @@ def _grounded_map(result: dict) -> list[str]:
     for relation, terms in result["coverage"].items():
         shown = ", ".join(terms[:3]) if terms else "not grounded yet"
         lines.append(f"- **{relation.replace('_', ' ').title()}:** {shown}")
-    quotes = [t for t in result.get("limitations", []) if t.get("examples")]
+    return lines + _compact_limitations(result)
+
+
+def _limitations(result):
+    return [t for t in result.get("limitations", []) if t.get("examples")]
+
+
+def _compact_limitations(result):
+    lines = []
+    quotes = _limitations(result)
     if quotes:
         # A limitation phrase is only worth as much as the sentence it came from.
         lines += ["", "## Stated limitations", ""]
@@ -79,12 +102,20 @@ def _distant_papers(result: dict) -> list[str]:
     harvested = result.get("harvest") or []
     lines: list[str] = []
     for heading, distant in (("Same shape, other fields", True), ("Same field, missed by the word gate", False)):
-        group = [h for h in harvested if bool(h.get("distant")) is distant]
+        group = _harvest_group(harvested, distant)
         if group:
             lines += ["", f"## {heading}", ""]
-            lines += [f"- **{h['title']}** ({h.get('year') or 'n.d.'}, {h['field']}) — shares "
-                      + ", ".join(h["shares"][:3]) for h in group[:5]]
+            lines += [_harvest_line(h) for h in group[:5]]
     return lines
+
+
+def _harvest_group(harvested, distant):
+    return [h for h in harvested if bool(h.get("distant")) is distant]
+
+
+def _harvest_line(hit):
+    return (f"- **{hit['title']}** ({hit.get('year') or 'n.d.'}, {hit['field']}) — shares "
+            + ", ".join(hit["shares"][:3]))
 
 
 def _directions(result: dict) -> list[str]:
@@ -96,7 +127,7 @@ def _directions(result: dict) -> list[str]:
 
 
 def _next_steps(result: dict) -> list[str]:
-    lines = ["", "**Gaps:** " + _words(result["gaps"])] if result["gaps"] else []
+    lines = _gap_lines(result)
     dormant = result.get("dormant_relations") or []
     if dormant:
         lines += ["", "**Not in this literature:** " + _words(dormant)
@@ -107,6 +138,10 @@ def _next_steps(result: dict) -> list[str]:
     if result.get("distant_queries"):
         lines += ["", "## Searches toward other fields", ""] + _bullets(result["distant_queries"])
     return lines
+
+
+def _gap_lines(result):
+    return ["", "**Gaps:** " + _words(result["gaps"])] if result["gaps"] else []
 
 
 def render_compact_markdown(result: dict) -> str:
@@ -136,18 +171,26 @@ def _round_table(result: dict) -> list[str]:
              "| Round | Queries | New papers | On topic (total) | Gap queries | Gaps left |",
              "|---|---|---|---|---|---|"]
     for r in rounds:
-        lines.append("| {} | {} | {} | {} | {} | {} |".format(
-            r.get("round_number"), len(r.get("queries", [])), r.get("new_papers"),
-            r.get("on_topic_papers", 0), len(r.get("gap_queries") or []),
-            ", ".join(r.get("gaps", [])) or "none"))
+        lines.append(_round_row(r))
     return lines
 
 
+def _round_row(row):
+    return "| {} | {} | {} | {} | {} | {} |".format(
+        row.get("round_number"), len(row.get("queries", [])), row.get("new_papers"),
+        row.get("on_topic_papers", 0), len(row.get("gap_queries") or []),
+        ", ".join(row.get("gaps", [])) or "none")
+
+
 def _quoted_limitations(result: dict) -> list[str]:
-    quotes = [t for t in result.get("limitations", []) if t.get("examples")]
+    quotes = _limitations(result)
     lines = ["", "## Stated limitations (quoted)", ""] if quotes else []
-    return lines + [f'- **{t["text"]}** ({t["support"]} papers) — "{example[:220]}"'
-                    for t in quotes for example in t["examples"][:2]]
+    return lines + [line for term in quotes for line in _limitation_quotes(term)]
+
+
+def _limitation_quotes(term):
+    return [f'- **{term["text"]}** ({term["support"]} papers) — "{example[:220]}"'
+            for example in term["examples"][:2]]
 
 
 def _evidence_list(result: dict) -> list[str]:

@@ -64,50 +64,51 @@ def evolve_equivalence_state(
     versioning, candidate generation, comparison, and promotion.
     """
 
-    state = VersionedEquivalenceState(state_root, seed_store)
-    parent_version, parent_path = state.active()
-    parent_graph = ConceptEquivalenceStore(parent_path).load()
-    parent_score = float(score(parent_graph))
+    return _EquivalenceEvolution(VersionedEquivalenceState(state_root, seed_store), score).run()
 
-    candidates: list[dict] = []
-    for index, edge in enumerate(parent_graph.edges(), 1):
-        if edge.get("relation") != "equivalent":
-            continue
-        if not parent_graph.aliases_for(edge["a"]):
-            continue
 
-        candidate_path = state.candidate_revoking(edge["a"], edge["b"], index)
-        candidate_graph = ConceptEquivalenceStore(candidate_path).load()
-        candidate_score = float(score(candidate_graph))
-        candidates.append(
-            {
-                "edge": [edge["a"], edge["b"]],
-                "score": candidate_score,
-                "path": str(candidate_path),
-            }
-        )
+class _EquivalenceEvolution:
+    def __init__(self, state, score):
+        self.state = state
+        self.score = score
+        self.parent_version, self.parent_path = state.active()
+        self.parent_graph = ConceptEquivalenceStore(self.parent_path).load()
+        self.parent_score = float(score(self.parent_graph))
 
-    best = max(candidates, key=lambda row: row["score"], default=None)
-    accepted = bool(best and best["score"] > parent_score)
+    def _candidates(self):
+        candidates = []
+        for index, edge in enumerate(self.parent_graph.edges(), 1):
+            if edge.get("relation") != "equivalent":
+                continue
+            if not self.parent_graph.aliases_for(edge["a"]):
+                continue
+            candidates.append(self._candidate(edge, index))
+        return candidates
 
-    active_version = parent_version
-    active_path = parent_path
-    if accepted and best is not None:
-        active_version, active_path = state.promote(best["path"])
+    def _candidate(self, edge, index):
+        path = self.state.candidate_revoking(edge["a"], edge["b"], index)
+        graph = ConceptEquivalenceStore(path).load()
+        return {"edge": [edge["a"], edge["b"]],
+                "score": float(self.score(graph)), "path": str(path)}
 
-    active_graph = ConceptEquivalenceStore(active_path).load()
-    active_score = float(score(active_graph))
+    def run(self):
+        candidates = self._candidates()
+        best = max(candidates, key=lambda row: row["score"], default=None)
+        accepted = bool(best and best["score"] > self.parent_score)
+        active_version, active_path = self.parent_version, self.parent_path
+        if accepted and best is not None:
+            active_version, active_path = self.state.promote(best["path"])
+        active_graph = ConceptEquivalenceStore(active_path).load()
+        active_score = float(self.score(active_graph))
+        result = self._result(candidates)
+        result.update(accepted=accepted, accepted_edge_revocation=_accepted_edge(best, accepted),
+                      active_version=active_version, active_score=active_score, active_path=str(active_path))
+        return result
 
-    return {
-        "parent_version": parent_version,
-        "parent_score": parent_score,
-        "candidates": [
-            {"edge": row["edge"], "score": row["score"]}
-            for row in candidates
-        ],
-        "accepted": accepted,
-        "accepted_edge_revocation": best["edge"] if accepted and best else None,
-        "active_version": active_version,
-        "active_score": active_score,
-        "active_path": str(active_path),
-    }
+    def _result(self, candidates):
+        return {"parent_version": self.parent_version, "parent_score": self.parent_score,
+                "candidates": [{"edge": row["edge"], "score": row["score"]} for row in candidates]}
+
+
+def _accepted_edge(best, accepted):
+    return best["edge"] if accepted and best else None

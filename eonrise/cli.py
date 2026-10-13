@@ -19,6 +19,14 @@ from .scheduling import ProviderStates
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Expand one topic into a grounded up/down/sideways map.")
+    _provider_arguments(p)
+    _run_arguments(p)
+    _map_arguments(p)
+    _memory_arguments(p)
+    return p
+
+
+def _provider_arguments(p):
     p.add_argument("question", help="Research question or topic in plain language")
     p.add_argument("--out", default="eonrise-output", help="Output directory")
     p.add_argument("--email", default=os.getenv("CROSSREF_EMAIL", ""), help="Email for Crossref polite pool")
@@ -31,10 +39,16 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--providers", default="", help="Comma-separated subset of: crossref,openalex,europepmc,doaj,semanticscholar,core")
     p.add_argument("--s2-key", default=os.getenv("S2_API_KEY", ""), help="Semantic Scholar key (free; the keyless pool answers 429 under load)")
     p.add_argument("--core-key", default=os.getenv("CORE_API_KEY", ""), help="CORE key (free; keyless requests 429 after a few calls)")
+
+
+def _run_arguments(p):
     p.add_argument("--max-rounds", type=int, default=6)
     p.add_argument("--results", type=int, default=20, help="Results per query/provider")
     p.add_argument("--http-timeout", type=int, default=12, help="Seconds per live API request")
     p.add_argument("--http-retries", type=int, default=2, help="Attempts per live API request")
+
+
+def _map_arguments(p):
     # One root topic; these settings bound how far the search grows from it.
     p.add_argument("--max-nodes", type=int, default=400, help="Most concepts the map may hold")
     p.add_argument("--max-depth", type=int, default=4, help="How many steps a concept may sit from the root")
@@ -42,17 +56,19 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--down-weight", type=float, default=1.0)
     p.add_argument("--sideways-weight", type=float, default=1.0)
     p.add_argument("--support-threshold", type=int, default=2, help="Papers needed to expand past round 1")
+
+
+def _memory_arguments(p):
     p.add_argument("--no-memory", action="store_true", help="Skip appending to local memory store")
     p.add_argument("--corpus", default="", help="Paper store to read and grow (default: <cache>/corpus.jsonl)")
     p.add_argument("--no-corpus", action="store_true", help="Do not read or write the local paper store")
     p.add_argument("--equivalence", default="", help="Concept-equivalence store to read and grow (default: <cache>/equivalence.jsonl)")
     p.add_argument("--no-equivalence", action="store_true", help="Do not read or write concept equivalences")
     p.add_argument("--query-expansion-slots", type=int, default=1, help="Per-run alternate-query slots supplied by learned equivalences")
-    return p
 
 
 def _bundle_providers(args: argparse.Namespace) -> list:
-    bundle_path = args.bundle or ([args.fixture] if args.fixture else None)
+    bundle_path = _bundle_path(args)
     if not bundle_path:
         raise SystemExit("assistant mode requires --bundle PATH")
     try:
@@ -63,15 +79,23 @@ def _bundle_providers(args: argparse.Namespace) -> list:
 
 def _provider_names(args: argparse.Namespace, available: dict) -> list[str]:
     if args.providers:
-        chosen = [n.strip().lower() for n in args.providers.split(",") if n.strip()]
-        unknown = [n for n in chosen if n not in available]
-        if unknown:
-            raise SystemExit(f"unknown provider(s): {', '.join(unknown)}")
-        return chosen
+        return _chosen_providers(args.providers, available)
     if args.crossref_only:
         return ["crossref"]
     keyed = [name for name, key in (("semanticscholar", args.s2_key), ("core", args.core_key)) if key]
     return ["crossref", "openalex", "europepmc", "doaj", *keyed]
+
+
+def _chosen_providers(raw, available):
+    chosen = [n.strip().lower() for n in raw.split(",") if n.strip()]
+    _check_providers(chosen, available)
+    return chosen
+
+
+def _check_providers(chosen, available):
+    unknown = [n for n in chosen if n not in available]
+    if unknown:
+        raise SystemExit(f"unknown provider(s): {', '.join(unknown)}")
 
 
 def _live_providers(args: argparse.Namespace, http: CachedHttpClient, corpus: PaperStore | None) -> list:
@@ -175,35 +199,46 @@ def _search(args: argparse.Namespace, cache: Path, providers: list) -> dict:
     result = run_search(args.question, providers, _settings(args), results_per_query=max(1, args.results),
                         background=background, states=states, equivalence=graph,
                         query_expansion_slots=max(0, args.query_expansion_slots) if graph is not None else 0)
-    try:
-        states.save()
-    except OSError:
-        pass
+    _save_states(states)
     if equivalence is not None:
         _learn_equivalences(equivalence, args.question, result)
     result["background_terms_penalised"] = len(background)
     if not args.no_memory:
-        try:
-            store.append_run(result)
-        except OSError:
-            pass
+        _save_run(store, result)
     return result
+
+
+def _save_states(states):
+    try:
+        states.save()
+    except OSError:
+        pass
+
+
+def _save_run(store, result):
+    try:
+        store.append_run(result)
+    except OSError:
+        pass
 
 
 def main() -> None:
     args = parser().parse_args()
     cache = Path.home() / ".cache" / "eonrise"
-    http = CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
-    corpus = None if args.no_corpus else PaperStore(args.corpus or (cache / "corpus.jsonl"))
-    bundle_path = args.bundle or ([args.fixture] if args.fixture else None)
+    http = _http(args, cache)
+    corpus = _corpus(args, cache)
+    bundle_path = _bundle_path(args)
     assistant = args.mode == "assistant" or bool(bundle_path)
     providers = _bundle_providers(args) if assistant else _live_providers(args, http, corpus)
     result = _search(args, cache, providers)
     result["mode"] = "assistant" if assistant else "live"
-    result["input_bundle"] = str(Path(bundle_path[0]).resolve()) if bundle_path else ""
-    result["input_bundles"] = [str(Path(b).resolve()) for b in bundle_path or []]
+    _record_inputs(result, bundle_path)
     if corpus is not None:
         _grow_corpus(corpus, result)
+    _finish_run(result, args)
+
+
+def _finish_run(result, args):
     result.pop("corpus_papers", None)  # the store's copy, never the artifact's
     write_outputs(result, args.out)
     print(json.dumps(_summary(result, args.out), indent=2))
@@ -212,6 +247,23 @@ def main() -> None:
     # caller scripting Eonrise has no other signal: `failed` is now a failed process.
     if result["status"] == "failed":
         raise SystemExit(2)
+
+
+def _http(args, cache):
+    return CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
+
+
+def _corpus(args, cache):
+    return None if args.no_corpus else PaperStore(args.corpus or (cache / "corpus.jsonl"))
+
+
+def _bundle_path(args):
+    return args.bundle or ([args.fixture] if args.fixture else None)
+
+
+def _record_inputs(result, bundle_path):
+    result["input_bundle"] = str(Path(bundle_path[0]).resolve()) if bundle_path else ""
+    result["input_bundles"] = [str(Path(b).resolve()) for b in bundle_path or []]
 
 
 if __name__ == "__main__":
