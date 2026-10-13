@@ -2,3 +2,4 @@ include LICENSE README.md CHANGELOG.md
 graft tests
 graft benchmarks
 global-exclude *.py[cod]
+graft tools
