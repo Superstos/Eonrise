@@ -1,5 +1,7 @@
 # Eonrise
 
+[![ci](https://github.com/Superstos/Eonrise/actions/workflows/ci.yml/badge.svg)](https://github.com/Superstos/Eonrise/actions/workflows/ci.yml)
+
 Eonrise maps where fields intersect. It searches scholarly sources and organizes the evidence into mechanisms, measurements, failure modes, methods, and neighboring fields.
 
 The goal is a shortcut to ideas: a problem that is new or half solved in your field is often already solved, more maturely, in another one. Results from distant fields are the point, not noise.
@@ -26,9 +28,11 @@ A real question searches scholarly APIs:
 eonrise "how does spaced repetition improve memory retention" --out output
 ```
 
-Live mode searches scholarly APIs and can keep a local cache so later runs reuse papers already found.
+Live runs keep a local cache so later runs reuse papers already found; [`docs/USAGE.md`](docs/USAGE.md)
+lists what is saved and how to turn it off.
 
-For a fully offline run:
+To run offline on papers you gathered yourself, pass a bundle (format in `docs/USAGE.md`).
+From a source checkout:
 
 ```bash
 eonrise "how does spaced repetition improve memory retention" \
@@ -60,6 +64,8 @@ Neighbor field: cognitive psychology, learning science
 
 If Eonrise cannot support part of the map with evidence, it leaves that part empty instead of making something up.
 
+[`docs/USAGE.md`](docs/USAGE.md) describes each file's keys, the bundle format and the environment variables.
+
 ## How it works
 
 Eonrise keeps one root question for the whole run. It searches several scholarly sources, rejects papers that drift too far from that question, extracts supported concepts, then uses later searches to repair missing parts of the map.
@@ -68,7 +74,7 @@ Normal runs can grow a local paper store at `~/.cache/eonrise/corpus.jsonl`. Lat
 
 Cross-field terminology lives in `~/.cache/eonrise/equivalence.jsonl`. An `equivalent` link needs support from at least two independent on-topic papers before it can change retrieval. Repeated co-occurrence alone is stored as `closely_related` and does not alter searches.
 
-The detailed traversal rules, benchmarks, rejected experiments, and version history live in [`docs/SPEC.md`](docs/SPEC.md).
+The design history, benchmarks and rejected experiments live in [`docs/SPEC.md`](docs/SPEC.md), oldest first.
 
 ## Sources
 

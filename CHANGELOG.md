@@ -7,6 +7,7 @@ User-facing changes. `docs/SPEC.md` keeps the engineering history.
 ### Added
 
 - `--version` prints the installed version.
+- `docs/USAGE.md`: bundle format, output files, environment variables, and what a run saves.
 - `--demo` runs offline on a sample bundle shipped in the package and writes only to `--out`.
 - The source package carries the tests, fixtures and benchmarks, and they pass from it.
 - The release workflow runs the tests first, refuses a tag that differs from `__version__`, and can rehearse the upload on TestPyPI.

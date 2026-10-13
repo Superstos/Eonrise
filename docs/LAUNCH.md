@@ -30,25 +30,27 @@ launch. Source: 2026-10-12 audit. Detail lives in commits and `CHANGELOG.md`, no
 
 ## Agent: product
 
-- [ ] One brand page: who it is for, what they want, the one idea, tagline
-- [ ] Logo drafts (mark + wordmark, light/dark, readable at 16px), 2 colors, 1 typeface
-- [ ] Social preview image 1280x640
-- [ ] README top: logo, badges, recording of a real run, one distant-field result
-- [ ] `examples/`: 3-5 real runs from different fields
-- [ ] User docs: bundle format, output schema, env vars, what is saved under `~/.cache/eonrise/`
+Trimmed 2026-10-13: a command-line tool is judged on its README in about 30 seconds, so brand
+work waits until people use it (see After launch).
+
+- [x] User docs: `docs/USAGE.md`; `tests/test_docs.py` keeps every doc in line with the code
+- [x] CI badge
+- [ ] README top: one real run with one distant-field result
+- [ ] `examples/`: 2-3 real runs from different fields
 - [ ] `CITATION.cff`
-- [ ] Repo description, topics, website link
+- [ ] Repo description and topics
 
 ## Owner
 
-- [ ] Buy a domain (`eonrise.dev` / `eonrise.app` free on 2026-10-12)
-- [ ] Pick a logo direction from the drafts
 - [ ] Approve deleting 23 old branches and 65+ probe workflow runs
 - [ ] Register the trusted publisher on PyPI (TestPyPI done; same five fields, environment `pypi`)
 - [ ] Make the repo public, then turn on private vulnerability reporting and protect `main`
 - [ ] Tag the first release
 
 ## After launch
+
+- [ ] Brand page, logo (mark + wordmark, light/dark, 16px), social preview 1280x640
+- [ ] Domain (`eonrise.dev` / `eonrise.app` free on 2026-10-12), once there is a site to host
 
 - [ ] Cache: atomic writes, skip a corrupt file (`providers.py` cache read/write)
 - [ ] Failed run gets its own exit code (today 2, same as bad flags)

@@ -1,5 +1,9 @@
 # Eonrise v0.1 spec — single root, agent-owned recursion
 
+> Engineering history, oldest first. Each section keeps the names and defaults of its own
+> version; `CHANGELOG.md` maps old names to current ones, and `docs/USAGE.md` describes the
+> tool as it is today.
+
 Locked 2026-09-14. Replaces the 2–4 topic split.
 
 ## Rule

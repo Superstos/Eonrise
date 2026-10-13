@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "eonrise"
 dynamic = ["version"]
-description = "Single-root, agent-budget research traversal with drift guards: one topic, up/down/sideways"
+description = "Finds where other research fields already solved your problem, from scholarly sources"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE*"]

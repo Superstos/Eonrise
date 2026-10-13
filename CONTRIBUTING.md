@@ -25,4 +25,6 @@ python -m benchmarks.run
 - Do not add dependencies, services, or unrelated tooling.
 - Preserve evidence-grounded behavior and explicit known limits.
 
+`tests/test_docs.py` fails when a doc names a flag, file or environment variable the code no longer has; fix the doc in the same change.
+
 Experimental ideas need measurement: baseline, changed behavior, and why the result should be trusted. Rejected experiments should be recorded in `docs/SPEC.md` rather than hidden.
