@@ -53,42 +53,43 @@ from .evidence import (
 )
 
 
-def seed_queries(question: str) -> list[str]:
-    compact = compact_question(question)
-    q_tokens = split_words(question)
-    phrases = sorted(_ngrams(question, 2, 4), key=lambda x: (len(set(split_words(x))), len(x)), reverse=True)
-    queries = [compact]
-    for phrase in phrases:
-        if len(queries) >= 3: break
-        if phrase not in queries and len(phrase.split()) <= 5: queries.append(phrase)
-    if len(queries) == 1 and len(q_tokens) > 3: queries.append(" ".join(q_tokens[:4]))
-    return list(dict.fromkeys(queries))
+def _core_labels(terms: list[Term]) -> list[str]:
+    return [t.text for t in terms if t.relation in {"core", "topic"} and t.confidence != "low"]
+
 
 def _anchor_terms(question: str, terms: list[Term]) -> list[str]:
-    core = [t.text for t in terms if t.relation in {"core", "topic"} and t.confidence != "low"] or [compact_question(question, 5)]
-    anchors, seen = [], set()
-    for term in core:
-        term = " ".join(term.split()[:4])
-        if term not in seen:
-            anchors.append(term); seen.add(term)
-        if len(anchors) == 2: break
-    return anchors
+    core = _core_labels(terms) or [compact_question(question, 5)]
+    return list(dict.fromkeys(" ".join(term.split()[:4]) for term in core))[:2]
+
+
+def _gap_query(anchors: list[str], relation: str, selected: str, intent: str) -> str:
+    parts = [anchors[0], selected]
+    if normalize(intent) not in normalize(selected): parts.append(intent)
+    if len(anchors) > 1 and relation == "neighbor_field": parts.insert(1, anchors[1])
+    return " ".join(" ".join(dict.fromkeys(parts)).split()[:9])
+
+
+def _relation_queries(anchors: list[str], terms: list[Term], relation: str, variant: int) -> list[str]:
+    """Up to two queries pairing the anchor with the relation's best terms, or its cue words."""
+    relation_terms = [t.text for t in top_terms(terms, relation, 2, grounded_only=True)]
+    cues = GAP_CUES[relation]
+    intent = cues[variant % len(cues)]
+    return [_gap_query(anchors, relation, selected, intent) for selected in (relation_terms or cues)[:2]]
+
+
+def _unsearched(queries: list[str], searched_keys: set[str]) -> list[str]:
+    return [query for query in queries if normalize(query) not in searched_keys]
+
 
 def next_queries(question: str, terms: list[Term], gaps: list[str], searched: set[str], variant: int = 0) -> list[str]:
     """Queries that would repair the gaps. `variant` rotates the cue wording so a second
     or third repair round asks differently instead of regenerating an already-searched
     string and being dropped as a duplicate."""
     anchors = _anchor_terms(question, terms)
-    output = []
+    searched_keys = {normalize(q) for q in searched}
+    output: list[str] = []
     for relation in (gaps or list(REQUIRED_RELATIONS)):
-        relation_terms = [t.text for t in top_terms(terms, relation, 2, grounded_only=True)]
-        for selected in (relation_terms or GAP_CUES[relation])[:2]:
-            parts = [anchors[0], selected]
-            intent = GAP_CUES[relation][variant % len(GAP_CUES[relation])]
-            if normalize(intent) not in normalize(selected): parts.append(intent)
-            if len(anchors) > 1 and relation == "neighbor_field": parts.insert(1, anchors[1])
-            query = " ".join(" ".join(dict.fromkeys(parts)).split()[:9])
-            if normalize(query) not in {normalize(q) for q in searched}: output.append(query)
+        output += _unsearched(_relation_queries(anchors, terms, relation, variant), searched_keys)
         if len(output) >= 5: break
     return list(dict.fromkeys(output))[:5]
 
@@ -110,21 +111,23 @@ def _keep_score(paper: Paper, on_topic: set[str]) -> tuple:
             round(recency + 0.6 * richness + math.log1p(paper.cited_by_count) / 12.0, 4))
 
 
+def _supporting(term: Term, lookup: dict[str, Paper]) -> list[Paper]:
+    return [lookup[paper_id] for paper_id in term.paper_ids[:5] if paper_id in lookup]
+
+
 def build_graph(question: str, terms: list[Term], papers: list[Paper]) -> dict:
-    nodes = [{"id": "question", "type": "question", "label": question}]
+    lookup = {p.paper_id: p for p in papers}
+    nodes = {"question": {"id": "question", "type": "question", "label": question}}
     edges = []
-    paper_lookup = {p.paper_id: p for p in papers}
     for index, term in enumerate(terms[:30]):
         term_id = f"term:{index}"
-        nodes.append({"id": term_id, "type": "term", "label": term.text, "relation": term.relation, "confidence": term.confidence})
+        nodes[term_id] = {"id": term_id, "type": "term", "label": term.text, "relation": term.relation, "confidence": term.confidence}
         edges.append({"from": "question", "to": term_id, "type": term.relation})
-        for paper_id in term.paper_ids[:5]:
-            paper = paper_lookup.get(paper_id)
-            if not paper: continue
+        for paper in _supporting(term, lookup):
             node_id = f"paper:{normalize(paper.paper_id)}"
-            if not any(n["id"] == node_id for n in nodes): nodes.append({"id": node_id, "type": "paper", "label": paper.title, "url": paper.url})
+            nodes.setdefault(node_id, {"id": node_id, "type": "paper", "label": paper.title, "url": paper.url})
             edges.append({"from": node_id, "to": term_id, "type": "supports"})
-    return {"nodes": nodes, "edges": edges}
+    return {"nodes": list(nodes.values()), "edges": edges}
 
 def relation_to_direction(relation: str, source_kind: str) -> str:
     """Up was unreachable. Every concept was created with source_kind `"term"`, so the
@@ -138,6 +141,12 @@ def relation_to_direction(relation: str, source_kind: str) -> str:
         return DOWN
     return SIDEWAYS
 
+
+
+def _dormant(silent_rounds: Counter) -> set[str]:
+    # Two full rounds with not one candidate term: the question does not have this
+    # facet in this literature. Chasing it spends the query budget on cue words.
+    return {r for r, n in silent_rounds.items() if n >= 2}
 
 
 @dataclass
@@ -225,11 +234,17 @@ class _Search:
 
     # --- plan -----------------------------------------------------------------------------
 
-    def plan_round(self, number: int) -> _Round:
-        expandable = [c for c in sorted(self.frontier, key=lambda c: c.weight, reverse=True)
-                      if c.depth < self.policy.max_depth]
+    def _expandable(self) -> list[ConceptNode]:
+        return [c for c in sorted(self.frontier, key=lambda c: c.weight, reverse=True)
+                if c.depth < self.policy.max_depth]
+
+    def _query_budget(self) -> int:
         cap = self.policy.per_direction_cap
-        budget = max(1, cap) if cap is not None else 5
+        return max(1, cap) if cap is not None else 5
+
+    def plan_round(self, number: int) -> _Round:
+        expandable = self._expandable()
+        budget = self._query_budget()
         gap_queries = self.gap_queries()
         reserve = min(self.expansion_remaining, max(0, budget - len(gap_queries)))
         expandable = expandable[: max(1, budget - len(gap_queries) - reserve)]
@@ -243,22 +258,27 @@ class _Search:
 
     def gap_queries(self) -> list[str]:
         """Gaps were computed, printed, and never searched. Reserve slots for them."""
+        if not self.last_gaps:
+            return []
         found: list[str] = []
-        variants = range(len(GAP_CUES["failure_mode"])) if self.last_gaps else range(0)
-        for variant in variants:
+        for variant in range(len(GAP_CUES["failure_mode"])):
             batch = next_queries(self.question, self.last_terms, self.last_gaps, self.searched, variant)
-            found += [q for q in dict.fromkeys(batch) if self._is_new(q) and q not in found]
+            found = list(dict.fromkeys(found + self._new_only(batch)))
             if len(found) >= GAP_QUERY_SLOTS:
                 break
         return found[:GAP_QUERY_SLOTS]
+
+    def _new_only(self, queries: list[str]) -> list[str]:
+        return [q for q in queries if self._is_new(q)]
 
     def expansions(self, queries: list[tuple[ConceptNode, str]], budget: int) -> list[tuple[ConceptNode, str]]:
         """One conservative equivalence alias may use a query slot. It never replaces the
         original query, so the run still searches what the question literally asked."""
         expand = getattr(self.equivalence, "expand_query", None)
+        room = min(self.expansion_remaining, budget - len(queries)) if callable(expand) else 0
         out: list[tuple[ConceptNode, str]] = []
-        for node, query in queries if callable(expand) else []:
-            if self.expansion_remaining <= 0 or len(queries) + len(out) >= budget:
+        for node, query in queries:
+            if len(out) >= room:
                 break
             alias = self._new_alias(expand(query, max_aliases=1))
             if alias is not None:
@@ -281,9 +301,12 @@ class _Search:
             incoming += self._ask_all(ordered, query)
         self.papers, step.added = _dedupe_papers(self.papers, incoming)
         for node, query in step.queries:
-            node.paper_ids += [p.paper_id for p in self.papers
-                               if query in p.found_by and p.paper_id not in node.paper_ids]
-            node.support = len(node.paper_ids)
+            self._attach(node, query)
+
+    def _attach(self, node: ConceptNode, query: str) -> None:
+        node.paper_ids += [p.paper_id for p in self.papers
+                           if query in p.found_by and p.paper_id not in node.paper_ids]
+        node.support = len(node.paper_ids)
 
     def _provider_order(self) -> list[SearchProvider]:
         # Ask the source that carries what this round is missing, and skip one that is
@@ -292,9 +315,7 @@ class _Search:
         names = order_for([p.name for p in self.providers], self.last_gaps, self.states)
         # The local store answers before paid providers. Ranking by metadata richness
         # otherwise puts DOAJ/OpenAlex first and spends a call a held paper could answer.
-        if "corpus" in by_name and "corpus" in names:
-            names = ["corpus", *[name for name in names if name != "corpus"]]
-        return [by_name[n] for n in names]
+        return [by_name[n] for n in sorted(names, key=lambda name: name != "corpus")]
 
     def _ask_all(self, ordered: list[SearchProvider], query: str) -> list[Paper]:
         found: list[Paper] = []
@@ -357,9 +378,7 @@ class _Search:
         present = {t.relation for t in terms}
         for relation in REQUIRED_RELATIONS:
             self.silent_rounds[relation] = 0 if relation in present else self.silent_rounds[relation] + 1
-        # Two full rounds with not one candidate term: the question does not have this
-        # facet in this literature. Chasing it spends the query budget on cue words.
-        self.dormant = {r for r, n in self.silent_rounds.items() if n >= 2}
+        self.dormant = _dormant(self.silent_rounds)
 
     # --- grow -----------------------------------------------------------------------------
 
@@ -440,8 +459,11 @@ class _Search:
         fresh = step.new_on_topic if len(self.on_topic) >= MIN_TOPICAL_CORPUS else step.added
         return step.number >= 2 and fresh <= 2 and len(step.grounded - self.previous_grounded) <= 2
 
+    def _unreachable(self) -> bool:
+        return not self.papers and bool(self.provider_errors)
+
     def decide(self, step: _Round, checks: dict[str, bool]) -> bool:
-        if not self.papers and self.provider_errors:
+        if self._unreachable():
             return self._stop("failed", "live providers were unreachable or returned no evidence")
         if all(checks.values()):
             return self._stop("ready", "all usability checks passed")
@@ -454,9 +476,7 @@ class _Search:
     def finish(self) -> None:
         self.topic_filter: set[str] | None = None
         if not self.papers:
-            self.terms: list[Term] = []
-            self.covered, self.gaps = {r: [] for r in REQUIRED_RELATIONS}, list(REQUIRED_RELATIONS)
-            self._stop("failed", "no papers could be retrieved")
+            self._finish_empty()
             return
         self.on_topic, self.topic_filter, _, self.terms = self.read_evidence()
         self.covered, self.gaps = coverage(self.terms)
@@ -464,6 +484,14 @@ class _Search:
         # still misses one was reported as plain `partial`, which read as failure.
         if self.status != "ready" and len(self.gaps) <= 1:
             self._grade_usable()
+        self._fail_off_topic()
+
+    def _finish_empty(self) -> None:
+        self.terms: list[Term] = []
+        self.covered, self.gaps = {r: [] for r in REQUIRED_RELATIONS}, list(REQUIRED_RELATIONS)
+        self._stop("failed", "no papers could be retrieved")
+
+    def _fail_off_topic(self) -> None:
         # `few` and `none` are not the same signal. MIN_TOPICAL_CORPUS exists so a small
         # bundle with few literal matches is not starved, but at zero it was converting
         # "no evidence of relevance" into "every paper may vote": `topic_filter` became
@@ -474,9 +502,12 @@ class _Search:
         if not self.on_topic and len(self.papers) >= MIN_TOPICAL_CORPUS:
             self._stop("failed", f"{len(self.papers)} papers retrieved, none about the question")
 
+    def _repaired(self) -> set[str]:
+        return {q for r in self.rounds for q in (r.gap_queries or [])}
+
     def _grade_usable(self) -> None:
         grounded = len(REQUIRED_RELATIONS) - len(self.gaps)
-        repaired = {q for r in self.rounds for q in (r.gap_queries or [])}
+        repaired = self._repaired()
         if grounded >= 4 and (repaired or not self.gaps):
             suffix = " after gap repair" if repaired else ""
             self._stop("usable", f"{grounded}/5 relations grounded{suffix}")
@@ -508,9 +539,12 @@ class _Search:
                     "rejected_for_budget": 0,
                     "expanded_queries": list(self.expanded_queries)}}
 
-    def _evidence(self, kept: list[Paper]) -> dict:
+    def _distant(self) -> list[dict]:
         home = self.on_topic | (self.topic_filter or set())
-        distant = rank_distant_papers(self.terms, self.papers, home, home_ids=self.on_topic) if self.papers else []
+        return rank_distant_papers(self.terms, self.papers, home, home_ids=self.on_topic) if self.papers else []
+
+    def _evidence(self, kept: list[Paper]) -> dict:
+        distant = self._distant()
         return {"on_topic_paper_ids": sorted(self.on_topic),
                 # Capture histories of the on-topic papers: how much these queries can still reach.
                 "unseen": estimate_coverage(self.papers, self.on_topic),
@@ -524,14 +558,16 @@ class _Search:
                 "retrieved_papers": len(self.papers),
                 "papers": [p.to_dict() for p in kept]}
 
-    def _diagnostics(self, kept: list[Paper]) -> dict:
+    def _providers_down(self) -> list[str]:
         # A provider that answered nothing all run changes what the map can contain, so the
         # brief says so instead of quietly reading as a Crossref-only result.
-        down = sorted(n for n, calls in self.provider_calls.items() if calls and self.provider_failures[n] == calls)
+        return sorted(n for n, calls in self.provider_calls.items() if calls and self.provider_failures[n] == calls)
+
+    def _diagnostics(self, kept: list[Paper]) -> dict:
         now = time.time()
         return {"rounds": [r.to_dict() for r in self.rounds],
                 "provider_errors": list(dict.fromkeys(self.provider_errors)),
-                "providers_down": down,
+                "providers_down": self._providers_down(),
                 "providers_blocked": sorted(n for n, st in self.states.states.items() if not st.available(now)),
                 "graph": build_graph(self.question, self.terms[:30], kept)}
 
