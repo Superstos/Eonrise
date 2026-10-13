@@ -42,7 +42,7 @@ fields beside it, narrower ones below, each branching again. This is the
 `--max-depth 30 --max-nodes 2000`: 1,950 concepts, 20 levels deep, drawn straight from its
 `research_map.json` by [`tools/graph_view.py`](tools/graph_view.py):
 
-<img src="docs/assets/concept-map.png" alt="Force-directed graph of 1,950 concepts one Eonrise run reached from a question about written instructions and repeated mistakes. The question sits in the middle. Labelled clusters around it include second language acquisition, curriculum implementation, task switching, proactive interference, memory interference, cognitive flexibility, dyslexia and speech production." width="100%">
+<img src="docs/assets/concept-map.png" alt="Network map of 1,950 concepts in 40 coloured clusters that one Eonrise run reached from a question about written instructions and repeated mistakes. The question sits in the middle. Labelled clusters around it include speech production, word recognition, curriculum implementation, attentional control, cognitive flexibility, memory interference, proactive interference and reading disorders." width="100%">
 
 1. The question becomes one root topic, and every later search stays tied to it.
 2. Each round searches the scholarly sources and drops papers about something else.

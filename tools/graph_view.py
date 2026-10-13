@@ -1,9 +1,9 @@
-"""Draw a run's concept map as a force-directed graph page, like Obsidian's graph view.
+"""Draw a run's concept map as a network picture: ForceAtlas2 layout, one colour per cluster.
 
     python tools/graph_view.py output/research_map.json --out graph.html
     python tools/graph_view.py output/research_map.json --out graph.html --png docs/assets/graph.png
 
-The page loads force-graph from a CDN; the package itself stays free of dependencies.
+The page loads graphology from a CDN; the package itself stays free of dependencies.
 --png renders the page in headless Chrome and saves a screenshot.
 """
 
@@ -14,52 +14,82 @@ import shutil
 import subprocess
 from pathlib import Path
 
-LIB = "https://cdn.jsdelivr.net/npm/force-graph@1.43.5/dist/force-graph.min.js"
+LIBS = "".join(f'<script src="https://cdn.jsdelivr.net/npm/{path}"></script>' for path in (
+    "graphology@0.25.4/dist/graphology.umd.min.js",
+    "graphology-library@0.8.0/dist/graphology-library.min.js",
+))
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>Eonrise concept map</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #1e1e1e; overflow: hidden;
-    font: 13px system-ui, sans-serif; color: #bbb; }
-  #legend, #title { z-index: 2; }
-  #legend { position: fixed; left: 16px; bottom: 14px; line-height: 1.7; }
-  #legend b { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
-  #title { position: fixed; left: 16px; top: 12px; max-width: 70%; color: #ddd; }
+  html { background: #05060a; }
+  html, body { margin: 0; height: 100%;
+    background: radial-gradient(ellipse at center, #151826 0%, #05060a 75%) fixed; overflow: hidden; }
+  canvas { display: block; }
+  #title { position: fixed; left: 22px; top: 18px; max-width: 70%;
+    font: 15px system-ui, sans-serif; color: #e8e8f0; letter-spacing: .2px; }
+  #title small { display: block; margin-top: 4px; color: #7c8090; font-size: 12px; }
 </style>
-<script src="__LIB__"></script></head>
-<body><div id="title"></div><div id="graph"></div><div id="legend"></div>
+__LIBS__</head>
+<body><div id="title"></div><canvas id="map"></canvas>
 <script>
+// ForceAtlas2 layout (Gephi's) plus Louvain clusters; each cluster gets one colour.
 const DATA = __DATA__;
-const COLOR = { root: "#a882ff", up: "#e0a458", sideways: "#7f8c9a", down: "#5fb38a" };
-const NAMES = { root: "your question", up: "broader", sideways: "related", down: "narrower" };
-document.getElementById("title").textContent = DATA.question + "  (" + DATA.nodes.length +
-  " concepts, depth " + DATA.maxDepth + ")";
-document.getElementById("legend").innerHTML = Object.keys(COLOR)
-  .map(k => '<div><b style="background:' + COLOR[k] + '"></b>' + NAMES[k] + "</div>").join("");
-const degree = {};
-DATA.links.forEach(l => { degree[l.source] = (degree[l.source] || 0) + 1; degree[l.target] = (degree[l.target] || 0) + 1; });
-const LABEL_DEGREE = DATA.nodes.length > 600 ? 20 : 5;
-const radius = n => 2 + Math.sqrt(degree[n.id] || 1) * 1.6;
-const graph = ForceGraph()(document.getElementById("graph"))
-  .graphData(DATA)
-  .backgroundColor("#1e1e1e")
-  .nodeRelSize(1)
-  .linkColor(() => "rgba(160,160,160,0.22)")
-  .linkWidth(0.6)
-  .cooldownTicks(400)
-  .nodeCanvasObject((n, ctx, scale) => {
-    // Sizes are in screen pixels, so a 2000-concept map stays readable when zoomed out.
-    const r = Math.max(radius(n), 1.6 / scale) * (n.depth === 0 ? 2.5 : 1);
-    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = COLOR[n.direction] || COLOR.sideways; ctx.fill();
-    if (n.depth > 0 && (degree[n.id] || 0) < LABEL_DEGREE) return;
-    ctx.font = (n.depth === 0 ? 15 : 11) / scale + "px system-ui"; ctx.fillStyle = "#d6d6d6";
-    ctx.textAlign = "center"; ctx.fillText(n.label, n.x, n.y + r + 12 / scale);
-  })
-  .nodeLabel(n => n.label + " (" + NAMES[n.direction] + ", depth " + n.depth + ")")
-  .onEngineStop(() => { graph.zoomToFit(0, 40); document.title = "settled"; });
-graph.d3Force("charge").strength(-12);
-graph.d3Force("link").distance(12);
+const lib = graphologyLibrary;
+const g = new graphology.Graph();
+DATA.nodes.forEach((n, i) => g.addNode(n.id, { ...n, x: Math.cos(i) * i, y: Math.sin(i) * i }));
+DATA.links.forEach(l => g.mergeEdge(l.source, l.target));
+lib.layoutForceAtlas2.assign(g, { iterations: 900, settings: {
+  ...lib.layoutForceAtlas2.inferSettings(g), barnesHutOptimize: true, strongGravityMode: true,
+  gravity: 0.6, scalingRatio: 6, adjustSizes: false } });
+const community = lib.communitiesLouvain(g, { resolution: 1.2 });
+const PALETTE = ["#ff6b9d", "#4cc9f0", "#ffd166", "#7bdff2", "#b388ff", "#06d6a0", "#ff9f1c",
+  "#f15bb5", "#9bf6ff", "#caffbf", "#ffadad", "#a0c4ff"];
+const sizes = {};
+Object.values(community).forEach(c => sizes[c] = (sizes[c] || 0) + 1);
+const rank = Object.keys(sizes).sort((a, b) => sizes[b] - sizes[a]);
+const colorOf = id => g.getNodeAttribute(id, "depth") === 0 ? "#ffffff"
+  : PALETTE[rank.indexOf(String(community[id])) % PALETTE.length];
+
+const W = innerWidth, H = innerHeight, canvas = document.getElementById("map");
+canvas.width = W; canvas.height = H; canvas.style.height = H + "px";
+const ctx = canvas.getContext("2d");
+const xs = g.mapNodes((_, a) => a.x), ys = g.mapNodes((_, a) => a.y);
+const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+const pad = 70, k = Math.min((W - 2 * pad) / (x1 - x0), (H - 2 * pad - 40) / (y1 - y0));
+const px = x => (x - (x0 + x1) / 2) * k + W / 2, py = y => (y - (y0 + y1) / 2) * k + H / 2 + 20;
+
+ctx.globalCompositeOperation = "lighter";
+g.forEachEdge((e, a, s, t, sa, ta) => {
+  const [ax, ay, bx, by] = [px(sa.x), py(sa.y), px(ta.x), py(ta.y)];
+  const mx = (ax + bx) / 2 + (by - ay) * 0.12, my = (ay + by) / 2 - (bx - ax) * 0.12;
+  ctx.strokeStyle = colorOf(t) + "40"; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(mx, my, bx, by); ctx.stroke();
+});
+const radius = id => id === "c0" ? 9 : 1.3 + Math.sqrt(g.degree(id)) * 0.9;
+g.forEachNode((id, a) => {
+  const c = colorOf(id), r = radius(id), x = px(a.x), y = py(a.y);
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+  glow.addColorStop(0, c + "55"); glow.addColorStop(1, c + "00");
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 7); ctx.fill();
+  ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+});
+
+ctx.globalCompositeOperation = "source-over";
+const hubs = {};
+g.forEachNode((id, a) => { const c = community[id];
+  if (a.depth > 0 && (!hubs[c] || g.degree(id) > g.degree(hubs[c]))) hubs[c] = id; });
+const labelled = rank.slice(0, 18).map(c => hubs[c]).filter(Boolean).concat(["c0"]);
+ctx.textAlign = "center"; ctx.lineJoin = "round";
+labelled.forEach(id => {
+  const a = g.getNodeAttributes(id), x = px(a.x), y = py(a.y) - radius(id) - 8;
+  ctx.font = (id === "c0" ? "600 16px" : "500 13px") + " system-ui, sans-serif";
+  ctx.lineWidth = 4; ctx.strokeStyle = "rgba(5,6,10,.85)"; ctx.strokeText(a.label, x, y);
+  ctx.fillStyle = id === "c0" ? "#ffffff" : colorOf(id); ctx.fillText(a.label, x, y);
+});
+document.getElementById("title").innerHTML = DATA.question +
+  "<small>" + DATA.nodes.length + " concepts, " + DATA.maxDepth + " levels deep, " + rank.length + " clusters</small>";
+document.title = "settled";
 </script></body></html>
 """
 
@@ -95,7 +125,7 @@ def main() -> None:
     args = p.parse_args()
 
     data = graph_data(json.loads(args.map.read_text(encoding="utf-8")))
-    page = PAGE.replace("__LIB__", LIB).replace("__DATA__", json.dumps(data, ensure_ascii=False))
+    page = PAGE.replace("__LIBS__", LIBS).replace("__DATA__", json.dumps(data, ensure_ascii=False))
     args.out.write_text(page, encoding="utf-8")
     print(f"{args.out}: {len(data['nodes'])} concepts, {len(data['links'])} links, depth {data['maxDepth']}")
     if args.png:
