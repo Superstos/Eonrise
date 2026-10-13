@@ -379,6 +379,9 @@ class ConceptEquivalenceGraph:
     def _linked(self, label: str) -> list[str]:
         return [key[1 - key.index(label)] for key, _ in self._active() if label in key]
 
+    def _unseen_links(self, label: str, seen: list[str]) -> list[str]:
+        return [other for other in self._linked(label) if other not in seen]
+
     def component_size(self, label: Any) -> int:
         """Labels reachable from this one, counted exactly up to one past MAX_ACTIVE_COMPONENT."""
         start = _canonical_label(label)
@@ -386,7 +389,7 @@ class ConceptEquivalenceGraph:
         for current in seen:  # `seen` grows while it is walked: a breadth-first search
             if len(seen) > MAX_ACTIVE_COMPONENT:
                 break
-            seen += [other for other in self._linked(current) if other not in seen]
+            seen += self._unseen_links(current, seen)
         return len(seen)
 
     def _directed(self, relation: str, min_confidence: float) -> list[tuple[ConceptEquivalence, str, str]]:

@@ -444,9 +444,13 @@ def _guard_relation(key: str, relation: str, paper_ids: set[str], on_topic: set[
     """
     if relation not in DOWN_RELATIONS:
         return relation
-    is_gap_cue = {to_singular(t) for t in key.split()} <= _GAP_CUE_SINGULARS[relation]
     on_question = on_topic is None or bool(paper_ids & on_topic)
-    return relation if abstract_backed and on_question and not is_gap_cue else "topic"
+    return relation if abstract_backed and on_question and not _is_gap_cue(key, relation) else "topic"
+
+
+def _is_gap_cue(key: str, relation: str) -> bool:
+    """The gap query's own cue words (`failure mode`) coming back as the finding."""
+    return {to_singular(t) for t in key.split()} <= _GAP_CUE_SINGULARS[relation]
 
 
 def _confidence(key: str, ev: CandidateEvidence) -> str:
@@ -537,11 +541,10 @@ def dedupe_terms(ranked: list[Term]) -> list[Term]:
     kept: list[Term] = []
     taken: list[frozenset[str]] = []
     for term in ranked:
-        key = concept_key(term.text)
-        if not key or any(key <= other or other <= key for other in taken):
+        if is_redundant(term.text, taken):
             continue
         kept.append(term)
-        taken.append(key)
+        taken.append(concept_key(term.text))
     return kept
 
 def _merged(old: list[str], new: list[str]) -> list[str]:
@@ -572,9 +575,11 @@ def _dedupe_papers(existing: list[Paper], incoming: Iterable[Paper]) -> tuple[li
 
 def top_terms(terms: list[Term], relation: str | None = None, limit: int = 5, grounded_only: bool = False) -> list[Term]:
     selected = [t for t in terms if relation in (None, t.relation)]
-    if grounded_only:
-        selected = [t for t in selected if t.confidence in GROUNDED]
-    return selected[:limit]
+    return (_grounded(selected) if grounded_only else selected)[:limit]
+
+
+def _grounded(terms: list[Term]) -> list[Term]:
+    return [t for t in terms if t.confidence in GROUNDED]
 
 def coverage(terms: list[Term], minimum_per_relation: int = 2) -> tuple[dict[str, list[str]], list[str]]:
     covered, gaps = {}, []
