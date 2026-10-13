@@ -38,22 +38,31 @@ not support part of the map, that part stays empty and the brief says so.
 
 ## How it works
 
+Eonrise puts your question at the center and grows a map around it: broader topics above,
+neighboring topics beside it, narrower mechanisms below, and papers from distant fields that
+share its shape. This map is from the [written instructions](examples/written-instructions-new-workers.md) run:
+
 ```mermaid
-flowchart LR
-  Q[Question] --> T[Root topic] --> S[Search sources] --> F[Drop off-topic] --> R[Read abstracts]
-  R -- gaps --> S
-  R --> D[Rank distant papers] --> B[Brief and map]
+flowchart TB
+  L[law] -- parent --> R
+  G[language and linguistics] -- parent --> R
+  R(("written instructions<br/>prevent same mistakes<br/>repeating"))
+  R -- sibling --- J[jury instructions]
+  R -- sibling --- S[second language<br/>acquisition and learning]
+  R -- child --> C[corrective feedback]
+  R -- child --> A[adult learning]
+  R -. distant field .-> N[What Nursing Students Hope<br/>from Clinical Mistakes]
 ```
 
-1. Root topic: the question becomes one root topic, and every later search stays tied to it.
-2. Search sources: each round queries the scholarly sources.
-3. Drop off-topic: papers about something else are removed before anything is read.
-4. Read abstracts: terms, relations and stated limitations come from titles and abstracts.
-   Empty parts of the map send targeted searches back to step 2, up to `--max-rounds`.
-5. Rank distant papers: papers from far fields that share the question's terms are kept
-   apart and ranked. They are the point of the tool.
-6. Brief and map: the run writes the brief, the map and the graph, and says how much of
-   the reachable literature it saw, so a thin map reads as unfinished.
+1. The question becomes one root topic, and every later search stays tied to it.
+2. Each round searches the scholarly sources and drops papers about something else.
+3. Terms, relations and stated limitations come from titles and abstracts. Each term joins
+   the map as a parent, sibling or child of the root.
+4. Empty parts of the map send targeted searches back to step 2, up to `--max-rounds`.
+5. Papers from far fields that share the question's terms are kept apart and ranked. They are
+   the point of the tool.
+6. The run writes the brief, the map and the graph, and says how much of the reachable
+   literature it saw, so a thin map reads as unfinished.
 
 ## Install
 
