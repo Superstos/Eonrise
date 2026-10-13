@@ -51,51 +51,50 @@ def parser() -> argparse.ArgumentParser:
     return p
 
 
-def main() -> None:
-    args = parser().parse_args()
-    cache = Path.home() / ".cache" / "eonrise"
-    http = CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
-    corpus = None if args.no_corpus else PaperStore(args.corpus or (cache / "corpus.jsonl"))
+def _bundle_providers(args: argparse.Namespace) -> list:
     bundle_path = args.bundle or ([args.fixture] if args.fixture else None)
-    if args.mode == "assistant" or bundle_path:
-        if not bundle_path:
-            raise SystemExit("assistant mode requires --bundle PATH")
-        try:
-            providers = [EvidenceBundleProvider(bundle_path)]
-        except ProviderError as exc:
-            raise SystemExit(str(exc))
-        mode = "assistant"
-    else:
-        # Measured on one query, 20 results each: Europe PMC returned 20/20 abstracts and
-        # 18/20 keyword lists, DOAJ 8/8 abstracts with an LCC subject each, Crossref 16%
-        # abstracts and no subjects. Keyless sources run by default; the two that need a
-        # free key join only when one is supplied.
-        available = {
-            "crossref": lambda: CrossrefProvider(http, args.email),
-            "openalex": lambda: OpenAlexProvider(http, args.openalex_key, args.semantic, args.email),
-            "europepmc": lambda: EuropePMCProvider(http, args.email),
-            "doaj": lambda: DoajProvider(http, args.email),
-            "semanticscholar": lambda: SemanticScholarProvider(http, args.s2_key),
-            "core": lambda: CoreProvider(http, args.core_key),
-        }
-        if args.providers:
-            chosen = [n.strip().lower() for n in args.providers.split(",") if n.strip()]
-            unknown = [n for n in chosen if n not in available]
-            if unknown:
-                raise SystemExit(f"unknown provider(s): {', '.join(unknown)}")
-        elif args.crossref_only:
-            chosen = ["crossref"]
-        else:
-            chosen = ["crossref", "openalex", "europepmc", "doaj"]
-            if args.s2_key: chosen.append("semanticscholar")
-            if args.core_key: chosen.append("core")
-        providers = [available[name]() for name in dict.fromkeys(chosen)]
-        # The store answers first and costs nothing: a paper already held needs no API
-        # credit, and OpenAlex now charges them.
-        if corpus is not None:
-            providers.insert(0, corpus)
-        mode = "live"
-    policy = SearchSettings(
+    if not bundle_path:
+        raise SystemExit("assistant mode requires --bundle PATH")
+    try:
+        return [EvidenceBundleProvider(bundle_path)]
+    except ProviderError as exc:
+        raise SystemExit(str(exc))
+
+
+def _provider_names(args: argparse.Namespace, available: dict) -> list[str]:
+    if args.providers:
+        chosen = [n.strip().lower() for n in args.providers.split(",") if n.strip()]
+        unknown = [n for n in chosen if n not in available]
+        if unknown:
+            raise SystemExit(f"unknown provider(s): {', '.join(unknown)}")
+        return chosen
+    if args.crossref_only:
+        return ["crossref"]
+    keyed = [name for name, key in (("semanticscholar", args.s2_key), ("core", args.core_key)) if key]
+    return ["crossref", "openalex", "europepmc", "doaj", *keyed]
+
+
+def _live_providers(args: argparse.Namespace, http: CachedHttpClient, corpus: PaperStore | None) -> list:
+    # Measured on one query, 20 results each: Europe PMC returned 20/20 abstracts and
+    # 18/20 keyword lists, DOAJ 8/8 abstracts with an LCC subject each, Crossref 16%
+    # abstracts and no subjects. Keyless sources run by default; the two that need a
+    # free key join only when one is supplied.
+    available = {
+        "crossref": lambda: CrossrefProvider(http, args.email),
+        "openalex": lambda: OpenAlexProvider(http, args.openalex_key, args.semantic, args.email),
+        "europepmc": lambda: EuropePMCProvider(http, args.email),
+        "doaj": lambda: DoajProvider(http, args.email),
+        "semanticscholar": lambda: SemanticScholarProvider(http, args.s2_key),
+        "core": lambda: CoreProvider(http, args.core_key),
+    }
+    providers = [available[name]() for name in dict.fromkeys(_provider_names(args, available))]
+    # The store answers first and costs nothing: a paper already held needs no API
+    # credit, and OpenAlex now charges them.
+    return ([corpus] if corpus is not None else []) + providers
+
+
+def _settings(args: argparse.Namespace) -> SearchSettings:
+    return SearchSettings(
         max_nodes=max(1, args.max_nodes),
         max_depth=max(1, args.max_depth),
         max_rounds=max(1, args.max_rounds),
@@ -104,70 +103,55 @@ def main() -> None:
         sideways_weight=args.sideways_weight,
         support_threshold=max(1, args.support_threshold),
     )
-    store = QuestionLog(cache / "memory.jsonl")
+
+
+def _background(store: QuestionLog, question: str) -> set[str]:
     try:
-        background = store.background_labels(canonical_root(args.question))
+        return store.background_labels(canonical_root(question))
     except OSError:
-        background = set()
-    # Availability lives longer than one process: a source rate limited for eight hours
-    # should not be re-discovered by tomorrow's run.
-    states = ProviderStates(cache / "providers.json")
-    equivalence_store = None
-    equivalence_graph = None
-    if not args.no_equivalence:
-        try:
-            equivalence_store = ConceptEquivalenceStore(args.equivalence or (cache / "equivalence.jsonl"))
-            equivalence_graph = equivalence_store.load()
-        except OSError:
-            equivalence_store = None
-            equivalence_graph = None
-    result = run_search(args.question, providers, policy, results_per_query=max(1, args.results),
-                       background=background, states=states, equivalence=equivalence_graph,
-                       query_expansion_slots=max(0, args.query_expansion_slots) if equivalence_graph is not None else 0)
+        return set()
+
+
+def _equivalence_store(args: argparse.Namespace, cache: Path) -> tuple:
+    """The store and the graph it holds, or (None, None) when off or unreadable."""
+    if args.no_equivalence:
+        return None, None
     try:
-        states.save()
+        store = ConceptEquivalenceStore(args.equivalence or (cache / "equivalence.jsonl"))
+        return store, store.load()
+    except OSError:
+        return None, None
+
+
+def _learn_equivalences(store: ConceptEquivalenceStore, question: str, result: dict) -> None:
+    papers = []
+    for row in result.get("corpus_papers") or result.get("papers", []):
+        try:
+            papers.append(Paper.from_dict(row))
+        except (AttributeError, TypeError, ValueError):
+            continue
+    try:
+        learned = store.observe_run(question, result.get("terms", []), papers,
+                                    set(result.get("on_topic_paper_ids", [])))
+        result["equivalence_store"] = str(store.path)
+        result["equivalence_observations"] = len(learned)
+        result["equivalence_edges"] = len(store.load().edges())
     except OSError:
         pass
-    if equivalence_store is not None:
-        try:
-            equivalence_rows = result.get("corpus_papers") or result.get("papers", [])
-            equivalence_papers = []
-            for row in equivalence_rows:
-                try:
-                    equivalence_papers.append(Paper.from_dict(row))
-                except (AttributeError, TypeError, ValueError):
-                    continue
-            learned = equivalence_store.observe_run(
-                args.question,
-                result.get("terms", []),
-                equivalence_papers,
-                set(result.get("on_topic_paper_ids", [])),
-            )
-            result["equivalence_store"] = str(equivalence_store.path)
-            result["equivalence_observations"] = len(learned)
-            result["equivalence_edges"] = len(equivalence_store.load().edges())
-        except OSError:
-            pass
-    result["background_terms_penalised"] = len(background)
-    result["mode"] = mode
-    result["input_bundle"] = str(Path(bundle_path[0]).resolve()) if bundle_path else ""
-    result["input_bundles"] = [str(Path(b).resolve()) for b in bundle_path or []]
-    if not args.no_memory:
-        try:
-            store.append_run(result)
-        except OSError:
-            pass
-    if corpus is not None:
-        try:
-            stored = result.pop("corpus_papers", None) or result["papers"]
-            result["corpus_added"] = corpus.add([Paper.from_dict(p) for p in stored])
-            result["corpus_size"] = corpus.stats()["papers"]
-        except OSError:
-            pass
-    result.pop("corpus_papers", None)  # the store's copy, never the artifact's
-    write_outputs(result, args.out)
-    print(json.dumps({
-        "mode": mode,
+
+
+def _grow_corpus(corpus: PaperStore, result: dict) -> None:
+    try:
+        stored = result.pop("corpus_papers", None) or result["papers"]
+        result["corpus_added"] = corpus.add([Paper.from_dict(p) for p in stored])
+        result["corpus_size"] = corpus.stats()["papers"]
+    except OSError:
+        pass
+
+
+def _summary(result: dict, out: str) -> dict:
+    return {
+        "mode": result["mode"],
         "status": result["status"],
         "stop_reason": result["stop_reason"],
         "root_topic": result.get("root_topic", ""),
@@ -177,8 +161,52 @@ def main() -> None:
         "gaps": result["gaps"],
         "providers_down": result.get("providers_down", []),
         "provider_errors": result.get("provider_errors", [])[:5],
-        "output": str(Path(args.out).resolve()),
-    }, indent=2))
+        "output": str(Path(out).resolve()),
+    }
+
+
+def _search(args: argparse.Namespace, cache: Path, providers: list) -> dict:
+    store = QuestionLog(cache / "memory.jsonl")
+    background = _background(store, args.question)
+    # Availability lives longer than one process: a source rate limited for eight hours
+    # should not be re-discovered by tomorrow's run.
+    states = ProviderStates(cache / "providers.json")
+    equivalence, graph = _equivalence_store(args, cache)
+    result = run_search(args.question, providers, _settings(args), results_per_query=max(1, args.results),
+                        background=background, states=states, equivalence=graph,
+                        query_expansion_slots=max(0, args.query_expansion_slots) if graph is not None else 0)
+    try:
+        states.save()
+    except OSError:
+        pass
+    if equivalence is not None:
+        _learn_equivalences(equivalence, args.question, result)
+    result["background_terms_penalised"] = len(background)
+    if not args.no_memory:
+        try:
+            store.append_run(result)
+        except OSError:
+            pass
+    return result
+
+
+def main() -> None:
+    args = parser().parse_args()
+    cache = Path.home() / ".cache" / "eonrise"
+    http = CachedHttpClient(cache, timeout=max(1, args.http_timeout), max_retries=max(1, args.http_retries))
+    corpus = None if args.no_corpus else PaperStore(args.corpus or (cache / "corpus.jsonl"))
+    bundle_path = args.bundle or ([args.fixture] if args.fixture else None)
+    assistant = args.mode == "assistant" or bool(bundle_path)
+    providers = _bundle_providers(args) if assistant else _live_providers(args, http, corpus)
+    result = _search(args, cache, providers)
+    result["mode"] = "assistant" if assistant else "live"
+    result["input_bundle"] = str(Path(bundle_path[0]).resolve()) if bundle_path else ""
+    result["input_bundles"] = [str(Path(b).resolve()) for b in bundle_path or []]
+    if corpus is not None:
+        _grow_corpus(corpus, result)
+    result.pop("corpus_papers", None)  # the store's copy, never the artifact's
+    write_outputs(result, args.out)
+    print(json.dumps(_summary(result, args.out), indent=2))
     # A run that retrieved nothing exited 0 and printed a brief that read like a thin
     # literature. A socket timeout against one provider is not a research finding, and a
     # caller scripting Eonrise has no other signal: `failed` is now a failed process.
