@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ontology_router.providers import EvidenceBundleProvider, ProviderError
+from eonrise.providers import EvidenceBundleProvider, ProviderError
 
 
 def _write(path: Path, rows) -> None:

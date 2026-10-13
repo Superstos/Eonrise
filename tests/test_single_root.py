@@ -3,9 +3,9 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from ontology_router.engine import canonical_root, relation_to_direction, run_agent
-from ontology_router.models import AgentPolicy
-from ontology_router.providers import EvidenceBundleProvider
+from eonrise.engine import canonical_root, relation_to_direction, run_agent
+from eonrise.models import AgentPolicy
+from eonrise.providers import EvidenceBundleProvider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
 

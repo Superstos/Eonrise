@@ -5,9 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ontology_router.engine import run_agent
-from ontology_router.models import STATUSES, AgentPolicy, Paper
-from ontology_router.providers import EvidenceBundleProvider
+from eonrise.engine import run_agent
+from eonrise.models import STATUSES, AgentPolicy, Paper
+from eonrise.providers import EvidenceBundleProvider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
 

@@ -27,10 +27,10 @@ def main() -> None:
         import json
         import tempfile
         from pathlib import Path
-        from ontology_router.engine import run_agent
-        from ontology_router.models import AgentPolicy
-        from ontology_router.providers import EvidenceBundleProvider
-        from ontology_router.report import write_outputs
+        from eonrise.engine import run_agent
+        from eonrise.models import AgentPolicy
+        from eonrise.providers import EvidenceBundleProvider
+        from eonrise.report import write_outputs
 
         try:
             with tempfile.TemporaryDirectory() as tmp:
@@ -55,8 +55,8 @@ def main() -> None:
         # Offline drift gate: a corpus that is half on-topic and half a neighbouring
         # literature must not put the neighbour in the map.
         try:
-            from ontology_router.engine import run_agent as _run
-            from ontology_router.models import AgentPolicy as _Policy, Paper as _Paper
+            from eonrise.engine import run_agent as _run
+            from eonrise.models import AgentPolicy as _Policy, Paper as _Paper
 
             class _Mixed:
                 name = "gauntlet-mixed"

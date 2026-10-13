@@ -5,11 +5,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ontology_router.engine import run_agent
-from ontology_router.equivalence import ConceptEquivalenceStore
-from ontology_router.evolution import evolve_equivalence_state
-from ontology_router.models import AgentPolicy, Paper
-from ontology_router.scheduling import ProviderStates
+from eonrise.engine import run_agent
+from eonrise.equivalence import ConceptEquivalenceStore
+from eonrise.evolution import evolve_equivalence_state
+from eonrise.models import AgentPolicy, Paper
+from eonrise.scheduling import ProviderStates
 
 
 class ReplayProvider:

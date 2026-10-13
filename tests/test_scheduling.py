@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ontology_router.scheduling import ProviderStates, order_for
+from eonrise.scheduling import ProviderStates, order_for
 
 ALL = ["crossref", "openalex", "europepmc", "doaj"]
 

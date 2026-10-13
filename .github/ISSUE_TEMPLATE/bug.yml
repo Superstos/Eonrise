@@ -47,7 +47,7 @@ body:
     id: providers
     attributes:
       label: Provider status
-      description: Include providers_down and provider_errors when available.
+      description: Include providers_down and provider_errors when available. Remove any API key or email address before posting.
   - type: textarea
     id: reproduction
     attributes:

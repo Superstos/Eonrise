@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from ontology_router.corpus import CorpusStore
-from ontology_router.engine import run_agent
-from ontology_router.models import AgentPolicy, Paper
+from eonrise.corpus import CorpusStore
+from eonrise.engine import run_agent
+from eonrise.models import AgentPolicy, Paper
 
 
 def paper(pid, title, abstract="", doi="", keywords=(), cited=0, provider="crossref"):

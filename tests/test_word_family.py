@@ -4,10 +4,10 @@ import json
 import unittest
 from pathlib import Path
 
-from ontology_router.engine import run_agent
-from ontology_router.evidence import family, topical_papers
-from ontology_router.models import AgentPolicy, Paper
-from ontology_router.providers import EvidenceBundleProvider
+from eonrise.engine import run_agent
+from eonrise.evidence import family, topical_papers
+from eonrise.models import AgentPolicy, Paper
+from eonrise.providers import EvidenceBundleProvider
 
 GOLD = Path(__file__).parent / "fixtures" / "crossfield_gold.json"
 
@@ -71,7 +71,7 @@ class LimitationGoldTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from ontology_router.evidence import LIMITATION_CUES, limitation_phrases
+        from eonrise.evidence import LIMITATION_CUES, limitation_phrases
         path = Path(__file__).parent / "fixtures" / "limitation_gold.json"
         cls.rows = json.loads(path.read_text(encoding="utf-8"))["sentences"]
         cls.cues, cls.extract = set(LIMITATION_CUES), staticmethod(limitation_phrases)
@@ -92,7 +92,7 @@ class LimitationGoldTests(unittest.TestCase):
 
 class ConceptGateTests(unittest.TestCase):
     def test_second_stage_on_gold(self):
-        from ontology_router.harvest import concept_gate
+        from eonrise.harvest import concept_gate
         raw = json.loads(GOLD.read_text(encoding="utf-8"))
         papers = EvidenceBundleProvider(GOLD).papers
         keep = concept_gate(raw["question"], papers, topical_papers(raw["question"], papers))
@@ -101,7 +101,7 @@ class ConceptGateTests(unittest.TestCase):
         self.assertEqual(kept("off"), 0)
 
     def test_empty_gate_is_not_bootstrapped(self):
-        from ontology_router.harvest import concept_gate
+        from eonrise.harvest import concept_gate
         self.assertEqual(concept_gate("volcano", EvidenceBundleProvider(GOLD).papers, set()), set())
 
 

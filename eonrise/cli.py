@@ -37,7 +37,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--http-retries", type=int, default=2, help="Attempts per live API request")
     # Single-root agent policy: the agent decides depth and direction.
     p.add_argument("--agent-name", default="default")
-    p.add_argument("--max-nodes", type=int, default=120, help="Agent concept budget (unbounded if large)")
+    p.add_argument("--max-nodes", type=int, default=400, help="Agent concept budget (unbounded if large)")
     p.add_argument("--max-depth", type=int, default=4, help="How deep one agent may recurse")
     p.add_argument("--up-weight", type=float, default=0.5)
     p.add_argument("--down-weight", type=float, default=1.0)

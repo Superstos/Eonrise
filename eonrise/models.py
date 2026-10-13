@@ -76,7 +76,7 @@ DIRECTIONS = (UP, DOWN, SIDEWAYS)
 class AgentPolicy:
     """One agent, one root topic, agent-owned recursion budget."""
     name: str = "default"
-    max_nodes: int = 120
+    max_nodes: int = 400
     max_depth: int = 4
     max_rounds: int = 6
     up_weight: float = 0.5

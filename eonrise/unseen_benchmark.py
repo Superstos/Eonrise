@@ -1,6 +1,6 @@
 """Stop rules against a literature whose size is known.
 
-`python -m ontology_router.unseen_benchmark`
+`python -m eonrise.unseen_benchmark`
 
 Each scenario is a population of papers with heterogeneous findability: every query finds
 paper i with probability p_i, drawn log-normal, so a few papers turn up everywhere and many

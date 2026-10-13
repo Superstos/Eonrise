@@ -5,14 +5,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ontology_router.engine import run_agent
-from ontology_router.equivalence import (
+from eonrise.engine import run_agent
+from eonrise.equivalence import (
     ConceptEquivalenceGraph,
     ConceptEquivalenceStore,
     discover_observations,
 )
-from ontology_router.equivalence_benchmark import run_benchmark
-from ontology_router.models import AgentPolicy, Paper
+from eonrise.equivalence_benchmark import run_benchmark
+from eonrise.models import AgentPolicy, Paper
 
 
 def evidence(pid: str, kind: str = "explicit_alias", field: str = "Machine Learning") -> dict:

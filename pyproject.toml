@@ -29,11 +29,11 @@ Repository = "https://github.com/Superstos/Eonrise"
 Issues = "https://github.com/Superstos/Eonrise/issues"
 
 [project.scripts]
-eonrise = "ontology_router.cli:main"
+eonrise = "eonrise.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ontology_router*"]
+include = ["eonrise*"]
 
 [tool.setuptools.dynamic]
-version = {attr = "ontology_router.__version__"}
+version = {attr = "eonrise.__version__"}

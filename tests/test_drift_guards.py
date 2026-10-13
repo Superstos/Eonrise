@@ -6,7 +6,7 @@ import urllib.error
 from pathlib import Path
 from unittest import mock
 
-from ontology_router.engine import (
+from eonrise.engine import (
     GAP_QUERY_SLOTS,
     limitation_phrases,
     _guard_relation,
@@ -17,10 +17,10 @@ from ontology_router.engine import (
     run_agent,
     topical_papers,
 )
-from ontology_router import cli
-from ontology_router.models import STATUSES, AgentPolicy, Paper
-from ontology_router import providers, report
-from ontology_router.providers import CachedHttpClient, OpenAlexProvider
+from eonrise import cli
+from eonrise.models import STATUSES, AgentPolicy, Paper
+from eonrise import providers, report
+from eonrise.providers import CachedHttpClient, OpenAlexProvider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "papers.json"
 
@@ -170,7 +170,7 @@ class BackgroundPenaltyTests(unittest.TestCase):
     def test_memory_only_counts_unrelated_roots(self):
         import json
         import tempfile
-        from ontology_router.memory import MemoryStore
+        from eonrise.memory import MemoryStore
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "memory.jsonl"
             rows = [{"root_topic": f"root {i}", "concepts": [{"label": "computer science"},
@@ -275,7 +275,7 @@ class RedundancyTests(unittest.TestCase):
         self.assertFalse(is_redundant("ontology alignment", taken))
 
     def test_run_produces_no_paraphrase_pairs(self):
-        from ontology_router.providers import EvidenceBundleProvider
+        from eonrise.providers import EvidenceBundleProvider
         result = run_agent("memory retention", [EvidenceBundleProvider(str(FIXTURE))],
                            AgentPolicy(max_nodes=60, max_depth=3, max_rounds=3))
         keys = [concept_key(c["label"]) for c in result["concepts"]]
@@ -324,13 +324,13 @@ class GapRepairTests(unittest.TestCase):
         self.assertTrue(provider.queries)
 
     def test_status_vocabulary_is_closed(self):
-        from ontology_router.providers import EvidenceBundleProvider
+        from eonrise.providers import EvidenceBundleProvider
         result = run_agent("memory", [EvidenceBundleProvider(str(FIXTURE))],
                            AgentPolicy(max_nodes=40, max_depth=2, max_rounds=3))
         self.assertIn(result["status"], STATUSES)
 
     def test_usable_requires_four_of_five_relations(self):
-        from ontology_router.providers import EvidenceBundleProvider
+        from eonrise.providers import EvidenceBundleProvider
         result = run_agent("spaced repetition memory retention",
                            [EvidenceBundleProvider(str(FIXTURE))],
                            AgentPolicy(max_nodes=80, max_depth=3, max_rounds=4))
@@ -426,6 +426,19 @@ class ProviderCooldownTests(unittest.TestCase):
         self.assertNotIsInstance(ctx.exception, providers.ProviderUnavailable)
         self.assertEqual(len(calls), 2, "a burst limit is worth retrying inside the run")
 
+    def test_failed_request_error_keeps_keys_and_email_out(self):
+        url = "https://api.openalex.org/works?search=q&api_key=SECRETKEY&mailto=a%40b.c"
+        err = urllib.error.URLError("timed out")
+        with tempfile.TemporaryDirectory() as tmp:
+            client = CachedHttpClient(cache_dir=Path(tmp), min_interval=0.0, max_retries=1)
+            with mock.patch("urllib.request.urlopen", side_effect=_raiser(err, [])), mock.patch("time.sleep"):
+                with self.assertRaises(providers.ProviderError) as ctx:
+                    client.get_json(url)
+        message = str(ctx.exception)
+        self.assertIn("https://api.openalex.org/works", message)
+        self.assertNotIn("SECRETKEY", message)
+        self.assertNotIn("a%40b.c", message)
+
 
 class DegradedProviderReportTests(unittest.TestCase):
     BASE = {"question": "q", "root_topic": "q", "status": "partial", "stop_reason": "x",
@@ -514,7 +527,7 @@ class ClaimMemoryTests(unittest.TestCase):
     def test_grounded_down_relations_are_written_as_claims(self):
         import json
         import tempfile
-        from ontology_router.memory import MemoryStore
+        from eonrise.memory import MemoryStore
         with tempfile.TemporaryDirectory() as tmp:
             store = MemoryStore(Path(tmp) / "memory.jsonl")
             store.append_run({
@@ -610,7 +623,7 @@ class ZeroTopicalCorpusTests(unittest.TestCase):
                              up_weight=0.5, down_weight=1.0, sideways_weight=1.0,
                              support_threshold=2)
         with tempfile.TemporaryDirectory() as tmp:
-            from ontology_router.scheduling import ProviderStates
+            from eonrise.scheduling import ProviderStates
             return run_agent("how are transformer attention heads pruned", [Bundle()], policy,
                              results_per_query=20, background=set(),
                              states=ProviderStates(Path(tmp) / "p.json"))

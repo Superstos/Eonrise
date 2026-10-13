@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from ontology_router.evidence import _dedupe_papers
-from ontology_router.providers import (CoreProvider, CrossrefProvider, DoajProvider,
+from eonrise.evidence import _dedupe_papers
+from eonrise.providers import (CoreProvider, CrossrefProvider, DoajProvider,
                                        EuropePMCProvider, OpenAlexProvider,
                                        SemanticScholarProvider)
 

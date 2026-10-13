@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import unittest
 
-from ontology_router.models import Paper
-from ontology_router.report import render_compact_markdown
-from ontology_router.unseen import estimate
-from ontology_router.unseen_benchmark import main as benchmark
+from eonrise.models import Paper
+from eonrise.report import render_compact_markdown
+from eonrise.unseen import estimate
+from eonrise.unseen_benchmark import main as benchmark
 
 
 def papers(histories):

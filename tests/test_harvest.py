@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from ontology_router.harvest import harvest, signature
-from ontology_router.models import Paper, Term
-from ontology_router.report import render_compact_markdown
+from eonrise.harvest import harvest, signature
+from eonrise.models import Paper, Term
+from eonrise.report import render_compact_markdown
 
 
 def term(text, relation="mechanism", confidence="high"):
@@ -74,7 +74,7 @@ class VotingCoreTests(unittest.TestCase):
     """Below the gate minimum the closest papers vote, not the whole corpus."""
 
     def test_small_gate_is_topped_up_by_closeness_not_by_everything(self):
-        from ontology_router.evidence import MIN_TOPICAL_CORPUS, voting_core
+        from eonrise.evidence import MIN_TOPICAL_CORPUS, voting_core
         q = "when should a literature search stop"
         close = [Paper(f"c{i}", "Stopping rules for screening", abstract="When to stop a literature search.")
                  for i in range(MIN_TOPICAL_CORPUS)]
@@ -83,18 +83,18 @@ class VotingCoreTests(unittest.TestCase):
         self.assertEqual(core, {p.paper_id for p in close})
 
     def test_large_gate_is_used_as_is(self):
-        from ontology_router.evidence import MIN_TOPICAL_CORPUS, voting_core
+        from eonrise.evidence import MIN_TOPICAL_CORPUS, voting_core
         on = {f"p{i}" for i in range(MIN_TOPICAL_CORPUS)}
         self.assertEqual(voting_core("q", [], on), on)
 
     def test_no_question_word_anywhere_means_no_core(self):
-        from ontology_router.evidence import voting_core
+        from eonrise.evidence import voting_core
         self.assertIsNone(voting_core("volcano eruptions", [Paper("x", "Analogy mining")], set()))
 
 
 class DistantQueryTests(unittest.TestCase):
     def test_other_fields_first_no_duplicates(self):
-        from ontology_router.harvest import distant_queries
+        from eonrise.harvest import distant_queries
         hits = [{"distant": False, "shares": ["target recall", "systematic reviews"]},
                 {"distant": True, "shares": ["stopping criteria", "active learning"]},
                 {"distant": True, "shares": ["stopping criteria", "active learning"]}]

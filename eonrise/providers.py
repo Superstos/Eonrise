@@ -60,7 +60,8 @@ class CachedHttpClient:
                 elif exc.code not in {500,502,503,504}: break
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc: last_error = exc
             time.sleep(2**attempt)
-        raise ProviderError(f"Request failed: {url}: {last_error}")
+        # The query string carries api_key and mailto, and this text lands in report.md.
+        raise ProviderError(f"Request failed: {urllib.parse.urlsplit(url)._replace(query='').geturl()}: {last_error}")
 
 def _retry_after_seconds(exc) -> float:
     raw = (getattr(exc, "headers", None) or {}).get("Retry-After", "")
