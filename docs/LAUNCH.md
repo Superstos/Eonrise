@@ -49,6 +49,9 @@ work waits until people use it (see After launch).
 
 ## After launch
 
+- [ ] Graph viewer GUI: an interactive version of `tools/graph_view.py` (search, click a
+  concept to see its papers), like Obsidian's graph view. The README image comes from that
+  script today.
 - [ ] Brand page, logo (mark + wordmark, light/dark, 16px), social preview 1280x640
 - [ ] Domain (`eonrise.dev` / `eonrise.app` free on 2026-10-12), once there is a site to host
 

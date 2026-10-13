@@ -13,8 +13,6 @@ Finds the research fields that already solved your problem under another name.
 
 <code>eonrise --demo --out output</code>
 
-<img src="docs/assets/brief.png" alt="Excerpt of a real Eonrise brief for the question how can written instructions prevent the same mistakes from repeating when every worker is new. It lists mechanisms, measurements, failure modes and methods from the papers, then two papers from other fields with the same shape: one on nursing students and clinical mistakes, one on designing teaching problems." width="760">
-
 </div>
 
 A problem that feels new in my field is often an old one somewhere else. Someone in law, medicine
@@ -38,35 +36,13 @@ not support part of the map, that part stays empty and the brief says so.
 
 ## How it works
 
-Eonrise takes one word out of your question and places it in a family tree: parents and
-grandparents above it, siblings beside it, children and grandchildren below. Searching up,
-sideways and down that tree is how it reaches fields that never use your words. Here is the
-word "mistakes" from the [written instructions](examples/written-instructions-new-workers.md) run:
+Each run grows a map of concepts around your question: broader fields above it, related
+fields beside it, narrower ones below, each branching again. This is the
+[written instructions](examples/written-instructions-new-workers.md) question run with
+`--max-depth 30 --max-nodes 2000`: 1,950 concepts, 20 levels deep, drawn straight from its
+`research_map.json` by [`tools/graph_view.py`](tools/graph_view.py):
 
-```mermaid
-flowchart TB
-  D["Health Sciences<br/><i>great-great-grandparent</i>"] --> F["Health Professions<br/><i>great-grandparent</i>"]
-  F --> SF["Emergency Medical Services<br/><i>grandparent</i>"]
-  SF --> T["Patient Safety and Medication Errors<br/><i>parent</i>"]
-  P["how can written instructions prevent the same<br/><b>mistakes</b> from repeating when every worker is new"] -. word taken .-> W
-  T --> W(("<b>mistakes</b>"))
-  T --> S1["near misses<br/><i>sibling</i>"]
-  T --> S2["incident reporting<br/><i>sibling</i>"]
-  T --> S3["error prevention<br/><i>sibling</i>"]
-  T --> S4["patient safety culture<br/><i>sibling</i>"]
-  T --> S5["surgical safety checklist<br/><i>sibling</i>"]
-  W --> C1["medication errors<br/><i>child</i>"]
-  W --> C2["prescribing errors<br/><i>child</i>"]
-  W --> C3["surgical errors<br/><i>child</i>"]
-  W --> C4["nursing errors<br/><i>child</i>"]
-  C1 --> G1["medication administration errors<br/><i>grandchild</i>"]
-  C1 --> G2["high-risk medications<br/><i>grandchild</i>"]
-  C4 --> G3["What Nursing Students Hope<br/>from Clinical Mistakes<br/><i>grandchild, found by Eonrise</i>"]
-```
-
-The four rows above the word are OpenAlex's topic hierarchy. Siblings, children and the
-medication grandchildren are that topic's own keywords. The nursing paper is what the run
-found by following that branch into another field.
+<img src="docs/assets/concept-map.png" alt="Force-directed graph of 1,950 concepts one Eonrise run reached from a question about written instructions and repeated mistakes. The question sits in the middle. Labelled clusters around it include second language acquisition, curriculum implementation, task switching, proactive interference, memory interference, cognitive flexibility, dyslexia and speech production." width="100%">
 
 1. The question becomes one root topic, and every later search stays tied to it.
 2. Each round searches the scholarly sources and drops papers about something else.
