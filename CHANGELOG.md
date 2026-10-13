@@ -4,6 +4,13 @@ User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
 ## Unreleased
 
+### Added
+
+- `--version` prints the installed version.
+- `--demo` runs offline on a sample bundle shipped in the package and writes only to `--out`.
+- The source package carries the tests, fixtures and benchmarks, and they pass from it.
+- The release workflow runs the tests first, refuses a tag that differs from `__version__`, and can rehearse the upload on TestPyPI.
+
 ### Changed
 
 - The import package is now `eonrise` (was `ontology_router`).

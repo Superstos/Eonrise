@@ -64,5 +64,35 @@ class SilentFailureTests(unittest.TestCase):
         self.assertNotIn("**Degraded:**", text)  # that line reads as a usable partial run
 
 
+
+class StartupFlagTests(unittest.TestCase):
+    def _main(self, *argv):
+        printed: list[str] = []
+        with mock.patch("sys.argv", ["eonrise", *argv]),                 mock.patch("builtins.print", side_effect=lambda *a, **k: printed.append(" ".join(map(str, a)))):
+            cli.main()
+        return printed
+
+    def test_version_prints_the_package_version(self):
+        from eonrise import __version__
+        with mock.patch("sys.argv", ["eonrise", "--version"]),                 mock.patch("sys.stdout.write") as write, self.assertRaises(SystemExit) as stop:
+            cli.main()
+        self.assertEqual(stop.exception.code, 0)
+        self.assertIn(__version__, "".join(call.args[0] for call in write.call_args_list))
+
+    def test_question_is_required_without_demo(self):
+        with mock.patch("sys.argv", ["eonrise"]), mock.patch("sys.stderr.write"),                 self.assertRaises(SystemExit) as stop:
+            cli.main()
+        self.assertEqual(stop.exception.code, 2)
+
+    def test_demo_runs_offline_and_writes_only_to_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home, out = Path(tmp) / "home", Path(tmp) / "out"
+            with mock.patch("pathlib.Path.home", return_value=home):
+                self._main("--demo", "--out", str(out))
+            self.assertFalse(home.exists())
+            brief = (out / "report.md").read_text(encoding="utf-8")
+        self.assertIn("## Same shape, other fields", brief)
+
+
 if __name__ == "__main__":
     unittest.main()

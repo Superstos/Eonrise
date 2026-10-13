@@ -37,3 +37,6 @@ include = ["eonrise*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "eonrise.__version__"}
+
+[tool.setuptools.package-data]
+eonrise = ["data/*.json"]

@@ -3,8 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import tempfile
 from pathlib import Path
 
+from . import __version__
 from .paper_store import PaperStore
 from .engine import canonical_root, run_search
 from .equivalence import ConceptEquivalenceStore
@@ -19,6 +21,8 @@ from .scheduling import ProviderStates
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Expand one topic into a grounded up/down/sideways map.")
+    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    p.add_argument("--demo", action="store_true", help="Offline run on a sample bundle shipped with Eonrise; writes only to --out")
     _provider_arguments(p)
     _run_arguments(p)
     _map_arguments(p)
@@ -27,7 +31,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def _provider_arguments(p):
-    p.add_argument("question", help="Research question or topic in plain language")
+    p.add_argument("question", nargs="?", help="Research question or topic in plain language")
     p.add_argument("--out", default="eonrise-output", help="Output directory")
     p.add_argument("--email", default=os.getenv("CROSSREF_EMAIL", ""), help="Email for Crossref polite pool")
     p.add_argument("--openalex-key", default=os.getenv("OPENALEX_API_KEY", ""), help="OpenAlex API key (optional: raises rate limits, enables --semantic)")
@@ -222,9 +226,33 @@ def _save_run(store, result):
         pass
 
 
+def _args() -> argparse.Namespace:
+    p = parser()
+    args = p.parse_args()
+    if args.demo:
+        _use_demo(args)
+    elif not args.question:
+        p.error("the following arguments are required: question (or --demo)")
+    return args
+
+
+def _use_demo(args):
+    """The sample bundle's own question, offline, with every store left untouched."""
+    bundle = Path(__file__).parent / "data" / "demo_bundle.json"
+    args.question = args.question or json.loads(bundle.read_text(encoding="utf-8"))["question"]
+    args.mode, args.bundle = "assistant", [str(bundle)]
+    args.no_memory = args.no_corpus = args.no_equivalence = True
+
+
 def main() -> None:
-    args = parser().parse_args()
-    cache = Path.home() / ".cache" / "eonrise"
+    args = _args()
+    if not args.demo:
+        return _run(args, Path.home() / ".cache" / "eonrise")
+    with tempfile.TemporaryDirectory() as cache:
+        _run(args, Path(cache))
+
+
+def _run(args, cache):
     http = _http(args, cache)
     corpus = _corpus(args, cache)
     bundle_path = _bundle_path(args)

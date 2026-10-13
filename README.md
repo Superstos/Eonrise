@@ -14,6 +14,15 @@ Eonrise installs on Python 3.11+.
 
 ```bash
 pip install .
+eonrise --demo --out output
+```
+
+`--demo` runs offline on a sample of 99 papers about finding analogous solutions in distant
+fields, and writes the brief to `output/report.md` in about a second. It saves nothing else.
+
+A real question searches scholarly APIs:
+
+```bash
 eonrise "how does spaced repetition improve memory retention" --out output
 ```
 

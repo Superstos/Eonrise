@@ -1,3 +1,4 @@
-include LICENSE
-include README.md
-include tests/fixtures/papers.json
+include LICENSE README.md CHANGELOG.md
+graft tests
+graft benchmarks
+global-exclude *.py[cod]
