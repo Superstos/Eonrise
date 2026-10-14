@@ -18,12 +18,20 @@ Borrowed, with the evidence in `tests/fixtures/crossfield_gold.json`:
 from __future__ import annotations
 
 import math
+import re
 from collections import Counter
 
 from .evidence import DOWN_RELATIONS, GENERIC_FIELDS, extract_terms, word_family, normalize, split_words
 from .models import Paper, Term
 
 DISTANT_PAPER_LIMIT = 8
+SNIPPET_CHARS = 240
+# Words that open the sentence saying what a paper did, rather than its background.
+METHOD_CUE = re.compile(r"\b(we|this (study|paper|review|article)|results?|found|show(s|ed)?|propos|develop|test(ed|s)?|compar)", re.I)
+# A sentence about what others should do next is not what this paper did.
+OUTLOOK = re.compile(r"\b(future (research|work|stud)|further (research|work|stud)|should|we recommend|more research)", re.I)
+# Journal furniture extracted with the abstract: headers, volume lines, licences.
+FURNITURE = re.compile(r"[¦|©]|\b(volume \d+|issue \d+|all rights reserved|creative commons|original article)\b", re.I)
 
 
 def _families_in_order(text: str) -> list[str]:
@@ -120,6 +128,7 @@ class _DistantRanking:
         return {"paper_id": paper.paper_id, "title": paper.title, "year": paper.year,
                 "url": paper.url or paper.doi, "field": field, "distant": field not in self.home,
                 "shares": _shared_labels(shared),
+                "what_they_did": what_they_did(paper, [label for label, _ in shared]),
                 "score": round(score, 3)}
 
     def _shared_score(self, shared):
@@ -128,6 +137,27 @@ class _DistantRanking:
     def _concept_score(self, label, rel):
         weight = 1.5 if rel in DOWN_RELATIONS else 1.0
         return weight * math.log(1 + len(self.papers) / self.df[label])
+
+
+def what_they_did(paper: Paper, shared: list[str]) -> str:
+    """The abstract sentence that best says what the paper did, or "" without an abstract.
+
+    Agents mapped distant papers from titles and topic labels alone ("shares blockchain
+    technology in education") and had to web-search each one. The sentence that names a
+    method or a result and carries the shared concepts is the "what they did" step."""
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", paper.abstract or "")
+                 if len(s.strip()) > 30 and not FURNITURE.search(s)]
+    if not sentences:
+        return ""
+    words = {w for label in shared for w in split_words(label)}
+    best = max(sentences, key=lambda s: (_did_score(s, words), -sentences.index(s)))
+    return best if len(best) <= SNIPPET_CHARS else best[:SNIPPET_CHARS].rsplit(" ", 1)[0] + "…"
+
+
+def _did_score(sentence, words):
+    # A method or result cue outweighs shared words: the step is "what they did".
+    shared = min(len(words & set(split_words(sentence))), 2)
+    return 2 * bool(METHOD_CUE.search(sentence)) + shared - 3 * bool(OUTLOOK.search(sentence))
 
 
 def _shared_labels(shared):

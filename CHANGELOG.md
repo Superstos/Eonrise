@@ -8,6 +8,14 @@ User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
 - Eonrise skill and Claude Code plugin (`plugin/`): teaches an agent to run Eonrise and map each distant paper to a concrete idea instead of dismissing it. Install with `/plugin install eonrise --marketplace Superstos/Eonrise`.
 - `tools/agent_check.py` measures how many distant fields a model's answer uses, with and without the skill.
+- Every run folder gets a `README.md` saying what each file, field and number means (also `docs/OUTPUT.md`). A test fails when a field goes undocumented.
+- Each distant paper in the brief carries *What they did*, the abstract sentence that names its method or result, so it can be mapped without opening the paper.
+- `--cache-dir` and `EONRISE_CACHE_DIR` keep every store and cached response in one folder, such as `.eonrise` inside a project.
+- `from_store_paper_ids` lists the papers the local store supplied from earlier runs; the brief marks them.
+
+### Fixed
+
+- The local paper store no longer floods unrelated questions with old papers. A stored paper now needs 30% of the query's weight, each word weighted by how rare it is in the store, plus two of the query's words side by side; field labels no longer count. Before, any two shared words matched, and on a 5,837-paper store a question about films got ten unrelated papers, which also skipped the live search.
 
 ## 0.9.0 - 2026-10-14
 

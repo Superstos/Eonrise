@@ -33,23 +33,10 @@ feed the neighboring-field part of the map, so a bundle without them rarely find
 
 ## Output files
 
-A run writes four files to `--out`:
-
-| File | What it holds |
-| --- | --- |
-| `report.md` | The short brief: map, stated limitations, distant-field papers, next searches. |
-| `internal_report.md` | The concept tree, search rounds and evidence behind each term. |
-| `research_map.json` | Everything, for other tools. Carries `version` (the schema version, now 5). |
-| `graph.json` | `nodes` and typed `edges` for a graph view. |
-
-Useful keys in `research_map.json`:
-
-- `status` is `usable`, `partial` or `failed`; `stop_reason` says why the run ended.
-- `coverage` maps each part of the map (mechanism, measurement, failure_mode, method,
-  neighbor_field) to its grounded terms; `gaps` lists the parts left empty.
-- `harvest` holds the distant-field papers that share the question's shape.
-- `papers` are the papers kept; `on_topic_paper_ids` marks the ones about the question.
-- `providers_down` and `provider_errors` say which sources failed during the run.
+A run writes five files to `--out`: `report.md` (the brief), `research_map.json` (everything,
+for scripts), `internal_report.md`, `graph.json`, and `README.md`, a guide to every file, field
+and number. The same guide is [OUTPUT.md](OUTPUT.md); a test keeps it in line with the real
+output.
 
 A `failed` run exits with code 2, so scripts can tell a broken search from a thin literature.
 
@@ -61,12 +48,14 @@ A `failed` run exits with code 2, so scripts can tell a broken search from a thi
 | `OPENALEX_API_KEY` | `--openalex-key` | Higher OpenAlex limits; needed for `--semantic`. |
 | `S2_API_KEY` | `--s2-key` | Semantic Scholar; the keyless pool often answers 429. |
 | `CORE_API_KEY` | `--core-key` | CORE; keyless requests are refused after a few calls. |
+| `EONRISE_CACHE_DIR` | `--cache-dir` | Folder for every store and cached response. |
 
 Keys never appear in reports or error messages.
 
 ## What a run keeps
 
-Live runs keep state under `~/.cache/eonrise/` so later runs cost fewer API calls:
+Live runs keep state under `~/.cache/eonrise/` so later runs cost fewer API calls.
+`--cache-dir .eonrise` (or `EONRISE_CACHE_DIR`) keeps all of it inside a project folder:
 
 | Path | What | Turn off with |
 | --- | --- | --- |

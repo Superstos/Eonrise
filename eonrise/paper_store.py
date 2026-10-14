@@ -13,6 +13,7 @@ Append-only JSONL, one paper per line, merged by DOI. Nothing here calls the net
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 
@@ -20,6 +21,10 @@ from .models import Paper
 
 STOP = {"a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "how", "in",
         "is", "it", "of", "on", "or", "that", "the", "to", "what", "when", "which", "with"}
+# Share of the query's rarity weight a stored paper must carry. Two of the query's words
+# must also sit side by side in it ("coding agents"): scattered words reached half the
+# weight in "The Role of Meaning in Word Recognition" for a question about training data.
+MIN_QUERY_WEIGHT = 0.3
 
 
 def _search_words(text: str) -> set[str]:
@@ -86,6 +91,7 @@ class PaperStore:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._papers: dict[str, Paper] = {}
+        self._words: dict[str, set[str]] = {}
         self._loaded = False
 
     def load(self) -> dict[str, Paper]:
@@ -104,9 +110,13 @@ class PaperStore:
         held = self._papers.get(key)
         if held is None:
             self._papers[key] = paper
+            self._words[key] = _paper_words(paper)
             return True
         # The same paper from two sources: keep whichever fields are actually filled.
-        return _enrich_paper(held, paper)
+        changed = _enrich_paper(held, paper)
+        if changed:
+            self._words[key] = _paper_words(held)
+        return changed
 
     def add(self, papers: list[Paper]) -> int:
         """Append papers that are new or newly enriched. Returns how many lines were written."""
@@ -129,21 +139,33 @@ class PaperStore:
                 handle.write(json.dumps(paper.to_dict(), ensure_ascii=False) + "\n")
 
     def search(self, query: str, limit: int = 20) -> list[Paper]:
-        """Rank stored papers against the query. A stored paper costs no API credit."""
+        """Rank stored papers against the query. A stored paper costs no API credit.
+
+        A match must carry enough of the query's weight (`MIN_QUERY_WEIGHT`), each word
+        weighted by how rare it is in the store. Two shared words used to be enough, and once the store held
+        thousands of papers every question found ten: "watch new movies with a fresh
+        perspective" returned "Teaching strategies" and "Color naming", and that full local
+        answer skipped the live search entirely."""
         wanted = _search_words(query)
         if not wanted:
             return []
+        weights = self._weights(wanted)
+        total = sum(weights.values())
+        pairs = _pairs(query)
         ranked: list[tuple[float, Paper]] = []
-        for paper in self.load().values():
-            found = _search_words(f"{paper.title} {paper.abstract} {' '.join(paper.keywords)} "
-                           f"{' '.join(paper.fields)} {' '.join(paper.topic_path)}")
-            hits = wanted & found
-            if len(hits) < min(2, len(wanted)):
+        for key, paper in self.load().items():
+            hits = wanted & self._words[key]
+            share = sum(weights[w] for w in hits) / total
+            if len(hits) < min(2, len(wanted)) or not _strong(share, pairs, paper):
                 continue
-            clone = _search_clone(paper, query)
-            ranked.append((len(hits) / len(wanted) + min(paper.cited_by_count, 200) / 2000, clone))
+            ranked.append((share + min(paper.cited_by_count, 200) / 2000, _search_clone(paper, query)))
         ranked.sort(key=lambda row: row[0], reverse=True)
         return [paper for _, paper in ranked[:limit]]
+
+    def _weights(self, wanted):
+        total = len(self._papers)
+        df = {w: sum(1 for words in self._words.values() if w in words) for w in wanted}
+        return {w: math.log((total + 1) / (df[w] + 1)) + 0.1 for w in wanted}
 
     def stats(self) -> dict:
         papers = self.load()
@@ -151,6 +173,27 @@ class PaperStore:
                 "with_abstract": _count_filled(papers.values(), "abstract"),
                 "with_keywords": _count_filled(papers.values(), "keywords"),
                 "providers": _providers(papers.values())}
+
+
+def _sequence(text):
+    return [t for t in re.findall(r"[a-z0-9]+", (text or "").lower()) if len(t) > 2 and t not in STOP]
+
+
+def _pairs(text):
+    seq = _sequence(text)
+    return set(zip(seq, seq[1:]))
+
+
+def _strong(share, pairs, paper):
+    if share < MIN_QUERY_WEIGHT:
+        return False
+    return not pairs or bool(pairs & _pairs(f"{paper.title} {paper.abstract} {' '.join(paper.keywords)}"))
+
+
+def _paper_words(paper):
+    # Field and topic labels stay out: "Education" on a paper's label matched any question
+    # that said "learn", whatever the paper was about.
+    return _search_words(f"{paper.title} {paper.abstract} {' '.join(paper.keywords)}")
 
 
 def _search_clone(paper, query):

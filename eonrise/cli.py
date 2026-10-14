@@ -64,6 +64,8 @@ def _map_arguments(p):
 
 def _memory_arguments(p):
     p.add_argument("--no-memory", action="store_true", help="Skip appending to local memory store")
+    p.add_argument("--cache-dir", default="", help="Folder for every store and cached response "
+                   "(default: $EONRISE_CACHE_DIR, else ~/.cache/eonrise). Use .eonrise to keep a run inside the project")
     p.add_argument("--corpus", default="", help="Paper store to read and grow (default: <cache>/corpus.jsonl)")
     p.add_argument("--no-corpus", action="store_true", help="Do not read or write the local paper store")
     p.add_argument("--equivalence", default="", help="Concept-equivalence store to read and grow (default: <cache>/equivalence.jsonl)")
@@ -247,7 +249,7 @@ def _use_demo(args):
 def main() -> None:
     args = _args()
     if not args.demo:
-        return _run(args, Path.home() / ".cache" / "eonrise")
+        return _run(args, Path(args.cache_dir or os.getenv("EONRISE_CACHE_DIR") or Path.home() / ".cache" / "eonrise"))
     with tempfile.TemporaryDirectory() as cache:
         _run(args, Path(cache))
 

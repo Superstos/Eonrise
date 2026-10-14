@@ -111,8 +111,36 @@ class CorpusStoreTests(unittest.TestCase):
 
     def test_search_records_the_query_that_found_it(self):
         store = PaperStore(self.path)
-        store.add([paper("p1", "Memory study", "Retention.", doi="10.1/x")])
+        store.add([paper("p1", "Memory retention study", "Retention.", doi="10.1/x")])
         self.assertIn("memory retention", store.search("memory retention")[0].found_by)
+
+    def test_scattered_shared_words_are_not_a_match(self):
+        # Seen 2026-10-14: "how to watch new movies with a fresh perspective" took ten
+        # unrelated stored papers ("Teaching strategies", "Color naming") off a 5,837-paper
+        # store, and that full local answer skipped every live search.
+        store = PaperStore(self.path)
+        store.add([paper("t", "Teaching strategies", "New teachers watch a lesson from a fresh angle.", doi="10.1/t"),
+                   paper("m", "Movies and memory", "Viewers who watch new movies from a fresh perspective recall more.", doi="10.1/m")])
+        found = [p.paper_id for p in store.search("watch new movies with a fresh perspective")]
+        self.assertEqual(found, ["m"])
+
+    def test_field_labels_do_not_make_a_match(self):
+        store = PaperStore(self.path)
+        labelled = paper("b", "Bridge rehabilitation", "Epoxy resin layers.", doi="10.1/b")
+        labelled.fields = ["Education learning theory"]
+        store.add([labelled])
+        self.assertEqual(store.search("learning theory"), [])
+
+    def test_unrelated_store_does_not_skip_the_live_search(self):
+        store = PaperStore(self.path)
+        store.add([paper(f"p{i}", f"Teaching strategies volume {i}",
+                         "New teachers watch from a fresh angle.", doi=f"10.1/{i}") for i in range(8)])
+        remote = mock.Mock()
+        remote.name = "doaj"
+        remote.search.return_value = []
+        run_search("watch new movies with a fresh perspective", [store, remote],
+                   SearchSettings(max_rounds=1), results_per_query=8)
+        remote.search.assert_called()
 
     def test_stats_counts_what_the_store_actually_holds(self):
         store = PaperStore(self.path)

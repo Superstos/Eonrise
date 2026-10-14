@@ -12,31 +12,60 @@ often solved the same problem years ago under another name.
 **A paper from a distant field is the product, not a search error.** Never call a result
 noise, off-topic or irrelevant before you have tried to map it (step 3).
 
-## 1. Run it
+## 0. What you need
+
+- **Python 3.11 or newer.** Check with `python --version` first. On an older Python, pip says
+  `Could not find a version that satisfies the requirement eonrise (from versions: none)`:
+  that means the wrong Python, not a missing package. On Windows, `py -3.12` picks a newer one.
+- **Network access** to the scholarly APIs. If your sandbox blocks the network, say so to the
+  user. `eonrise --demo` works offline but answers its own sample question, not the user's.
+- **Scholarly questions only.** Sources are research papers, so a question about films,
+  products or code repositories comes back `failed`. Say so instead of stretching the result.
+
+## 1. Run it, inside the project folder
+
+Everything stays in the folder you work in: the virtual environment, the output, and the
+cache of past runs.
 
 ```bash
-pip install eonrise
-eonrise "the problem in plain words" --out eonrise-out
+python -m venv .venv                  # Python 3.11+; Windows: py -3.12 -m venv .venv
+.venv/bin/pip install eonrise         # Windows: .venv\Scripts\pip install eonrise
+.venv/bin/eonrise "the problem in plain words" --out eonrise-out --cache-dir .eonrise
 ```
 
+To work from the source instead: `git clone https://github.com/Superstos/Eonrise`, then
+`pip install -e ./Eonrise` into the same venv.
+
+- `--cache-dir .eonrise` keeps every store inside the project. Without it, Eonrise writes to
+  `~/.cache/eonrise`, outside the folder. `EONRISE_CACHE_DIR` does the same as the flag.
+- Use the command line and its flags only. Never import Eonrise's private functions to change
+  where it writes; `eonrise --help` lists every option.
 - Describe the problem, not a solution you already suspect. Naming a method only finds that method.
 - Use everyday words. Leave out idioms and your own field's jargon: they pull results back
-  into your field, or match the idiom literally.
+  into your field, or match the idiom literally. A word with two senses ("train" a model,
+  "train" staff) needs the other words to fix its sense.
 - Deeper run when the first one is shallow: `--max-depth 30 --max-nodes 2000`.
-- Offline sample, no network: `eonrise --demo --out eonrise-out`.
 
 ## 2. Read the brief
 
-Open `eonrise-out/report.md`. Read in this order:
+Open `eonrise-out/report.md`. `eonrise-out/README.md` says what every file, field and number
+means: read it before you open `research_map.json`, never guess the fields.
+(`on_topic_papers` is a count; the IDs are in `on_topic_paper_ids`.)
+
+Read the brief in this order:
 
 1. **Status.** `failed` means no paper was about the question: tell the user so and rephrase.
    Do not build on a failed map.
-2. **Same shape, other fields.** The main reason to run Eonrise.
+2. **Same shape, other fields.** The main reason to run Eonrise. Each paper carries
+   *What they did*, one sentence from its abstract.
 3. **Grounded map** and **Stated limitations**.
-4. **Unfinished: saw at most ~N%.** The search is partial. An empty section is unsearched,
-   not absent.
+4. **Unfinished: saw at most ~N%.** The share of what *these queries* can reach, not of all
+   research. A broader follow-up run can show a lower share while finding more papers, so
+   compare paper counts between runs, never the percentages.
 5. **Searches toward other fields** and **Next searches**: run the best one or two if the
    first pass is thin.
+
+A paper marked *from an earlier run* came from the local store, not a fresh search.
 
 ## 3. Map every distant item
 
@@ -50,8 +79,8 @@ Example, for "AI agents repeat mistakes I corrected in earlier sessions":
 > follow -> test which wording of a rule changes the agent's behavior
 
 Drop an item only after trying that line, and say in a few words why it failed
-("shares only the word 'training'"). Titles alone are thin evidence: say when you only saw
-the title.
+("shares only the word 'training'"). When *What they did* says "no abstract, title only",
+say you only saw the title.
 
 ## 4. Answer the user
 

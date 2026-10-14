@@ -1,5 +1,5 @@
 {
- "compact": "# Eonrise brief\n\n**Question:** why do lithium-ion batteries lose capacity over repeated charging cycles\n\n**Root topic:** lithium-ion batteries lose capacity over repeated\n\n**Status:** usable — 4/5 relations grounded after gap repair\n\n**Evidence:** 37 papers kept of 37 retrieved (24 on topic), 75 concepts\n\n## Grounded map\n\n- **Mechanism:** machine learning, home storage\n- **Measurement:** soh estimation, mode estimation\n- **Failure Mode:** degradation modes, degradation mechanisms, degradation models\n- **Method:** not grounded yet\n- **Neighbor Field:** energy storage, degradation diagnostics, cycle life prediction\n\n## Stated limitations\n\n- **raising stress** — \"Notes that simply raising stress ignores mechanisms, and the same capacity attenuation does not mean the same state of health when mechanisms differ.\"\n- **laboratory data** — \"Highlights limitations of laboratory data and reviews practical challenges of field battery data for SoH estimation.\"\n\n## Same shape, other fields\n\n- **Bayesian and likelihood inferences on remaining useful life in two-phase degradation models under gamma process** (2017, Reliability Engineering) — shares degradation models\n- **A Wiener-process-based degradation model with a recursive filter algorithm for remaining useful life estimation** (2013, Mechanical Systems and Signal Processing) — shares degradation models\n\n## Concept directions\n\n- **down:** degradation modes, degradation mechanisms, machine learning\n- **sideways:** lithium ion batteries, lithium plating, state of health, li ion batteries\n\n**Gaps:** method\n\n**Not in this literature:** method — two full rounds produced no candidate at all, so the run stopped spending queries on it rather than calling it an unfilled gap.\n\n## Next searches\n\n- `lithium ion batteries experiment`\n- `lithium ion batteries ablation experiment`\n\n## Searches toward other fields\n\n- `degradation models`\n",
+ "compact": "# Eonrise brief\n\n**Question:** why do lithium-ion batteries lose capacity over repeated charging cycles\n\n**Root topic:** lithium-ion batteries lose capacity over repeated\n\n**Status:** usable — 4/5 relations grounded after gap repair\n\n**Evidence:** 37 papers kept of 37 retrieved (24 on topic), 75 concepts\n\n*README.md in this folder says what every file, field and number means.*\n\n## Grounded map\n\n- **Mechanism:** machine learning, home storage\n- **Measurement:** soh estimation, mode estimation\n- **Failure Mode:** degradation modes, degradation mechanisms, degradation models\n- **Method:** not grounded yet\n- **Neighbor Field:** energy storage, degradation diagnostics, cycle life prediction\n\n## Stated limitations\n\n- **raising stress** — \"Notes that simply raising stress ignores mechanisms, and the same capacity attenuation does not mean the same state of health when mechanisms differ.\"\n- **laboratory data** — \"Highlights limitations of laboratory data and reviews practical challenges of field battery data for SoH estimation.\"\n\n## Same shape, other fields\n\n- **Bayesian and likelihood inferences on remaining useful life in two-phase degradation models under gamma process** (2017, Reliability Engineering)\n  - What they did: Develops likelihood and Bayesian inference for remaining useful life in two-phase degradation models under a gamma process, with a random rate change time.\n  - Shared concepts: degradation models\n- **A Wiener-process-based degradation model with a recursive filter algorithm for remaining useful life estimation** (2013, Mechanical Systems and Signal Processing)\n  - What they did: Uses a recursive filter to update the drift coefficient of a Wiener process and the EM algorithm to update all other parameters whenever new degradation data become available, to estimate remaining useful life.\n  - Shared concepts: degradation models\n\n## Concept directions\n\n- **down:** degradation modes, degradation mechanisms, machine learning\n- **sideways:** lithium ion batteries, lithium plating, state of health, li ion batteries\n\n**Gaps:** method\n\n**Not in this literature:** method — two full rounds produced no candidate at all, so the run stopped spending queries on it rather than calling it an unfilled gap.\n\n## Next searches\n\n- `lithium ion batteries experiment`\n- `lithium ion batteries ablation experiment`\n\n## Searches toward other fields\n\n- `degradation models`\n",
  "edges": [
   {
    "a": "accelerated aging",
@@ -4356,6 +4356,7 @@
   "dormant_relations": [
    "method"
   ],
+  "from_store_paper_ids": [],
   "gaps": [
    "method"
   ],
@@ -5294,6 +5295,7 @@
     ],
     "title": "Bayesian and likelihood inferences on remaining useful life in two-phase degradation models under gamma process",
     "url": "https://www.sciencedirect.com/science/article/abs/pii/S0951832017303083",
+    "what_they_did": "Develops likelihood and Bayesian inference for remaining useful life in two-phase degradation models under a gamma process, with a random rate change time.",
     "year": 2017
    },
    {
@@ -5306,6 +5308,7 @@
     ],
     "title": "A Wiener-process-based degradation model with a recursive filter algorithm for remaining useful life estimation",
     "url": "https://www.sciencedirect.com/science/article/abs/pii/S0888327012003226",
+    "what_they_did": "Uses a recursive filter to update the drift coefficient of a Wiener process and the EM algorithm to update all other parameters whenever new degradation data become available, to estimate remaining useful life.",
     "year": 2013
    }
   ],

@@ -191,6 +191,7 @@ class _Search:
     silent_rounds: Counter = field(default_factory=Counter)
     dormant: set[str] = field(default_factory=set)
     corpus_saved: int = 0  # paid calls the local store made unnecessary
+    from_store: set[str] = field(default_factory=set)  # papers the local store supplied
     on_topic: set[str] = field(default_factory=set)
     previous_on_topic: int = 0
     expanded_queries: list[str] = field(default_factory=list)
@@ -341,6 +342,8 @@ class _Search:
             return []
         for p in found:
             p.found_by = list(dict.fromkeys([*p.found_by, query]))
+        if provider.name == "corpus":
+            self.from_store.update(p.paper_id for p in found)
         self.states.observe(provider.name, True)
         return found
 
@@ -527,6 +530,9 @@ class _Search:
                 # away ~90% of each run's evidence before the next run could reuse it.
                 "corpus_papers": [p.to_dict() for p in self.papers],
                 "calls_saved_by_corpus": self.corpus_saved,
+                # Which papers an earlier run supplied, so a reader can tell reuse from a
+                # fresh find when an old paper turns up in a new question.
+                "from_store_paper_ids": sorted(self.from_store),
                 # Only sentences a paper actually wrote. Title n-grams containing "failure"
                 # were being quoted here as stated limitations.
                 "limitations": [t.to_dict() for t in top_terms(self.terms, "failure_mode", 5, grounded_only=True)

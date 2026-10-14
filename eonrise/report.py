@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .literature_coverage import WARN_BELOW
+from .output_guide import render_guide
 
 
 def _bullets(items) -> list[str]:
@@ -20,7 +21,8 @@ def _header(result: dict) -> list[str]:
             f"**Root topic:** {result.get('root_topic', '')}", "",
             f"**Status:** {result['status']} — {result['stop_reason']}", "",
             f"**Evidence:** {len(papers)} papers kept of {result.get('retrieved_papers', len(papers))} retrieved"
-            f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts"]
+            f" ({result.get('on_topic_papers', 0)} on topic), {len(result.get('concepts', []))} concepts",
+            "", "*README.md in this folder says what every file, field and number means.*"]
 
 
 def _failure_notes(result: dict) -> list[str]:
@@ -101,12 +103,13 @@ def _distant_papers(result: dict) -> list[str]:
     # The papers the gate set aside that carry the same shape. Distant fields are the
     # product; a brief that only showed the on-topic map hid them.
     harvested = result.get("harvest") or []
+    stored = set(result.get("from_store_paper_ids") or [])
     lines: list[str] = []
     for heading, distant in (("Same shape, other fields", True), ("Same field, missed by the word gate", False)):
         group = _harvest_group(harvested, distant)
         if group:
             lines += ["", f"## {heading}", ""]
-            lines += [_harvest_line(h) for h in group[:5]]
+            lines += [_harvest_line(h, stored) for h in group[:5]]
     return lines
 
 
@@ -114,9 +117,12 @@ def _harvest_group(harvested, distant):
     return [h for h in harvested if bool(h.get("distant")) is distant]
 
 
-def _harvest_line(hit):
-    return (f"- **{hit['title']}** ({hit.get('year') or 'n.d.'}, {hit['field']}) — shares "
-            + ", ".join(hit["shares"][:3]))
+def _harvest_line(hit, stored=frozenset()):
+    did = hit.get("what_they_did")
+    origin = ", from an earlier run" if hit.get("paper_id") in stored else ""
+    return (f"- **{hit['title']}** ({hit.get('year') or 'n.d.'}, {hit['field']}{origin})\n"
+            f"  - What they did: {did if did else 'no abstract, title only'}\n"
+            f"  - Shared concepts: " + ", ".join(hit["shares"][:3]))
 
 
 def _directions(result: dict) -> list[str]:
@@ -212,3 +218,4 @@ def write_outputs(result: dict, output_dir: str | Path) -> None:
     (path / "report.md").write_text(render_compact_markdown(result), encoding="utf-8")
     (path / "internal_report.md").write_text(render_markdown(result), encoding="utf-8")
     (path / "graph.json").write_text(json.dumps(result["graph"], indent=2, ensure_ascii=False), encoding="utf-8")
+    (path / "README.md").write_text(render_guide(), encoding="utf-8")
