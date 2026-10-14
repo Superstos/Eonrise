@@ -19,8 +19,9 @@ noise, off-topic or irrelevant before you have tried to map it (step 3).
   that means the wrong Python, not a missing package. On Windows, `py -3.12` picks a newer one.
 - **Network access** to the scholarly APIs. If your sandbox blocks the network, say so to the
   user. `eonrise --demo` works offline but answers its own sample question, not the user's.
-- **Scholarly questions only.** Sources are research papers, so a question about films,
-  products or code repositories comes back `failed`. Say so instead of stretching the result.
+- **A research question.** Sources are scholarly papers. A question that needs other sources
+  (films to watch, products, code repositories) usually ends `failed` or finds little; say so
+  instead of stretching the result.
 
 ## 1. Run it, inside the project folder
 
@@ -28,15 +29,19 @@ Everything stays in the folder you work in: the virtual environment, the output,
 cache of past runs.
 
 ```bash
-python -m venv .venv                  # Python 3.11+; Windows: py -3.12 -m venv .venv
-.venv/bin/pip install eonrise         # Windows: .venv\Scripts\pip install eonrise
-.venv/bin/eonrise "the problem in plain words" --out eonrise-out --cache-dir .eonrise
+python -m venv .venv                  # Python 3.11+
+.venv/bin/python -m pip install eonrise
+.venv/bin/python -m eonrise "the problem in plain words" --out eonrise-out --cache-dir .eonrise
 ```
 
-To work from the source instead: `git clone https://github.com/Superstos/Eonrise`, then
-`pip install -e ./Eonrise` into the same venv. On Windows, a build that fails with
-`WinError 3` means the path is too long: point `TEMP` and `TMP` at a short folder inside the
-project (`.tmp`) and install again.
+On Windows: `py -3.12 -m venv .venv`, then `.venv\Scripts\python.exe` in place of
+`.venv/bin/python`.
+
+`--cache-dir`, the output `README.md` and the *What they did* lines need a version newer than
+0.9.0. If `python -m eonrise --help` does not list `--cache-dir`, install from source:
+`git clone https://github.com/Superstos/Eonrise`, then `.venv/bin/python -m pip install ./Eonrise`.
+On Windows, a build that fails with `WinError 3` means the path is too long: point `TEMP` and
+`TMP` at a short folder inside the project (`.tmp`) and install again.
 
 - `--cache-dir .eonrise` keeps every store inside the project. Without it, Eonrise writes to
   `~/.cache/eonrise`, outside the folder. `EONRISE_CACHE_DIR` does the same as the flag.
@@ -56,8 +61,9 @@ means: read it before you open `research_map.json`, never guess the fields.
 
 Read the brief in this order:
 
-1. **Status.** `failed` means no paper was about the question: tell the user so and rephrase.
-   Do not build on a failed map.
+1. **Status.** `failed` has two causes. If the brief lists provider errors, the sources failed:
+   retry later or pick others with `--providers`. Otherwise no paper was about the question:
+   tell the user and rephrase. Do not build on a failed map.
 2. **Same shape, other fields.** The main reason to run Eonrise. Each paper carries
    *What they did*, one sentence from its abstract.
 3. **Grounded map** and **Stated limitations**.

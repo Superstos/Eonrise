@@ -6,7 +6,7 @@ User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
 ### Added
 
-- Eonrise skill and Claude Code plugin (`plugin/`): teaches an agent to run Eonrise and map each distant paper to a concrete idea instead of dismissing it. Install with `/plugin install eonrise --marketplace Superstos/Eonrise`.
+- Eonrise skill and Claude Code plugin (`plugin/`): teaches an agent to run Eonrise and map each distant paper to a concrete idea instead of dismissing it. Install with `/plugin marketplace add Superstos/Eonrise`, then `/plugin install eonrise@eonrise`.
 - `tools/agent_check.py` measures how many distant fields a model's answer uses, with and without the skill.
 - Every run folder gets a `README.md` saying what each file, field and number means (also `docs/OUTPUT.md`). A test fails when a field goes undocumented.
 - Each distant paper in the brief carries *What they did*, the abstract sentence that names its method or result, so it can be mapped without opening the paper.

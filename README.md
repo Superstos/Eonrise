@@ -66,7 +66,8 @@ eonrise --demo --out output
 ```
 
 The demo runs offline on a sample of 99 papers about finding analogous solutions in distant
-fields. It writes the brief to `output/report.md` in about a second and saves nothing else.
+fields. It writes the brief to `output/report.md`, with four other output files, in about a second,
+and keeps no cache or stores.
 
 Then ask your own question:
 
@@ -93,7 +94,8 @@ Eonrise. The Eonrise skill teaches an agent to run it, read the brief, and turn 
 paper into a concrete idea. In Claude Code:
 
 ```text
-/plugin install eonrise --marketplace Superstos/Eonrise
+/plugin marketplace add Superstos/Eonrise
+/plugin install eonrise@eonrise
 ```
 
 Other agents can read [`plugin/skills/eonrise/SKILL.md`](plugin/skills/eonrise/SKILL.md)
