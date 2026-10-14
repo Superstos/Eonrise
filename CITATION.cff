@@ -8,7 +8,7 @@ type: software
 authors:
   - family-names: Naji
     given-names: Mohamed Amine
-version: 0.10.1
+version: 0.10.2
 date-released: 2026-10-14
 license: MIT
 repository-code: "https://github.com/Superstos/Eonrise"
