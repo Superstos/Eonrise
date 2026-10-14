@@ -37,12 +37,14 @@ not support part of the map, that part stays empty and the brief says so.
 ## How it works
 
 Each run grows a map of concepts around your question: broader fields above it, related
-fields beside it, narrower ones below, each branching again. This is the
-[written instructions](examples/written-instructions-new-workers.md) question run with
-`--max-depth 30 --max-nodes 2000`: 1,950 concepts, 20 levels deep, drawn straight from its
-`research_map.json` by [`tools/graph_view.py`](tools/graph_view.py):
+fields beside it, narrower ones below, each branching again. Concepts backed by the same
+papers are linked too. This is the [written instructions](examples/written-instructions-new-workers.md)
+question run with `--max-depth 30 --max-nodes 2000`: 1,950 concepts, 20 levels deep. Click the
+picture for the [live map](https://superstos.github.io/Eonrise/demo/), where you can hover,
+search and switch links and colours. [`tools/graph_view.py`](tools/graph_view.py) builds both
+from any run's `research_map.json`.
 
-<img src="docs/assets/concept-map.png" alt="Network map of 1,950 concepts in 40 coloured clusters that one Eonrise run reached from a question about written instructions and repeated mistakes. The question sits in the middle. Labelled clusters around it include speech production, word recognition, curriculum implementation, attentional control, cognitive flexibility, memory interference, proactive interference and reading disorders." width="100%">
+<a href="https://superstos.github.io/Eonrise/demo/"><img src="docs/assets/concept-map.png" alt="Network map of 1,950 concepts one Eonrise run reached from a question about written instructions and repeated mistakes, in muted colours by cluster. The question sits near the centre. Labelled concepts around it include second language acquisition, visual word, lexical access, proactive interference, memory interference, cognitive flexibility, phonological processing and reading disorders." width="100%"></a>
 
 1. The question becomes one root topic, and every later search stays tied to it.
 2. Each round searches the scholarly sources and drops papers about something else.

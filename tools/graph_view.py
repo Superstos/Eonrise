@@ -1,17 +1,21 @@
-"""Draw a run's concept map as a network picture: ForceAtlas2 layout, one colour per cluster.
+"""Draw a run's concept map as an interactive network page, and optionally a still image.
 
     python tools/graph_view.py output/research_map.json --out graph.html
-    python tools/graph_view.py output/research_map.json --out graph.html --png docs/assets/graph.png
+    python tools/graph_view.py output/research_map.json --out graph.html --png docs/assets/concept-map.png
 
-The page loads graphology from a CDN; the package itself stays free of dependencies.
---png renders the page in headless Chrome and saves a screenshot.
+Two kinds of links: the tree (each concept to the concept it grew from) and shared papers
+(two concepts supported by the same papers). The page lays them out with ForceAtlas2, finds
+clusters with Louvain, and lets you switch links, colours and search. It loads graphology from
+a CDN; the package itself stays free of dependencies. --png saves a still in headless Chrome.
 """
 
 import argparse
+import itertools
 import json
 import os
 import shutil
 import subprocess
+from collections import Counter, defaultdict
 from pathlib import Path
 
 LIBS = "".join(f'<script src="https://cdn.jsdelivr.net/npm/{path}"></script>' for path in (
@@ -19,77 +23,205 @@ LIBS = "".join(f'<script src="https://cdn.jsdelivr.net/npm/{path}"></script>' fo
     "graphology-library@0.8.0/dist/graphology-library.min.js",
 ))
 
+# A paper backing more concepts than this says little about any pair of them.
+MAX_PAPER_FANOUT = 60
+MIN_SHARED_PAPERS = 2
+
 PAGE = """<!doctype html>
-<html><head><meta charset="utf-8"><title>Eonrise concept map</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eonrise concept map</title>
 <style>
-  html { background: #05060a; }
-  html, body { margin: 0; height: 100%;
-    background: radial-gradient(ellipse at center, #151826 0%, #05060a 75%) fixed; overflow: hidden; }
-  canvas { display: block; }
-  #title { position: fixed; left: 22px; top: 18px; max-width: 70%;
-    font: 15px system-ui, sans-serif; color: #e8e8f0; letter-spacing: .2px; }
-  #title small { display: block; margin-top: 4px; color: #7c8090; font-size: 12px; }
+  :root { --bg: #111317; --panel: #181b21; --line: #2a2f38; --text: #d4d6db; --dim: #8a8f99; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 13px/1.45 system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; cursor: grab; }
+  #title { position: fixed; left: 20px; top: 16px; max-width: 55%; font-size: 15px; }
+  #title small { display: block; color: var(--dim); font-size: 12px; margin-top: 3px; }
+  #panel { position: fixed; right: 16px; top: 16px; width: 270px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  #panel h4 { margin: 10px 0 4px; font-size: 11px; font-weight: 600; color: var(--dim);
+    text-transform: uppercase; letter-spacing: .6px; }
+  #panel h4:first-child { margin-top: 0; }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { flex: 1; background: none; border: 0; color: var(--dim); padding: 5px 0;
+    font: inherit; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button.on { background: #262a33; color: var(--text); }
+  .hint { color: var(--dim); font-size: 12px; margin-top: 5px; }
+  input { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+  #info { position: fixed; left: 20px; bottom: 16px; max-width: 420px; color: var(--dim); }
+  #info b { color: var(--text); font-weight: 600; }
+  #busy { position: fixed; inset: 0; display: grid; place-items: center; color: var(--dim);
+    pointer-events: none; }
+  body.still #panel, body.still #info { display: none; }
 </style>
 __LIBS__</head>
-<body><div id="title"></div><canvas id="map"></canvas>
+<body><div id="title"></div><canvas id="map"></canvas><div id="busy">Laying out...</div>
+<div id="panel">
+  <h4>Links</h4>
+  <div class="seg" data-key="links"><button data-v="tree">Tree</button><button data-v="shared">Shared papers</button><button data-v="both">Both</button></div>
+  <div class="hint">Tree: each concept to the one it grew from. Shared papers: two concepts the same papers support.</div>
+  <h4>Colour</h4>
+  <div class="seg" data-key="color"><button data-v="cluster">Cluster</button><button data-v="direction">Direction</button><button data-v="depth">Depth</button></div>
+  <div class="hint" id="colorHint"></div>
+  <h4>Find</h4>
+  <input id="find" placeholder="a concept, then Enter">
+</div>
+<div id="info">Hover a concept to see what it connects to. Scroll to zoom, drag to move.</div>
 <script>
-// ForceAtlas2 layout (Gephi's) plus Louvain clusters; each cluster gets one colour.
 const DATA = __DATA__;
 const lib = graphologyLibrary;
-const g = new graphology.Graph();
-DATA.nodes.forEach((n, i) => g.addNode(n.id, { ...n, x: Math.cos(i) * i, y: Math.sin(i) * i }));
-DATA.links.forEach(l => g.mergeEdge(l.source, l.target));
-lib.layoutForceAtlas2.assign(g, { iterations: 900, settings: {
-  ...lib.layoutForceAtlas2.inferSettings(g), barnesHutOptimize: true, strongGravityMode: true,
-  gravity: 0.6, scalingRatio: 6, adjustSizes: false } });
-const community = lib.communitiesLouvain(g, { resolution: 1.2 });
-const PALETTE = ["#ff6b9d", "#4cc9f0", "#ffd166", "#7bdff2", "#b388ff", "#06d6a0", "#ff9f1c",
-  "#f15bb5", "#9bf6ff", "#caffbf", "#ffadad", "#a0c4ff"];
-const sizes = {};
-Object.values(community).forEach(c => sizes[c] = (sizes[c] || 0) + 1);
-const rank = Object.keys(sizes).sort((a, b) => sizes[b] - sizes[a]);
-const colorOf = id => g.getNodeAttribute(id, "depth") === 0 ? "#ffffff"
-  : PALETTE[rank.indexOf(String(community[id])) % PALETTE.length];
+const still = location.hash === "#still";
+if (still) document.body.classList.add("still");
+const state = { links: "both", color: "cluster" };
+const PALETTE = ["#8da0b3", "#b8a27c", "#93a890", "#a8909e", "#9590b3", "#80a3a1", "#b39581",
+  "#a1a08a", "#7f94a9", "#a7a7bb", "#9aa88a", "#b09a9a"];
+const DIRECTION = { root: "#ece6da", up: "#c2a878", sideways: "#8d9bb0", down: "#8fae94" };
+const HINTS = {
+  cluster: "Groups the links pull together (Louvain). A colour is a neighbourhood, not a field.",
+  direction: "Ochre: broader than its parent. Slate: related. Sage: narrower.",
+  depth: "Light: close to your question. Dark: many steps away (up to " + DATA.maxDepth + ")."
+};
+const cache = {};
 
-const W = innerWidth, H = innerHeight, canvas = document.getElementById("map");
-canvas.width = W; canvas.height = H; canvas.style.height = H + "px";
-const ctx = canvas.getContext("2d");
-const xs = g.mapNodes((_, a) => a.x), ys = g.mapNodes((_, a) => a.y);
-const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-const pad = 70, k = Math.min((W - 2 * pad) / (x1 - x0), (H - 2 * pad - 40) / (y1 - y0));
-const px = x => (x - (x0 + x1) / 2) * k + W / 2, py = y => (y - (y0 + y1) / 2) * k + H / 2 + 20;
+function build(mode) {
+  if (cache[mode]) return cache[mode];
+  const g = new graphology.Graph();
+  DATA.nodes.forEach((n, i) => g.addNode(n.id, { ...n, x: Math.cos(i) * Math.sqrt(i), y: Math.sin(i) * Math.sqrt(i) }));
+  const add = (s, t, kind, w) => { if (s !== t && !g.hasEdge(s, t) && !g.hasEdge(t, s)) g.addEdge(s, t, { kind, weight: w }); };
+  if (mode !== "shared") DATA.tree.forEach(([s, t]) => add(s, t, "tree", 1));
+  if (mode !== "tree") DATA.shared.forEach(([s, t, w]) => add(s, t, "shared", Math.min(w, 5) / 2));
+  lib.layoutForceAtlas2.assign(g, { iterations: 700, getEdgeWeight: "weight", settings: {
+    ...lib.layoutForceAtlas2.inferSettings(g), barnesHutOptimize: true, strongGravityMode: true,
+    gravity: 0.5, scalingRatio: 8, edgeWeightInfluence: 1 } });
+  const community = lib.communitiesLouvain(g, { getEdgeWeight: "weight", resolution: 1 });
+  const size = {};
+  Object.values(community).forEach(c => size[c] = (size[c] || 0) + 1);
+  const rank = Object.keys(size).sort((a, b) => size[b] - size[a]);
+  const hub = {};
+  g.forEachNode((id, a) => { const c = community[id];
+    if (a.depth > 0 && (!hub[c] || g.degree(id) > g.degree(hub[c]))) hub[c] = id; });
+  return cache[mode] = { g, community, rank, hubs: new Set(rank.slice(0, 16).map(c => hub[c])) };
+}
 
-ctx.globalCompositeOperation = "lighter";
-g.forEachEdge((e, a, s, t, sa, ta) => {
-  const [ax, ay, bx, by] = [px(sa.x), py(sa.y), px(ta.x), py(ta.y)];
-  const mx = (ax + bx) / 2 + (by - ay) * 0.12, my = (ay + by) / 2 - (bx - ax) * 0.12;
-  ctx.strokeStyle = colorOf(t) + "40"; ctx.lineWidth = 0.7;
-  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(mx, my, bx, by); ctx.stroke();
-});
-const radius = id => id === "c0" ? 9 : 1.3 + Math.sqrt(g.degree(id)) * 0.9;
-g.forEachNode((id, a) => {
-  const c = colorOf(id), r = radius(id), x = px(a.x), y = py(a.y);
-  const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
-  glow.addColorStop(0, c + "55"); glow.addColorStop(1, c + "00");
-  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 7); ctx.fill();
-  ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
-});
+const canvas = document.getElementById("map"), ctx = canvas.getContext("2d");
+const dpr = window.devicePixelRatio || 1;
+let W, H, view = { k: 1, x: 0, y: 0 }, cur, hover = null;
 
-ctx.globalCompositeOperation = "source-over";
-const hubs = {};
-g.forEachNode((id, a) => { const c = community[id];
-  if (a.depth > 0 && (!hubs[c] || g.degree(id) > g.degree(hubs[c]))) hubs[c] = id; });
-const labelled = rank.slice(0, 18).map(c => hubs[c]).filter(Boolean).concat(["c0"]);
-ctx.textAlign = "center"; ctx.lineJoin = "round";
-labelled.forEach(id => {
-  const a = g.getNodeAttributes(id), x = px(a.x), y = py(a.y) - radius(id) - 8;
-  ctx.font = (id === "c0" ? "600 16px" : "500 13px") + " system-ui, sans-serif";
-  ctx.lineWidth = 4; ctx.strokeStyle = "rgba(5,6,10,.85)"; ctx.strokeText(a.label, x, y);
-  ctx.fillStyle = id === "c0" ? "#ffffff" : colorOf(id); ctx.fillText(a.label, x, y);
+function resize() {
+  W = innerWidth; H = innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + "px"; canvas.style.height = H + "px";
+}
+function fit() {
+  const xs = cur.g.mapNodes((_, a) => a.x), ys = cur.g.mapNodes((_, a) => a.y);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const right = still ? 40 : 320;
+  view.k = Math.min((W - 40 - right) / (x1 - x0), (H - 110) / (y1 - y0));
+  view.x = (W - right + 40) / 2 - (x0 + x1) / 2 * view.k;
+  view.y = (H + 50) / 2 - (y0 + y1) / 2 * view.k;
+}
+const sx = a => a.x * view.k + view.x, sy = a => a.y * view.k + view.y;
+function colorOf(id, a) {
+  if (a.depth === 0) return DIRECTION.root;
+  if (state.color === "direction") return DIRECTION[a.direction] || DIRECTION.sideways;
+  if (state.color === "depth") {
+    const t = a.depth / DATA.maxDepth, mix = (p, q) => Math.round(p + (q - p) * t);
+    return "rgb(" + mix(222, 70) + "," + mix(214, 82) + "," + mix(196, 102) + ")";
+  }
+  return PALETTE[cur.rank.indexOf(String(cur.community[id])) % PALETTE.length];
+}
+const radius = id => id === "c0" ? 7 : 1.4 + Math.sqrt(cur.g.degree(id)) * 0.75;
+
+function draw() {
+  const g = cur.g, near = hover ? new Set(g.neighbors(hover).concat(hover)) : null;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = "#111317"; ctx.fillRect(0, 0, W, H);
+  ctx.lineWidth = 0.6;
+  g.forEachEdge((e, attr, s, t, sa, ta) => {
+    const lit = near && (s === hover || t === hover);
+    if (near && !lit) ctx.strokeStyle = "rgba(150,158,172,0.03)";
+    else if (lit) ctx.strokeStyle = "rgba(225,228,235,0.55)";
+    else ctx.strokeStyle = attr.kind === "tree" ? "rgba(150,158,172,0.13)" : "rgba(178,160,128,0.16)";
+    ctx.beginPath(); ctx.moveTo(sx(sa), sy(sa)); ctx.lineTo(sx(ta), sy(ta)); ctx.stroke();
+  });
+  g.forEachNode((id, a) => {
+    ctx.globalAlpha = near && !near.has(id) ? 0.15 : 1;
+    ctx.fillStyle = colorOf(id, a);
+    ctx.beginPath(); ctx.arc(sx(a), sy(a), radius(id), 0, 7); ctx.fill();
+  });
+  ctx.globalAlpha = 1; ctx.textAlign = "center"; ctx.lineJoin = "round";
+  const minDegree = 24 / Math.max(view.k / fitK, 1);
+  g.forEachNode((id, a) => {
+    const show = near ? near.has(id) : (id === "c0" || cur.hubs.has(id) || g.degree(id) >= minDegree);
+    if (!show) return;
+    ctx.font = (id === "c0" ? "600 14px" : id === hover ? "600 13px" : "12px") + " system-ui, sans-serif";
+    const x = sx(a), y = sy(a) - radius(id) - 6;
+    ctx.lineWidth = 3.5; ctx.strokeStyle = "rgba(17,19,23,0.9)"; ctx.strokeText(a.label, x, y);
+    ctx.fillStyle = id === "c0" || id === hover ? "#f2efe8" : "#c3c6cd"; ctx.fillText(a.label, x, y);
+  });
+}
+
+let fitK = 1;
+function render(refit) {
+  document.getElementById("busy").style.display = "grid";
+  setTimeout(() => {
+    cur = build(state.links);
+    if (refit) { fit(); fitK = view.k; }
+    document.getElementById("busy").style.display = "none";
+    document.querySelectorAll(".seg").forEach(s => s.querySelectorAll("button")
+      .forEach(b => b.classList.toggle("on", state[s.dataset.key] === b.dataset.v)));
+    document.getElementById("colorHint").textContent = HINTS[state.color];
+    document.getElementById("title").innerHTML = DATA.question + "<small>" + DATA.nodes.length +
+      " concepts, " + DATA.maxDepth + " levels deep, " + cur.g.size + " links, " + cur.rank.length + " clusters</small>";
+    draw();
+    document.title = "settled";
+  }, 20);
+}
+
+document.querySelectorAll(".seg").forEach(s => s.addEventListener("click", e => {
+  const v = e.target.dataset.v; if (!v) return;
+  const key = s.dataset.key, relayout = key === "links" && state.links !== v;
+  state[key] = v; render(relayout);
+}));
+function nodeAt(mx, my) {
+  let best = null, bestD = 64;
+  cur.g.forEachNode((id, a) => { const d = (sx(a) - mx) ** 2 + (sy(a) - my) ** 2;
+    if (d < bestD && d < (radius(id) + 5) ** 2) { best = id; bestD = d; } });
+  return best;
+}
+function describe(id) {
+  if (!id) return "Hover a concept to see what it connects to. Scroll to zoom, drag to move.";
+  const a = cur.g.getNodeAttributes(id), names = { root: "your question", up: "broader", sideways: "related", down: "narrower" };
+  return "<b>" + a.label + "</b><br>" + names[a.direction] + ", " + a.depth + " steps from your question, " +
+    a.papers + " papers, " + cur.g.degree(id) + " links";
+}
+let drag = null;
+canvas.addEventListener("mousedown", e => drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y });
+addEventListener("mouseup", () => drag = null);
+canvas.addEventListener("mousemove", e => {
+  if (drag) { view.x = drag.vx + e.clientX - drag.x; view.y = drag.vy + e.clientY - drag.y; draw(); return; }
+  const id = nodeAt(e.clientX, e.clientY);
+  if (id !== hover) { hover = id; document.getElementById("info").innerHTML = describe(id); draw(); }
 });
-document.getElementById("title").innerHTML = DATA.question +
-  "<small>" + DATA.nodes.length + " concepts, " + DATA.maxDepth + " levels deep, " + rank.length + " clusters</small>";
-document.title = "settled";
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const f = Math.exp(-e.deltaY * 0.0015);
+  view.x = e.clientX - (e.clientX - view.x) * f; view.y = e.clientY - (e.clientY - view.y) * f;
+  view.k *= f; draw();
+}, { passive: false });
+document.getElementById("find").addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const q = e.target.value.trim().toLowerCase();
+  const id = cur.g.findNode((_, a) => a.label.toLowerCase().includes(q));
+  if (!id) return;
+  const a = cur.g.getNodeAttributes(id);
+  view.k = fitK * 4; view.x = (W - 320) / 2 - a.x * view.k; view.y = H / 2 - a.y * view.k;
+  hover = id; document.getElementById("info").innerHTML = describe(id); draw();
+});
+addEventListener("resize", () => { resize(); fit(); fitK = view.k; draw(); });
+resize(); render(true);
 </script></body></html>
 """
 
@@ -97,12 +229,22 @@ document.title = "settled";
 def graph_data(research_map: dict) -> dict:
     concepts = research_map["concepts"]
     ids = {c["node_id"] for c in concepts}
-    nodes = [{"id": c["node_id"], "label": c["label"], "direction": c["direction"], "depth": c["depth"]}
-             for c in concepts]
-    links = [{"source": c["parent_id"], "target": c["node_id"]}
-             for c in concepts if c.get("parent_id") in ids]
+    nodes = [{"id": c["node_id"], "label": c["label"], "direction": c["direction"], "depth": c["depth"],
+              "papers": len(c.get("paper_ids", []))} for c in concepts]
+    tree = [[c["parent_id"], c["node_id"]] for c in concepts if c.get("parent_id") in ids]
+    backers = defaultdict(set)
+    for c in concepts:
+        for paper in c.get("paper_ids", []):
+            backers[paper].add(c["node_id"])
+    pairs = Counter()
+    for group in backers.values():
+        if len(group) <= MAX_PAPER_FANOUT:
+            pairs.update(itertools.combinations(sorted(group), 2))
+    in_tree = {tuple(sorted(link)) for link in tree}
+    shared = [[a, b, n] for (a, b), n in sorted(pairs.items())
+              if n >= MIN_SHARED_PAPERS and (a, b) not in in_tree]
     return {"question": research_map["question"], "maxDepth": max(c["depth"] for c in concepts),
-            "nodes": nodes, "links": links}
+            "nodes": nodes, "tree": tree, "shared": shared}
 
 
 def find_chrome() -> str:
@@ -120,19 +262,20 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("map", type=Path, help="research_map.json from an Eonrise run")
     p.add_argument("--out", type=Path, default=Path("graph.html"))
-    p.add_argument("--png", type=Path, help="also save a screenshot here")
-    p.add_argument("--size", default="1600,1000", help="screenshot width,height")
+    p.add_argument("--png", type=Path, help="also save a still image here")
+    p.add_argument("--size", default="1600,1000", help="still image width,height")
     args = p.parse_args()
 
     data = graph_data(json.loads(args.map.read_text(encoding="utf-8")))
     page = PAGE.replace("__LIBS__", LIBS).replace("__DATA__", json.dumps(data, ensure_ascii=False))
     args.out.write_text(page, encoding="utf-8")
-    print(f"{args.out}: {len(data['nodes'])} concepts, {len(data['links'])} links, depth {data['maxDepth']}")
+    print(f"{args.out}: {len(data['nodes'])} concepts, {len(data['tree'])} tree links, "
+          f"{len(data['shared'])} shared-paper links, depth {data['maxDepth']}")
     if args.png:
         args.png.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run([find_chrome(), "--headless=new", "--disable-gpu", "--hide-scrollbars",
-                        f"--window-size={args.size}", "--virtual-time-budget=30000",
-                        f"--screenshot={args.png.resolve()}", args.out.resolve().as_uri()], check=True)
+                        f"--window-size={args.size}", "--virtual-time-budget=60000",
+                        f"--screenshot={args.png.resolve()}", args.out.resolve().as_uri() + "#still"], check=True)
         if not args.png.exists():
             raise SystemExit(f"Chrome ran but wrote no {args.png}")
         print(f"{args.png}: saved")
