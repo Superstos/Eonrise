@@ -44,6 +44,7 @@ class OutputGuideTests(unittest.TestCase):
         self.assertEqual((out / "README.md").read_text(encoding="utf-8"), render_guide())
         self.assertIn("README.md in this folder", (out / "report.md").read_text(encoding="utf-8"))
 
+    @unittest.skipUnless((ROOT / "docs").is_dir(), "docs ship only in the repository, not the source package")
     def test_docs_page_is_the_guide(self):
         # Regenerate with: python -c "from eonrise.output_guide import render_guide as r; open('docs/OUTPUT.md','w',encoding='utf-8',newline='\n').write(r())"
         self.assertEqual((ROOT / "docs" / "OUTPUT.md").read_text(encoding="utf-8"), render_guide())
