@@ -3,3 +3,5 @@ graft tests
 graft benchmarks
 global-exclude *.py[cod]
 graft tools
+graft plugin
+graft examples
