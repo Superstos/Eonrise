@@ -2,7 +2,9 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
-## Unreleased
+## 0.9.0 - 2026-10-14
+
+First public release.
 
 ### Added
 
