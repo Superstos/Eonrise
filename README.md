@@ -100,6 +100,13 @@ paper into a concrete idea. In Claude Code:
 /plugin install eonrise@eonrise
 ```
 
+In Codex, the same marketplace works:
+
+```text
+codex plugin marketplace add https://github.com/Superstos/Eonrise
+codex plugin add eonrise@eonrise
+```
+
 Other agents can read [`plugin/skills/eonrise/SKILL.md`](plugin/skills/eonrise/SKILL.md)
 directly. [`tools/agent_check.py`](tools/agent_check.py) measures the difference; on Haiku the
 skill raised the distant fields used per answer from 1.6 to 2.8 (5 runs each).
