@@ -61,9 +61,7 @@ from any run's `research_map.json`.
 Eonrise needs Python 3.11 or newer and nothing else.
 
 ```bash
-git clone https://github.com/Superstos/Eonrise
-cd Eonrise
-pip install .
+pip install eonrise
 eonrise --demo --out output
 ```
 
@@ -87,6 +85,20 @@ free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 | DOAJ | keyless |
 | Semantic Scholar | free API key, or `--providers` |
 | CORE | free API key, or `--providers` |
+
+### With an AI agent
+
+Small models tend to treat papers from distant fields as noise, which throws away the point of
+Eonrise. The Eonrise skill teaches an agent to run it, read the brief, and turn each distant
+paper into a concrete idea. In Claude Code:
+
+```text
+/plugin install eonrise --marketplace Superstos/Eonrise
+```
+
+Other agents can read [`plugin/skills/eonrise/SKILL.md`](plugin/skills/eonrise/SKILL.md)
+directly. [`tools/agent_check.py`](tools/agent_check.py) measures the difference; on Haiku the
+skill raised the distant fields used per answer from 1.6 to 2.8 (5 runs each).
 
 ## Tech stack and why
 

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS = ["README.md", "CONTRIBUTING.md", "AGENTS.md", "SECURITY.md", "docs/USAGE.md",
         ".github/PULL_REQUEST_TEMPLATE.md", ".github/ISSUE_TEMPLATE/bug.yml",
         ".github/ISSUE_TEMPLATE/feature.yml"]
-OTHER_TOOLS_FLAGS = {"--quick"}  # python -m benchmarks.run --quick
+OTHER_TOOLS_FLAGS = {"--quick", "--marketplace"}  # benchmarks.run --quick; Claude Code /plugin install
 REPO_TOP = ("docs/", "tests/", "eonrise/", "benchmarks/", ".github/")
 
 

@@ -1,0 +1,14 @@
+{
+  "name": "eonrise",
+  "owner": {
+    "name": "Mohamed Amine NAJI"
+  },
+  "plugins": [
+    {
+      "name": "eonrise",
+      "source": "./plugin",
+      "description": "Find where other research fields already solved your problem, and turn their papers into ideas you can use",
+      "category": "research"
+    }
+  ]
+}

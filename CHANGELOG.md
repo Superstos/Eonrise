@@ -2,6 +2,13 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
+## Unreleased
+
+### Added
+
+- Eonrise skill and Claude Code plugin (`plugin/`): teaches an agent to run Eonrise and map each distant paper to a concrete idea instead of dismissing it. Install with `/plugin install eonrise --marketplace Superstos/Eonrise`.
+- `tools/agent_check.py` measures how many distant fields a model's answer uses, with and without the skill.
+
 ## 0.9.0 - 2026-10-14
 
 First public release.
