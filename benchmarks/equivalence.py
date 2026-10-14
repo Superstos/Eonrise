@@ -35,29 +35,9 @@ class Scenario:
     forbidden: list[tuple[str, str]]
 
 
-def _paper(
-    paper_id: str,
-    title: str,
-    abstract: str,
-    keywords: list[str],
-    fields: list[str],
-    topic: str = "",
-) -> Paper:
-    return Paper(
-        paper_id=paper_id,
-        title=title,
-        abstract=abstract,
-        url=f"https://example.org/{paper_id}",
-        doi=f"10.9/{paper_id}",
-        year=2024,
-        cited_by_count=5,
-        provider="benchmark",
-        keywords=list(keywords),
-        fields=list(fields),
-        topic_path=[topic] if topic else [],
-        venue="",
-        found_by=[],
-    )
+def _paper(paper_id: str, title: str, abstract: str, keywords: list[str], fields: list[str], topic: str = "") -> Paper:
+    return Paper(paper_id, title, abstract, f"https://example.org/{paper_id}", f"10.9/{paper_id}", 2024, 5,
+                 "benchmark", list(keywords), list(fields), [topic] if topic else [])
 
 
 @dataclass

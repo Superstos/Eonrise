@@ -21,6 +21,14 @@ class SingleRootTests(unittest.TestCase):
         self.assertLessEqual(len(root.split()), 6)
         self.assertNotIn("?", root)
 
+    def test_root_drops_question_filler(self):
+        # Real runs, 2026-10-14: `often come` retrieved "Do You Come Here Often?".
+        self.assertEqual(canonical_root("why do inventions often come from borrowing a method from an unrelated field"),
+                         "inventions borrowing method unrelated field")
+        self.assertEqual(canonical_root("how do new ideas form when knowledge from two separate fields is combined"),
+                         "ideas form knowledge separate fields combined")
+        self.assertEqual(canonical_root("how to keep going"), "keep going")
+
     def test_run_produces_single_root_and_concepts(self):
         result = run_search("memory retention", [provider()],
                            SearchSettings(max_nodes=40, max_depth=3, max_rounds=3))

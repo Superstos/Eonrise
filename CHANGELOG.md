@@ -2,6 +2,12 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
+## Unreleased
+
+### Fixed
+
+- Grammar words in a question (`often`, `come`, `keep`, `two`, ...) no longer become the search's root topic. One run had searched `often come` and retrieved titles like "Do You Come Here Often?".
+
 ## 0.10.1 - 2026-10-14
 
 ### Changed

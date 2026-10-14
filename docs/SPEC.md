@@ -862,3 +862,29 @@ own words (`lithium ion batteries experiment`).
   unchanged. It also chose `machine learning` as a skeleton. Too small for a slot every
   round. Not shipped; the next attempt should pick skeletons from down-relation concepts
   only, once relation typing stops calling `machine learning` a mechanism.
+
+## Question filler
+
+Two live runs on 2026-10-14 rooted on grammar words. "why do inventions often come from
+borrowing a method from an unrelated field" gave the root `inventions often come borrowing
+method unrelated` and retrieved 15 titles like "Do You Come Here Often?". `question_words`
+now drops `QUESTION_FILLER` (the concept `FILLER` set plus frequency adverbs, light verbs
+such as `come`, `get`, `keep`, `go`, and small number words) from the root and the compact
+query only. Paper text is untouched, so evidence extraction and every snapshot are
+unchanged. After: root `inventions borrowing method unrelated field`, 0 such titles.
+A question made only of filler keeps its words. `form` stays: it is a real noun in papers.
+
+## Candidate features, not built
+
+From an Eonrise run on how ideas form where two fields meet (2026-10-14), followed by
+problem-first searches. Each needs a measured run before it ships.
+
+- **Bridge fields.** Show fields adjacent to both sides of the problem, next to the distant
+  ones. Source: about two centuries of US patents, where breakthrough combinations came
+  mostly from inventors who knew a field next to the two being combined.
+- **Near/far mix.** Report how much of the harvest is near and how much is far, aiming for
+  mostly near with some far. Source: 277 European regions, 1981-2010, where almost no
+  breakthrough combined only unrelated technologies.
+- **The map as a boundary object.** Present the concept map as something two fields can
+  share while each reads it its own way (Star and Griesemer, 1989); string diagrams play
+  that role between physics and computer science.

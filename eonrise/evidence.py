@@ -72,8 +72,15 @@ def normalize(text: str) -> str:
 def split_words(text: str) -> list[str]:
     return [t for t in re.findall(r"[a-z][a-z0-9-]+", text.lower()) if t not in STOPWORDS and len(t) > 1]
 
+def question_words(question: str) -> list[str]:
+    # Words a question needs for grammar but no paper is about. "why do inventions often come
+    # from" rooted a run on `often come` and retrieved "Do You Come Here Often?".
+    words = split_words(question)
+    return [w for w in words if w not in QUESTION_FILLER] or words
+
+
 def compact_question(question: str, max_tokens: int = 8) -> str:
-    selected = split_words(question)
+    selected = question_words(question)
     return " ".join(selected[:max_tokens]) or question.strip()
 
 GAP_CUE_TOKENS = {rel: {t for cue in cues for t in re.findall(r"[a-z]+", cue)} for rel, cues in GAP_CUES.items()}
@@ -89,6 +96,10 @@ FILLER = {"very", "both", "such", "many", "most", "several", "various", "actuall
           "mainly", "largely", "widely", "directly", "strongly", "currently", "finally",
           "initially", "simply", "clearly", "well-known", "state-of-the-art", "novel",
           "brought", "make", "makes", "made", "take", "takes", "good", "better", "best"}
+QUESTION_FILLER = FILLER | {
+    "often", "sometimes", "always", "never", "come", "comes", "came", "coming", "get", "gets",
+    "getting", "got", "keep", "keeps", "kept", "keeping", "go", "goes", "going", "one", "two",
+    "three", "way", "ways", "thing", "things", "someone", "something"}
 WEAK_EDGE = {"between", "through", "via", "within", "among", "toward", "towards", "into",
              "under", "over", "upon", "per", "about", "against", "after", "before",
              "during", "such", "both", "each", "other", "others", "same", "given",
@@ -188,7 +199,7 @@ def is_clean_label(key: str) -> bool:
 
 def canonical_root(question: str, max_tokens: int = 6) -> str:
     """Single root topic for the whole run. One question -> one canonical node."""
-    selected = split_words(question)
+    selected = question_words(question)
     return " ".join(selected[:max_tokens]) or question.strip().lower()
 
 def _families(text: str) -> set[str]:
