@@ -47,7 +47,7 @@ work waits until people use it (see After launch).
 - [x] Make the repo public, then turn on private vulnerability reporting and protect `main`
 - [x] Same day: turn on GitHub Pages from `main` `/docs`. Until then the README's live map
   link (`superstos.github.io/Eonrise/demo/`) is a 404
-- [ ] Tag the first release
+- [x] Tag the first release (v0.9.0 on PyPI, 2026-10-14)
 
 ## After launch
 
