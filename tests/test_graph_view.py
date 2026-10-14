@@ -22,5 +22,13 @@ class GraphViewTest(unittest.TestCase):
         self.assertEqual(data["maxDepth"], 2)
 
 
+    def test_paper_details_drop_email_addresses(self):
+        research_map = {"question": "q", "concepts": [
+            {"node_id": "c0", "label": "root", "direction": "root", "depth": 0, "paper_ids": ["p1"]}],
+            "papers": [{"paper_id": "p1", "title": "T", "abstract": "Contact a.b@example.org for data."}]}
+        details = graph_view.paper_details(research_map, None)
+        self.assertEqual(details["p1"]["abstract"], "Contact [email removed] for data.")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -275,6 +276,8 @@ resize(); render(true);
 
 
 ABSTRACT_CHARS = 600
+# Abstracts sometimes carry an author's address; the repo keeps no email addresses.
+EMAIL = re.compile(r"\S+@\S+\.\w+")
 
 
 def paper_details(research_map: dict, store: Path | None) -> dict:
@@ -294,7 +297,7 @@ def paper_details(research_map: dict, store: Path | None) -> dict:
     details = {}
     for pid in wanted & records.keys():
         p = records[pid]
-        abstract = (p.get("abstract") or "").strip()
+        abstract = EMAIL.sub("[email removed]", (p.get("abstract") or "")).strip()
         if len(abstract) > ABSTRACT_CHARS:
             abstract = abstract[:ABSTRACT_CHARS].rsplit(" ", 1)[0] + "..."
         details[pid] = {"title": p.get("title"), "year": p.get("year"), "venue": p.get("venue"),
