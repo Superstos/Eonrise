@@ -94,6 +94,12 @@ class WhatTheyDidTests(unittest.TestCase):
             "Students reviewed green chemistry principles through a problem-based polycondensation lab."))
         self.assertTrue(what_they_did(p, ["problem based"]).startswith("Students reviewed"))
 
+    def test_a_leading_section_label_is_dropped(self):
+        p = Paper("a", "Neuropathy model", abstract="Abstract This study aims to develop a predictive model for neuropathy risk.")
+        self.assertTrue(what_they_did(p, ["predictive model"]).startswith("This study aims"))
+        kept = Paper("r", "Recall", abstract="Results show that spaced recall doubles retention after a week.")
+        self.assertTrue(what_they_did(kept, ["spaced recall"]).startswith("Results show"))
+
     def test_no_abstract_gives_an_empty_answer(self):
         self.assertEqual(what_they_did(Paper("t", "A title only"), ["anything"]), "")
 

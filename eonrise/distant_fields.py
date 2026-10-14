@@ -28,6 +28,8 @@ DISTANT_PAPER_LIMIT = 8
 SNIPPET_CHARS = 240
 # Words that open the sentence saying what a paper did, rather than its background.
 METHOD_CUE = re.compile(r"\b(we|this (study|paper|review|article)|results?|found|show(s|ed)?|propos|develop|test(ed|s)?|compar)", re.I)
+# Section labels that abstracts carry into their first sentence ("Abstract This study ...").
+SECTION_LABEL = re.compile(r"^(abstract|background|objectives?|purpose|aims?|methods?|results?|conclusions?|introduction)\b[:.]?\s+(?=(?-i:[A-Z]))", re.I)
 # A sentence about what others should do next is not what this paper did.
 OUTLOOK = re.compile(r"\b(future (research|work|stud)|further (research|work|stud)|should|we recommend|more research)", re.I)
 # Journal furniture extracted with the abstract: headers, volume lines, licences.
@@ -151,6 +153,7 @@ def what_they_did(paper: Paper, shared: list[str]) -> str:
         return ""
     words = {w for label in shared for w in split_words(label)}
     best = max(sentences, key=lambda s: (_did_score(s, words), -sentences.index(s)))
+    best = SECTION_LABEL.sub("", best, count=1)
     return best if len(best) <= SNIPPET_CHARS else best[:SNIPPET_CHARS].rsplit(" ", 1)[0] + "…"
 
 
