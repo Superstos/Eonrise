@@ -37,11 +37,9 @@ python -m venv .venv                  # Python 3.11+
 On Windows: `py -3.12 -m venv .venv`, then `.venv\Scripts\python.exe` in place of
 `.venv/bin/python`.
 
-`--cache-dir`, the output `README.md` and the *What they did* lines need a version newer than
-0.9.0. If `python -m eonrise --help` does not list `--cache-dir`, install from source:
-`git clone https://github.com/Superstos/Eonrise`, then `.venv/bin/python -m pip install ./Eonrise`.
-On Windows, a build that fails with `WinError 3` means the path is too long: point `TEMP` and
-`TMP` at a short folder inside the project (`.tmp`) and install again.
+`--cache-dir`, the output `README.md` and the *What they did* lines need 0.10.0 or newer. If
+`python -m eonrise --help` does not list `--cache-dir`, run
+`.venv/bin/python -m pip install -U eonrise`.
 
 - `--cache-dir .eonrise` keeps every store inside the project. Without it, Eonrise writes to
   `~/.cache/eonrise`, outside the folder. `EONRISE_CACHE_DIR` does the same as the flag.

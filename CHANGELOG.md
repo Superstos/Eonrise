@@ -2,7 +2,7 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
-## Unreleased
+## 0.10.0 - 2026-10-14
 
 ### Added
 
