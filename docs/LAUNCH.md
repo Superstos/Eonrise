@@ -37,8 +37,8 @@ work waits until people use it (see After launch).
 - [x] CI badge
 - [x] README rewritten (create-readme + readme-write gates pass); hero is a real brief
 - [x] `examples/`: 2 live runs + the demo
-- [ ] `CITATION.cff`
-- [ ] Repo description and topics
+- [x] `CITATION.cff` (a test keeps its version in line)
+- [x] Repo description and topics
 
 ## Owner
 

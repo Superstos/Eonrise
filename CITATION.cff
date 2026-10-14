@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use Eonrise in your work, please cite it as below."
+title: Eonrise
+abstract: >-
+  Finds the research fields that already solved your problem under another name,
+  from scholarly sources.
+type: software
+authors:
+  - family-names: Naji
+    given-names: Mohamed Amine
+version: 0.9.0
+date-released: 2026-10-14
+license: MIT
+repository-code: "https://github.com/Superstos/Eonrise"
+keywords:
+  - research
+  - literature search
+  - analogy
+  - cross-domain
+  - knowledge graph

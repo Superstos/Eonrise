@@ -54,3 +54,11 @@ class DocsMatchCodeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless((ROOT / "CITATION.cff").is_file(), "the citation file ships only in the repository")
+class CitationTests(unittest.TestCase):
+    def test_citation_version_matches_the_package(self):
+        from eonrise import __version__
+        text = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+        self.assertIn(f"\nversion: {__version__}\n", text)
