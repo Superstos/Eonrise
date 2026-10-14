@@ -34,7 +34,9 @@ python -m venv .venv                  # Python 3.11+; Windows: py -3.12 -m venv 
 ```
 
 To work from the source instead: `git clone https://github.com/Superstos/Eonrise`, then
-`pip install -e ./Eonrise` into the same venv.
+`pip install -e ./Eonrise` into the same venv. On Windows, a build that fails with
+`WinError 3` means the path is too long: point `TEMP` and `TMP` at a short folder inside the
+project (`.tmp`) and install again.
 
 - `--cache-dir .eonrise` keeps every store inside the project. Without it, Eonrise writes to
   `~/.cache/eonrise`, outside the folder. `EONRISE_CACHE_DIR` does the same as the flag.
