@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "eonrise"
 dynamic = ["version"]
-description = "Finds where other research fields already solved your problem, from scholarly sources"
+description = "Research tool for AI agents and people: finds papers from other fields that already solved your problem"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE*"]
