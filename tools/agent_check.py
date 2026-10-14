@@ -5,14 +5,16 @@ Gives the model a real brief and a user's problem, with and without the Eonrise 
 each answer turns into advice and how often it dismisses the results.
 
     python tools/agent_check.py --model haiku --runs 5
+    python tools/agent_check.py --cli codex --model gpt-6-luna --effort high
 
-Needs the `claude` command line tool. Not part of the test suite: it calls a model.
+Needs the `claude` or `codex` command line tool. Not part of the test suite: it calls a model.
 """
 from __future__ import annotations
 
 import argparse
 import re
 import subprocess
+import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -45,26 +47,36 @@ def prompt(with_skill: bool) -> str:
     return "\n\n".join(parts + [TASK, "---", BRIEF.read_text(encoding="utf-8")])
 
 
-def ask(model: str, text: str) -> str:
-    done = subprocess.run(["claude", "-p", "--model", model, "--tools", ""], input=text,
-                          capture_output=True, text=True, encoding="utf-8", timeout=300)
-    return done.stdout
+def ask(cli: str, model: str, effort: str, text: str) -> str:
+    if cli == "claude":
+        command = ["claude", "-p", "--model", model, "--tools", ""] + (["--effort", effort] if effort else [])
+        return subprocess.run(command, input=text, capture_output=True, text=True,
+                              encoding="utf-8", timeout=600).stdout
+    with tempfile.TemporaryDirectory() as tmp:
+        answer = Path(tmp) / "answer.md"
+        command = ["codex", "exec", "-m", model, "--skip-git-repo-check", "-s", "read-only",
+                   "-o", str(answer), "-"] + (["-c", f"model_reasoning_effort={effort}"] if effort else [])
+        subprocess.run(command, input=text, capture_output=True, text=True, encoding="utf-8",
+                       timeout=600, cwd=tmp)
+        return answer.read_text(encoding="utf-8") if answer.exists() else ""
 
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("--cli", choices=["claude", "codex"], default="claude")
     p.add_argument("--model", default="haiku")
+    p.add_argument("--effort", default="", help="reasoning effort, such as high")
     p.add_argument("--runs", type=int, default=5)
     p.add_argument("--save", type=Path, help="folder for the raw answers")
     args = p.parse_args()
     jobs = [(cond, i) for cond in ("plain", "skill") for i in range(args.runs)]
     with ThreadPoolExecutor(max_workers=6) as pool:
-        answers = list(pool.map(lambda job: ask(args.model, prompt(job[0] == "skill")), jobs))
+        answers = list(pool.map(lambda job: ask(args.cli, args.model, args.effort, prompt(job[0] == "skill")), jobs))
     if args.save:
         args.save.mkdir(parents=True, exist_ok=True)
         for (cond, i), answer in zip(jobs, answers):
             (args.save / f"{cond}-{i + 1}.md").write_text(answer, encoding="utf-8")
-    print(f"model {args.model}, {args.runs} runs each, {len(FIELDS)} distant fields in the brief")
+    print(f"{args.cli} {args.model} {args.effort or 'default effort'}, {args.runs} runs each, {len(FIELDS)} distant fields in the brief")
     for cond in ("plain", "skill"):
         scores = [score(a) for (c, _), a in zip(jobs, answers) if c == cond]
         mean = sum(len(s["fields"]) for s in scores) / len(scores)
