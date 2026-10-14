@@ -45,6 +45,21 @@ RULES = {
 }
 
 
+def _run_round(rng, p, found, round_number):
+    for q in range(ROUND):
+        query = f"q{round_number}.{q}"
+        for i, pi in enumerate(p):
+            if rng.random() < pi:
+                found.setdefault(i, []).append(query)
+
+
+def _record_stops(stops, est, new, round_number, recall):
+    for name, rule in RULES.items():
+        if name not in stops and round_number >= 2 and rule(est, new):
+            stops[name] = {"round": round_number, "recall": recall,
+                           "claimed": est["found_share"] if est else None}
+
+
 def simulate(population: int, mu: float, sd: float, seed: int, max_rounds: int = 12) -> dict:
     rng = random.Random(seed)
     p = [min(0.6, math.exp(rng.gauss(mu, sd))) for _ in range(population)]
@@ -52,52 +67,64 @@ def simulate(population: int, mu: float, sd: float, seed: int, max_rounds: int =
     stops: dict[str, dict] = {}
     for round_number in range(1, max_rounds + 1):
         before = len(found)
-        for q in range(ROUND):
-            query = f"q{round_number}.{q}"
-            for i, pi in enumerate(p):
-                if rng.random() < pi:
-                    found.setdefault(i, []).append(query)
-        new = len(found) - before
+        _run_round(rng, p, found, round_number)
         papers = [Paper(str(i), str(i), found_by=qs) for i, qs in found.items()]
-        est = estimate_coverage(papers)
-        for name, rule in RULES.items():
-            if name not in stops and round_number >= 2 and rule(est, new):
-                stops[name] = {"round": round_number, "recall": len(found) / population,
-                               "claimed": est["found_share"] if est else None}
+        _record_stops(stops, estimate_coverage(papers), len(found) - before, round_number,
+                      len(found) / population)
     for name in RULES:  # a rule that never fired ran to the cap
         stops.setdefault(name, {"round": max_rounds, "recall": len(found) / population, "claimed": None})
     return stops
 
 
-def main(seeds: int = 40) -> dict:
-    report = {"scenarios": [], "totals": {}}
-    pooled = {name: [] for name in RULES}
-    for name, population, mu, sd in SCENARIOS:
-        runs = [simulate(population, mu, sd, seed) for seed in range(seeds)]
-        row = {"scenario": name, "population": population}
-        for rule in RULES:
-            stops = [r[rule] for r in runs]
-            pooled[rule].extend(stops)
-            row[rule] = {"median_queries": statistics.median(s["round"] * ROUND for s in stops),
-                         "median_recall": round(statistics.median(s["recall"] for s in stops), 3),
-                         "recall_ge_0.8": round(sum(s["recall"] >= 0.8 for s in stops) / len(stops), 3)}
-        report["scenarios"].append(row)
-    base = pooled["saturation"]
-    for rule, stops in pooled.items():
-        claimed = [abs(s["claimed"] - s["recall"]) for s in stops if s["claimed"] is not None]
-        report["totals"][rule] = {
-            "recall_ge_0.8": round(sum(s["recall"] >= 0.8 for s in stops) / len(stops), 3),
-            "median_queries": statistics.median(s["round"] * ROUND for s in stops),
+def _share_at_least(stops, recall=0.8):
+    return round(sum(s["recall"] >= recall for s in stops) / len(stops), 3)
+
+
+def _median_queries(stops):
+    return statistics.median(s["round"] * ROUND for s in stops)
+
+
+def _scenario_row(name, population, runs, pooled):
+    row = {"scenario": name, "population": population}
+    for rule in RULES:
+        stops = [r[rule] for r in runs]
+        pooled[rule].extend(stops)
+        row[rule] = {"median_queries": _median_queries(stops),
+                     "median_recall": round(statistics.median(s["recall"] for s in stops), 3),
+                     "recall_ge_0.8": _share_at_least(stops)}
+    return row
+
+
+def _totals(stops):
+    claimed = [abs(s["claimed"] - s["recall"]) for s in stops if s["claimed"] is not None]
+    return {"recall_ge_0.8": _share_at_least(stops),
+            "median_queries": _median_queries(stops),
             "median_claim_error": round(statistics.median(claimed), 3) if claimed else None}
+
+
+def _warning(base):
     # The shipped use: a warning where the engine's own rule stopped, when the Chao2 share
     # (an upper bound on recall under heterogeneity) is below WARN_BELOW.
     fired = [s for s in base if s["claimed"] is not None and s["claimed"] < WARN_BELOW]
-    report["warning"] = {"threshold": WARN_BELOW, "fired": len(fired), "of_stops": len(base),
-                         "precision": round(sum(s["recall"] < WARN_BELOW for s in fired) / max(len(fired), 1), 3)}
+    return {"threshold": WARN_BELOW, "fired": len(fired), "of_stops": len(base),
+            "precision": round(sum(s["recall"] < WARN_BELOW for s in fired) / max(len(fired), 1), 3)}
+
+
+def _kill_rule(totals, rule):
+    t, b = totals[rule], totals["saturation"]
+    return t["recall_ge_0.8"] > b["recall_ge_0.8"] and t["median_queries"] <= 1.5 * b["median_queries"]
+
+
+def main(seeds: int = 40) -> dict:
+    pooled = {name: [] for name in RULES}
+    rows = []
+    for name, population, mu, sd in SCENARIOS:
+        runs = [simulate(population, mu, sd, seed) for seed in range(seeds)]
+        rows.append(_scenario_row(name, population, runs, pooled))
+    report = {"scenarios": rows, "totals": {rule: _totals(stops) for rule, stops in pooled.items()}}
+    report["warning"] = _warning(pooled["saturation"])
     for rule in ("coverage", "found_share"):
-        t, b = report["totals"][rule], report["totals"]["saturation"]
-        t["passes_kill_rule"] = (t["recall_ge_0.8"] > b["recall_ge_0.8"]
-                                 and t["median_queries"] <= 1.5 * b["median_queries"])
+        report["totals"][rule]["passes_kill_rule"] = _kill_rule(report["totals"], rule)
     return report
 
 

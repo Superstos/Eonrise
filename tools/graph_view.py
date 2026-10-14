@@ -30,7 +30,7 @@ LIBS = "".join(f'<script src="https://cdn.jsdelivr.net/npm/{path}"></script>' fo
 MAX_PAPER_FANOUT = 60
 MIN_SHARED_PAPERS = 2
 
-PAGE = """<!doctype html>
+PAGE = r"""<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Eonrise concept map</title>
 <style>
@@ -463,13 +463,8 @@ def paper_details(research_map: dict, store: Path | None) -> dict:
     return details
 
 
-def graph_data(research_map: dict, store: Path | None = None) -> dict:
-    concepts = research_map["concepts"]
-    ids = {c["node_id"] for c in concepts}
-    nodes = [{"id": c["node_id"], "label": c["label"], "direction": c["direction"], "depth": c["depth"],
-              "parent": c.get("parent_id"), "query": c.get("query"), "papers": len(c.get("paper_ids", [])),
-              "paperIds": c.get("paper_ids", [])} for c in concepts]
-    tree = [[c["parent_id"], c["node_id"]] for c in concepts if c.get("parent_id") in ids]
+def shared_links(concepts: list[dict], tree: list[list[str]]) -> list[list]:
+    """Concept pairs outside the tree that cite at least MIN_SHARED_PAPERS of the same papers."""
     backers = defaultdict(set)
     for c in concepts:
         for paper in c.get("paper_ids", []):
@@ -479,10 +474,20 @@ def graph_data(research_map: dict, store: Path | None = None) -> dict:
         if len(group) <= MAX_PAPER_FANOUT:
             pairs.update(itertools.combinations(sorted(group), 2))
     in_tree = {tuple(sorted(link)) for link in tree}
-    shared = [[a, b, n] for (a, b), n in sorted(pairs.items())
-              if n >= MIN_SHARED_PAPERS and (a, b) not in in_tree]
+    return [[a, b, n] for (a, b), n in sorted(pairs.items())
+            if n >= MIN_SHARED_PAPERS and (a, b) not in in_tree]
+
+
+def graph_data(research_map: dict, store: Path | None = None) -> dict:
+    concepts = research_map["concepts"]
+    ids = {c["node_id"] for c in concepts}
+    nodes = [{"id": c["node_id"], "label": c["label"], "direction": c["direction"], "depth": c["depth"],
+              "parent": c.get("parent_id"), "query": c.get("query"), "papers": len(c.get("paper_ids", [])),
+              "paperIds": c.get("paper_ids", [])} for c in concepts]
+    tree = [[c["parent_id"], c["node_id"]] for c in concepts if c.get("parent_id") in ids]
     return {"question": research_map["question"], "maxDepth": max(c["depth"] for c in concepts),
-            "nodes": nodes, "tree": tree, "shared": shared, "papers": paper_details(research_map, store)}
+            "nodes": nodes, "tree": tree, "shared": shared_links(concepts, tree),
+            "papers": paper_details(research_map, store)}
 
 
 def find_chrome() -> str:

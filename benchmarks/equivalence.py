@@ -42,14 +42,13 @@ def _paper(
     keywords: list[str],
     fields: list[str],
     topic: str = "",
-    doi: str = "",
 ) -> Paper:
     return Paper(
         paper_id=paper_id,
         title=title,
         abstract=abstract,
         url=f"https://example.org/{paper_id}",
-        doi=doi or f"10.9/{paper_id}",
+        doi=f"10.9/{paper_id}",
         year=2024,
         cited_by_count=5,
         provider="benchmark",
@@ -61,18 +60,25 @@ def _paper(
     )
 
 
-def _true_scenario(
-    name: str,
-    question: str,
-    left: str,
-    right: str,
-    left_field: str,
-    right_field: str,
-    context: str,
-    anchor: str,
-    right_text: str | None = None,
-) -> Scenario:
+@dataclass
+class Vocabulary:
+    """Two names for one concept, each from its own field."""
+
+    name: str
+    question: str
+    left: str
+    right: str
+    left_field: str
+    right_field: str
+    context: str
+    anchor: str
+    right_text: str | None = None
+
+
+def _true_scenario(v: Vocabulary) -> Scenario:
     """Build one alternate-vocabulary literature with explicit alias evidence."""
+    name, left, right, context, anchor = v.name, v.left, v.right, v.context, v.anchor
+    left_field, right_field, right_text = v.left_field, v.right_field, v.right_text
     papers = [
         _paper(
             f"{name}-explicit-{index}",
@@ -116,12 +122,12 @@ def _true_scenario(
         "Bridges",
     ))
     relevant = [paper.paper_id for paper in papers if paper.paper_id != f"{name}-decoy"]
-    return Scenario(name, question, (left, right), papers, relevant, [])
+    return Scenario(name, v.question, (left, right), papers, relevant, [])
 
 
 def scenarios() -> list[Scenario]:
     true = [
-        _true_scenario(
+        _true_scenario(Vocabulary(
             "drift",
             "how does concept drift affect machine learning models",
             "concept drift",
@@ -130,8 +136,8 @@ def scenarios() -> list[Scenario]:
             "Statistics",
             "model performance",
             "machine learning",
-        ),
-        _true_scenario(
+        )),
+        _true_scenario(Vocabulary(
             "nonstationarity",
             "how does non-stationarity affect forecasting models",
             "non-stationarity",
@@ -140,8 +146,8 @@ def scenarios() -> list[Scenario]:
             "Econometrics",
             "forecast accuracy",
             "forecasting models",
-        ),
-        _true_scenario(
+        )),
+        _true_scenario(Vocabulary(
             "feedback",
             "how does a feedback loop stabilize a control system",
             "feedback loop",
@@ -151,8 +157,8 @@ def scenarios() -> list[Scenario]:
             "system stability",
             "feedback control",
             "closed loop regulation",
-        ),
-        _true_scenario(
+        )),
+        _true_scenario(Vocabulary(
             "fault",
             "how does fault tolerance shape distributed system design",
             "fault tolerance",
@@ -161,7 +167,7 @@ def scenarios() -> list[Scenario]:
             "Software Engineering",
             "system design",
             "distributed design",
-        ),
+        )),
     ]
     negative_papers = [
         _paper(
@@ -262,49 +268,56 @@ def _run(question: str, papers: list[Paper], graph: ConceptEquivalenceGraph, slo
     )
 
 
-def run_benchmark() -> dict:
-    scenario_results: list[dict] = []
-    with tempfile.TemporaryDirectory() as tmp:
-        for scenario in scenarios():
-            store = ConceptEquivalenceStore(Path(tmp) / f"{scenario.name}.jsonl")
-            on_topic = topical_papers(scenario.question, scenario.papers)
-            terms = extract_terms(scenario.question, scenario.papers, on_topic or None)
-            learned = store.observe_run(scenario.question, terms, scenario.papers, on_topic)
-            graph = store.load()
-            baseline = _run(scenario.question, scenario.papers, ConceptEquivalenceGraph(), 0)
-            expanded = _run(scenario.question, scenario.papers, graph, 1)
-            baseline_ids = set(_top_ids(baseline))
-            expanded_ids = set(_top_ids(expanded))
-            relevant = set(scenario.relevant)
-            baseline_ger = len(baseline_ids & relevant) / len(relevant)
-            expanded_ger = len(expanded_ids & relevant) / len(relevant)
-            baseline_precision = _precision(scenario.question, baseline)
-            expanded_precision = _precision(scenario.question, expanded)
-            discovered = bool(graph.aliases_for(scenario.expected[0])) or bool(
-                graph.aliases_for(scenario.expected[1])
-            )
-            false_pairs = [
-                pair for pair in scenario.forbidden
-                if graph.aliases_for(pair[0]) or graph.aliases_for(pair[1])
-            ]
-            scenario_results.append({
-                "name": scenario.name,
-                "expected": list(scenario.expected),
-                "expected_discovered": discovered,
-                "false_pairs": [list(pair) for pair in false_pairs],
-                "learned_edges": len(learned),
-                "baseline_ger20": round(baseline_ger, 4),
-                "expanded_ger20": round(expanded_ger, 4),
-                "retrieval_gain": round(expanded_ger - baseline_ger, 4),
-                "baseline_precision": round(baseline_precision, 4),
-                "expanded_precision": round(expanded_precision, 4),
-                "precision_loss": round(baseline_precision - expanded_precision, 4),
-                "expansion_only_relevant": sorted(expanded_ids & relevant - baseline_ids),
-                "baseline_queries": baseline["rounds"][0]["queries"] if baseline.get("rounds") else [],
-                "expanded_queries": expanded["rounds"][0]["queries"] if expanded.get("rounds") else [],
-                "expanded_query_count": len(expanded.get("query_expansion", {}).get("expanded_queries", [])),
-            })
+def _ger(ids: set[str], relevant: set[str]) -> float:
+    return len(ids & relevant) / len(relevant)
 
+
+def _first_queries(result: dict) -> list[str]:
+    return result["rounds"][0]["queries"] if result.get("rounds") else []
+
+
+def _learned_graph(scenario: Scenario, tmp: str):
+    store = ConceptEquivalenceStore(Path(tmp) / f"{scenario.name}.jsonl")
+    on_topic = topical_papers(scenario.question, scenario.papers)
+    terms = extract_terms(scenario.question, scenario.papers, on_topic or None)
+    learned = store.observe_run(scenario.question, terms, scenario.papers, on_topic)
+    return learned, store.load()
+
+
+def _aliased(graph, pair) -> bool:
+    return bool(graph.aliases_for(pair[0])) or bool(graph.aliases_for(pair[1]))
+
+
+def _score_scenario(scenario: Scenario, tmp: str) -> dict:
+    learned, graph = _learned_graph(scenario, tmp)
+    baseline = _run(scenario.question, scenario.papers, ConceptEquivalenceGraph(), 0)
+    expanded = _run(scenario.question, scenario.papers, graph, 1)
+    baseline_ids, expanded_ids = set(_top_ids(baseline)), set(_top_ids(expanded))
+    relevant = set(scenario.relevant)
+    baseline_ger, expanded_ger = _ger(baseline_ids, relevant), _ger(expanded_ids, relevant)
+    baseline_precision = _precision(scenario.question, baseline)
+    expanded_precision = _precision(scenario.question, expanded)
+    false_pairs = [pair for pair in scenario.forbidden if _aliased(graph, pair)]
+    return {
+        "name": scenario.name,
+        "expected": list(scenario.expected),
+        "expected_discovered": _aliased(graph, scenario.expected),
+        "false_pairs": [list(pair) for pair in false_pairs],
+        "learned_edges": len(learned),
+        "baseline_ger20": round(baseline_ger, 4),
+        "expanded_ger20": round(expanded_ger, 4),
+        "retrieval_gain": round(expanded_ger - baseline_ger, 4),
+        "baseline_precision": round(baseline_precision, 4),
+        "expanded_precision": round(expanded_precision, 4),
+        "precision_loss": round(baseline_precision - expanded_precision, 4),
+        "expansion_only_relevant": sorted(expanded_ids & relevant - baseline_ids),
+        "baseline_queries": _first_queries(baseline),
+        "expanded_queries": _first_queries(expanded),
+        "expanded_query_count": len(expanded.get("query_expansion", {}).get("expanded_queries", [])),
+    }
+
+
+def _summary(scenario_results: list[dict]) -> dict:
     positives = [row for row in scenario_results if row["name"] != "non-equivalent"]
     median_gain = float(statistics.median([row["retrieval_gain"] for row in positives]))
     median_loss = float(statistics.median([row["precision_loss"] for row in positives]))
@@ -328,6 +341,11 @@ def run_benchmark() -> dict:
         "passed_kill_rule": passed,
         "scenarios": scenario_results,
     }
+
+
+def run_benchmark() -> dict:
+    with tempfile.TemporaryDirectory() as tmp:
+        return _summary([_score_scenario(scenario, tmp) for scenario in scenarios()])
 
 
 def main() -> None:

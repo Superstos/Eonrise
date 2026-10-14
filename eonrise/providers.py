@@ -84,6 +84,7 @@ class CachedHttpClient:
     def _request_json(self, url, headers, cache_file):
         host = urllib.parse.urlsplit(url).netloc
         self._last_request = self._host_last[host] = time.monotonic()
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- every caller passes a fixed https API base plus urlencoded parameters
         with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=self.timeout) as response:
             payload = json.loads(response.read().decode())
             cache_file.write_text(json.dumps(payload))
@@ -144,8 +145,10 @@ class CrossrefProvider:
         title = _strip_markup(_first_title(item.get("title")))
         if not title:
             return None
+        # nosemgrep: python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1 -- a stable ID for papers without a DOI, not security; changing it would re-key stored papers
+        paper_id = doi or hashlib.sha1(title.lower().encode(), usedforsecurity=False).hexdigest()
         return Paper(
-            doi or hashlib.sha1(title.lower().encode()).hexdigest(), title, _strip_markup(item.get("abstract")),
+            paper_id, title, _strip_markup(item.get("abstract")),
             str(item.get("URL", "")), doi, _crossref_year(item), int(item.get("is-referenced-by-count",0) or 0), self.name,
             [], _crossref_subjects(item), [], _first_title(item.get("container-title")), [query])
 
