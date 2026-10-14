@@ -34,36 +34,96 @@ PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Eonrise concept map</title>
 <style>
-  :root { --bg: #111317; --panel: #181b21; --line: #2a2f38; --text: #d4d6db; --dim: #8a8f99; }
+  :root { --bg: #111317; --panel: #171a20; --raise: #262a33; --line: #2a2f38; --text: #e1e3e8;
+    --dim: #9aa0aa; --accent: #c2a878; --link: #a9bdd8; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
     font: 13px/1.45 system-ui, sans-serif; overflow: hidden; }
   canvas { display: block; cursor: grab; }
   #title { position: fixed; left: 20px; top: 16px; max-width: 55%; font-size: 15px; }
   #title small { display: block; color: var(--dim); font-size: 12px; margin-top: 3px; }
-  #panel { position: fixed; right: 16px; top: 16px; width: 270px; background: var(--panel);
-    border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
-  #panel h4 { margin: 10px 0 4px; font-size: 11px; font-weight: 600; color: var(--dim);
-    text-transform: uppercase; letter-spacing: .6px; }
-  #panel h4:first-child { margin-top: 0; }
-  .seg { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-  .seg button { flex: 1; background: none; border: 0; color: var(--dim); padding: 5px 0;
-    font: inherit; cursor: pointer; }
-  .seg button + button { border-left: 1px solid var(--line); }
-  .seg button.on { background: #262a33; color: var(--text); }
-  .hint { color: var(--dim); font-size: 12px; margin-top: 5px; }
-  input { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text);
-    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
-  #panel { max-height: calc(100vh - 34px); overflow-y: auto; box-sizing: border-box; }
-  #detail { display: none; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
-  #detail h3 { margin: 0 0 2px; font-size: 15px; font-weight: 600; }
-  #detail .meta, #detail .crumbs { color: var(--dim); font-size: 12px; }
-  #detail a { color: #b9c4d6; text-decoration: none; }
-  #detail a:hover { text-decoration: underline; }
-  #detail .go { cursor: pointer; color: #b9c4d6; }
-  #detail ol { padding-left: 18px; margin: 4px 0; }
-  #detail li { margin-bottom: 7px; }
-  #detail summary { cursor: pointer; color: var(--dim); font-size: 12px; }
-  #detail p { margin: 4px 0; font-size: 12px; color: #a9adb6; }
+  #panel { position: fixed; right: 16px; top: 16px; bottom: 16px; width: 340px; display: flex;
+    flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    overflow: hidden; }
+  #panel .top { padding: 12px 12px 0; }
+  .search { position: relative; }
+  .search input { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px 8px 30px; font: inherit; }
+  .search input::placeholder { color: var(--dim); }
+  .search input:focus { outline: none; border-color: var(--accent); }
+  .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--dim); }
+  .tabs { display: flex; gap: 4px; margin: 12px 0 0; border-bottom: 1px solid var(--line); }
+  .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--dim);
+    padding: 7px 10px 8px; font: inherit; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
+  .body { flex: 1; overflow-y: auto; padding: 14px 14px 18px; }
+  .body[hidden] { display: none; }
+  .label { font-size: 12px; font-weight: 600; color: var(--dim); margin: 16px 0 6px; }
+  .label:first-child { margin-top: 0; }
+  .seg { display: flex; background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 2px; }
+  .seg button { flex: 1; background: none; border: 0; border-radius: 5px; color: var(--dim); padding: 5px 0;
+    font: inherit; cursor: pointer; transition: background .15s, color .15s; }
+  .seg button:hover { color: var(--text); }
+  .seg button.on { background: var(--raise); color: var(--text); }
+  .hint { color: var(--dim); font-size: 12px; margin-top: 6px; }
+  .legend { display: grid; gap: 2px; margin-top: 8px; }
+  .legend button { display: flex; align-items: center; gap: 8px; background: none; border: 0; color: var(--text);
+    padding: 4px 6px; border-radius: 5px; font: inherit; text-align: left; cursor: pointer; }
+  .legend button:hover { background: var(--raise); }
+  .legend .n { margin-left: auto; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--c); }
+  .ramp { height: 8px; border-radius: 4px; margin-top: 8px;
+    background: linear-gradient(90deg, rgb(222,214,196), rgb(70,82,102)); }
+  .ramp + .ends { display: flex; justify-content: space-between; color: var(--dim); font-size: 12px; margin-top: 3px; }
+  .empty { color: var(--dim); padding: 24px 4px; text-align: center; }
+  .bar { display: flex; gap: 4px; margin-bottom: 12px; }
+  .bar button { background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 6px;
+    padding: 3px 9px; font: inherit; font-size: 12px; cursor: pointer; }
+  .bar button:hover:not(:disabled) { border-color: var(--dim); }
+  .bar button:disabled { color: #4a4f59; cursor: default; }
+  .bar .grow { flex: 1; }
+  .head { display: flex; align-items: flex-start; gap: 10px; }
+  .head .dot { width: 12px; height: 12px; margin-top: 5px; }
+  .head h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.3; text-wrap: balance; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 0; }
+  .chip { --c: var(--dim); display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px;
+    border-radius: 999px; font-size: 12px; color: color-mix(in oklab, var(--c) 75%, white);
+    background: color-mix(in oklab, var(--c) 16%, transparent);
+    border: 1px solid color-mix(in oklab, var(--c) 32%, transparent); }
+  button.chip { font: inherit; font-size: 12px; cursor: pointer; }
+  button.chip:hover { background: color-mix(in oklab, var(--c) 28%, transparent); }
+  .found { margin-top: 10px; color: var(--dim); font-size: 12px; }
+  .found q { color: var(--text); }
+  details.sec { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 10px; }
+  details.sec > summary { list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    font-weight: 600; }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary::before { content: ""; width: 6px; height: 6px; border: solid var(--dim);
+    border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); transition: transform .15s; }
+  details.sec[open] > summary::before { transform: rotate(45deg); }
+  details.sec > summary .n { color: var(--dim); font-weight: 400; }
+  details.sec > summary .seg { margin-left: auto; font-weight: 400; font-size: 12px; }
+  details.sec > summary .seg button { padding: 2px 8px; }
+  .papers { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 12px; }
+  .papers a { color: var(--text); text-decoration: none; font-weight: 500; }
+  .papers a:hover { color: var(--link); text-decoration: underline; }
+  .pmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; color: var(--dim); font-size: 12px; }
+  .year { color: var(--link); font-variant-numeric: tabular-nums; }
+  .cites { color: #c2a878; }
+  .papers details summary { color: var(--dim); font-size: 12px; cursor: pointer; margin-top: 4px; width: max-content; }
+  .papers details p { margin: 5px 0 0; font-size: 12px; line-height: 1.5; color: #b3b8c2; }
+  .links { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .more { background: none; border: 0; color: var(--link); font: inherit; font-size: 12px; cursor: pointer; padding: 2px 4px; }
+  .trail { list-style: none; margin: 8px 0 0; padding: 0; }
+  .trail li { position: relative; padding: 0 0 8px 20px; }
+  .trail li::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: -6px; width: 1px; background: var(--line); }
+  .trail li:last-child::before { display: none; }
+  .trail .dot { position: absolute; left: 0; top: 5px; }
+  .trail button { background: none; border: 0; padding: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+  .trail button:hover { color: var(--link); }
+  .trail .here { font-weight: 600; }
+  .trail .gap { color: var(--dim); }
+  .trail small { color: var(--dim); margin-left: 4px; }
   #info { position: fixed; left: 20px; bottom: 16px; max-width: 420px; color: var(--dim); }
   #info b { color: var(--text); font-weight: 600; }
   #busy { position: fixed; inset: 0; display: grid; place-items: center; color: var(--dim);
@@ -72,17 +132,24 @@ PAGE = """<!doctype html>
 </style>
 __LIBS__</head>
 <body><div id="title"></div><canvas id="map"></canvas><div id="busy">Laying out...</div>
-<div id="panel">
-  <h4>Links</h4>
-  <div class="seg" data-key="links"><button data-v="tree">Tree</button><button data-v="shared">Shared papers</button><button data-v="both">Both</button></div>
-  <div class="hint">Tree: each concept to the one it grew from. Shared papers: two concepts the same papers support.</div>
-  <h4>Colour</h4>
-  <div class="seg" data-key="color"><button data-v="cluster">Cluster</button><button data-v="direction">Direction</button><button data-v="depth">Depth</button></div>
-  <div class="hint" id="colorHint"></div>
-  <h4>Find</h4>
-  <input id="find" placeholder="a concept, then Enter">
-  <div id="detail"></div>
-</div>
+<aside id="panel">
+  <div class="top">
+    <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="find" placeholder="Find a concept" aria-label="Find a concept" list="names"></label>
+    <datalist id="names"></datalist>
+    <nav class="tabs"><button data-tab="concept">Concept</button><button data-tab="view">View</button></nav>
+  </div>
+  <div class="body" id="tab-concept"><div class="empty">Click a concept on the map, or find one by name.</div></div>
+  <div class="body" id="tab-view" hidden>
+    <div class="label">Links</div>
+    <div class="seg" data-key="links"><button data-v="tree">Tree</button><button data-v="shared">Shared papers</button><button data-v="both">Both</button></div>
+    <div class="hint">Tree links each concept to the one it grew from. Shared papers links two concepts the same papers support.</div>
+    <div class="label">Colour</div>
+    <div class="seg" data-key="color"><button data-v="cluster">Cluster</button><button data-v="direction">Direction</button><button data-v="depth">Depth</button></div>
+    <div class="hint" id="colorHint"></div>
+    <div id="legend"></div>
+  </div>
+</aside>
 <div id="info">Hover a concept to see what it connects to; click it for its papers. Scroll to zoom, drag to move.</div>
 <script>
 const DATA = __DATA__;
@@ -95,9 +162,9 @@ const PALETTE = ["#8da0b3", "#b8a27c", "#93a890", "#a8909e", "#9590b3", "#80a3a1
   "#a1a08a", "#7f94a9", "#a7a7bb", "#9aa88a", "#b09a9a"];
 const DIRECTION = { root: "#ece6da", up: "#c2a878", sideways: "#8d9bb0", down: "#8fae94" };
 const HINTS = {
-  cluster: "Groups the links pull together (Louvain). A colour is a neighbourhood, not a field.",
-  direction: "Ochre: broader than its parent. Slate: related. Sage: narrower.",
-  depth: "Light: close to your question. Dark: many steps away (up to " + DATA.maxDepth + ")."
+  cluster: "Groups the links pull together. A colour is a neighbourhood, not a field. Click one to open its hub.",
+  direction: "How each concept relates to the one it grew from.",
+  depth: "Steps from your question to each concept."
 };
 const cache = {};
 
@@ -133,7 +200,7 @@ function resize() {
 function fit() {
   const xs = cur.g.mapNodes((_, a) => a.x), ys = cur.g.mapNodes((_, a) => a.y);
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  const right = still ? 40 : 320;
+  const right = still ? 40 : 380;
   view.k = Math.min((W - 40 - right) / (x1 - x0), (H - 110) / (y1 - y0));
   view.x = (W - right + 40) / 2 - (x0 + x1) / 2 * view.k;
   view.y = (H + 50) / 2 - (y0 + y1) / 2 * view.k;
@@ -189,6 +256,8 @@ function render(refit) {
     document.querySelectorAll(".seg").forEach(s => s.querySelectorAll("button")
       .forEach(b => b.classList.toggle("on", state[s.dataset.key] === b.dataset.v)));
     document.getElementById("colorHint").textContent = HINTS[state.color];
+    legend();
+    if (selected) select(selected, false);
     document.getElementById("title").innerHTML = DATA.question + "<small>" + DATA.nodes.length +
       " concepts, " + DATA.maxDepth + " levels deep, " + cur.g.size + " links, " + cur.rank.length + " clusters</small>";
     draw();
@@ -217,32 +286,121 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const paperLink = id => DATA.papers[id] && DATA.papers[id].url ? DATA.papers[id].url
   : /^10\./.test(id) ? "https://doi.org/" + id : /^https?:/.test(id) ? id : "";
 const NAMES = { root: "your question", up: "broader", sideways: "related", down: "narrower" };
-function select(id) {
-  selected = id; const box = document.getElementById("detail");
-  if (!id) { box.style.display = "none"; draw(); return; }
-  const a = cur.g.getNodeAttributes(id);
-  const chain = []; for (let n = DATA.byId[id]; n; n = DATA.byId[n.parent]) chain.unshift(n);
-  const go = n => '<span class="go" data-id="' + n + '">' + esc(DATA.byId[n].label) + "</span>";
-  const crumbs = chain.map(n => n.id === id ? esc(n.label) : go(n.id)).join(" &rsaquo; ");
-  const papers = a.paperIds.map(pid => {
-    const p = DATA.papers[pid] || {}, url = paperLink(pid), title = esc(p.title || pid);
-    const meta = [p.year, p.venue, p.cites != null ? p.cites + " citations" : ""].filter(Boolean).map(esc).join(" &middot; ");
-    return "<li>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + title + "</a>" : title) +
-      (meta ? '<div class="meta">' + meta + "</div>" : "") +
-      (p.abstract ? "<details><summary>abstract</summary><p>" + esc(p.abstract) + "</p></details>" : "") + "</li>";
-  }).join("");
-  box.innerHTML = "<h3>" + esc(a.label) + '</h3><div class="meta">' + NAMES[a.direction] + ", " + a.depth +
-    " steps from your question" + (a.query ? ", found by searching <i>" + esc(a.query) + "</i>" : "") + "</div>" +
-    '<h4>Path from your question</h4><div class="crumbs">' + crumbs + "</div>" +
-    "<h4>Linked concepts (" + cur.g.degree(id) + ')</h4><div class="crumbs">' + cur.g.neighbors(id).map(go).join(", ") + "</div>" +
-    "<h4>Papers (" + a.paperIds.length + ")</h4><ol>" + papers + "</ol>";
-  box.style.display = "block"; box.scrollIntoView({ block: "nearest" }); draw();
+const history = [], at = { i: -1 };
+let paperSort = "cites", showAllLinks = false;
+const dotFor = id => '<span class="dot" style="--c:' + colorOf(id, cur.g.getNodeAttributes(id)) + '"></span>';
+const chipFor = id => '<button class="chip" data-id="' + id + '" style="--c:' + colorOf(id, cur.g.getNodeAttributes(id)) + '">' +
+  esc(DATA.byId[id].label) + "</button>";
+
+function tab(name) {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.getElementById("tab-concept").hidden = name !== "concept";
+  document.getElementById("tab-view").hidden = name !== "view";
 }
-document.getElementById("detail").addEventListener("click", e => {
-  const id = e.target.dataset && e.target.dataset.id; if (!id) return;
+function legend() {
+  const box = document.getElementById("legend");
+  if (state.color === "depth") {
+    box.innerHTML = '<div class="ramp"></div><div class="ends"><span>your question</span><span>' + DATA.maxDepth + " steps</span></div>";
+    return;
+  }
+  if (state.color === "direction") {
+    const count = {}; DATA.nodes.forEach(n => count[n.direction] = (count[n.direction] || 0) + 1);
+    box.innerHTML = '<div class="legend">' + ["up", "sideways", "down"].map(d =>
+      '<button disabled><span class="dot" style="--c:' + DIRECTION[d] + '"></span>' + NAMES[d] +
+      '<span class="n">' + count[d] + "</span></button>").join("") + "</div>";
+    return;
+  }
+  const size = {}; Object.values(cur.community).forEach(c => size[c] = (size[c] || 0) + 1);
+  const hubOf = {}; cur.hubs.forEach(id => hubOf[cur.community[id]] = id);
+  box.innerHTML = '<div class="legend">' + cur.rank.slice(0, 12).filter(c => hubOf[c]).map(c =>
+    '<button data-id="' + hubOf[c] + '"><span class="dot" style="--c:' + colorOf(hubOf[c], cur.g.getNodeAttributes(hubOf[c])) + '"></span>' +
+    esc(DATA.byId[hubOf[c]].label) + '<span class="n">' + size[c] + "</span></button>").join("") + "</div>";
+}
+
+function papersHtml(ids) {
+  const rows = ids.map(pid => ({ pid, p: DATA.papers[pid] || {} }));
+  rows.sort(paperSort === "cites" ? (a, b) => (b.p.cites || 0) - (a.p.cites || 0) : (a, b) => (b.p.year || 0) - (a.p.year || 0));
+  return '<ol class="papers">' + rows.map(({ pid, p }) => {
+    const url = paperLink(pid), title = esc(p.title || pid);
+    return "<li>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + title + "</a>" : title) +
+      '<div class="pmeta">' + (p.year ? '<span class="year">' + p.year + "</span>" : "") +
+      (p.venue ? "<span>" + esc(p.venue) + "</span>" : "") +
+      (p.cites != null ? '<span class="cites">' + p.cites + " cited</span>" : "") + "</div>" +
+      (p.abstract ? "<details><summary>Abstract</summary><p>" + esc(p.abstract) + "</p></details>" : "") + "</li>";
+  }).join("") + "</ol>";
+}
+function trailHtml(id) {
+  const chain = []; for (let n = DATA.byId[id]; n; n = DATA.byId[n.parent]) chain.unshift(n);
+  const step = (n, i) => "<li>" + '<span class="dot" style="--c:' + (DIRECTION[n.direction] || DIRECTION.sideways) + '"></span>' +
+    (n.id === id ? '<span class="here">' + esc(n.label) + "</span>" : '<button data-id="' + n.id + '">' + esc(n.label) + "</button>") +
+    (i ? "<small>" + NAMES[n.direction] + "</small>" : "") + "</li>";
+  if (chain.length <= 7) return '<ol class="trail">' + chain.map(step).join("") + "</ol>";
+  return '<ol class="trail">' + chain.slice(0, 2).map(step).join("") +
+    '<li><button class="gap" data-expand="1">' + (chain.length - 5) + " more steps</button></li>" +
+    chain.slice(-3).map((n, i) => step(n, chain.length - 3 + i)).join("") + "</ol>";
+}
+function select(id, push = true) {
+  selected = id; draw();
+  const box = document.getElementById("tab-concept");
+  if (!id) { box.innerHTML = '<div class="empty">Click a concept on the map, or find one by name.</div>'; return; }
+  if (push && history[at.i] !== id) { history.splice(at.i + 1); history.push(id); at.i = history.length - 1; showAllLinks = false; }
+  const a = cur.g.getNodeAttributes(id), color = colorOf(id, a);
+  const links = cur.g.neighbors(id).sort((x, y) => cur.g.degree(y) - cur.g.degree(x));
+  const shown = showAllLinks ? links : links.slice(0, 14);
+  box.innerHTML =
+    '<div class="bar"><button data-nav="-1"' + (at.i > 0 ? "" : " disabled") + ' aria-label="Back">&#8249; Back</button>' +
+    '<button data-nav="1"' + (at.i < history.length - 1 ? "" : " disabled") + ' aria-label="Forward">Forward &#8250;</button>' +
+    '<span class="grow"></span><button data-centre="1">Centre on map</button></div>' +
+    '<div class="head"><span class="dot" style="--c:' + color + '"></span><h3>' + esc(a.label) + "</h3></div>" +
+    '<div class="chips"><span class="chip" style="--c:' + (DIRECTION[a.direction] || DIRECTION.sideways) + '">' + NAMES[a.direction] + "</span>" +
+    '<span class="chip">' + a.depth + " steps deep</span>" +
+    '<span class="chip">' + a.paperIds.length + " papers</span>" +
+    '<span class="chip">' + links.length + " links</span></div>" +
+    (a.query ? '<div class="found">Found by searching <q>' + esc(a.query) + "</q></div>" : "") +
+    '<details class="sec" open><summary>Path from your question <span class="n">' + a.depth + " steps</span></summary>" +
+    trailHtml(id) + "</details>" +
+    '<details class="sec" open><summary>Linked concepts <span class="n">' + links.length + "</span></summary>" +
+    '<div class="links">' + shown.map(chipFor).join("") +
+    (links.length > shown.length ? '<button class="more" data-all="1">Show all ' + links.length + "</button>" : "") + "</div></details>" +
+    '<details class="sec" open><summary>Papers <span class="n">' + a.paperIds.length + "</span>" +
+    '<span class="seg" data-sort="1"><button data-v="cites"' + (paperSort === "cites" ? ' class="on"' : "") + '>Most cited</button>' +
+    '<button data-v="year"' + (paperSort === "year" ? ' class="on"' : "") + ">Newest</button></span></summary>" +
+    papersHtml(a.paperIds) + "</details>";
+  if (push) tab("concept");
+}
+function centre(id) {
   const a = cur.g.getNodeAttributes(id);
-  view.x = (W - 320) / 2 - a.x * view.k; view.y = H / 2 - a.y * view.k; select(id);
+  if (view.k < fitK * 2.5) view.k = fitK * 2.5;
+  view.x = (W - 380) / 2 - a.x * view.k; view.y = H / 2 - a.y * view.k; draw();
+}
+document.querySelector(".tabs").addEventListener("click", e => { if (e.target.dataset.tab) tab(e.target.dataset.tab); });
+document.getElementById("legend").addEventListener("click", e => {
+  const b = e.target.closest("[data-id]"); if (b) { centre(b.dataset.id); select(b.dataset.id); }
 });
+document.getElementById("tab-concept").addEventListener("click", e => {
+  const el = e.target.closest("button, summary"); if (!el) return;
+  const d = el.dataset;
+  if (el.parentElement && el.parentElement.dataset.sort) { e.preventDefault(); paperSort = d.v; select(selected, false); return; }
+  if (d.nav) { at.i += Number(d.nav); centre(history[at.i]); select(history[at.i], false); return; }
+  if (d.centre) { centre(selected); return; }
+  if (d.all) { showAllLinks = true; select(selected, false); return; }
+  if (d.expand) { el.closest(".trail").outerHTML = trailHtml(selected).replace(/<li><button class="gap"[^]*?<\/li>/, ""); expandTrail(); return; }
+  if (d.id) { centre(d.id); select(d.id); }
+});
+function expandTrail() {
+  const chain = []; for (let n = DATA.byId[selected]; n; n = DATA.byId[n.parent]) chain.unshift(n);
+  const box = document.querySelector("#tab-concept .trail");
+  box.innerHTML = chain.map((n, i) => "<li>" + '<span class="dot" style="--c:' + (DIRECTION[n.direction] || DIRECTION.sideways) + '"></span>' +
+    (n.id === selected ? '<span class="here">' + esc(n.label) + "</span>" : '<button data-id="' + n.id + '">' + esc(n.label) + "</button>") +
+    (i ? "<small>" + NAMES[n.direction] + "</small>" : "") + "</li>").join("");
+}
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "Escape") select(null);
+  if (e.altKey && e.key === "ArrowLeft" && at.i > 0) { at.i--; centre(history[at.i]); select(history[at.i], false); }
+  if (e.altKey && e.key === "ArrowRight" && at.i < history.length - 1) { at.i++; centre(history[at.i]); select(history[at.i], false); }
+});
+document.getElementById("names").innerHTML = DATA.nodes.map(n => '<option value="' + esc(n.label) + '">').join("");
 let drag = null;
 canvas.addEventListener("mousedown", e => drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false });
 addEventListener("mouseup", e => {

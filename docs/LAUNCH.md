@@ -45,12 +45,12 @@ work waits until people use it (see After launch).
 - [ ] Approve deleting 23 old branches and 65+ probe workflow runs
 - [ ] Register the trusted publisher on PyPI (TestPyPI done; same five fields, environment `pypi`)
 - [ ] Make the repo public, then turn on private vulnerability reporting and protect `main`
+- [ ] Same day: turn on GitHub Pages from `main` `/docs`. Until then the README's live map
+  link (`superstos.github.io/Eonrise/demo/`) is a 404
 - [ ] Tag the first release
 
 ## After launch
 
-- [ ] Turn on GitHub Pages from `main` `/docs` once public, so the README's live map link
-  (`docs/demo/index.html`, built by `tools/graph_view.py`) works
 - [ ] Brand page, logo (mark + wordmark, light/dark, 16px), social preview 1280x640
 - [ ] Domain (`eonrise.dev` / `eonrise.app` free on 2026-10-12), once there is a site to host
 
