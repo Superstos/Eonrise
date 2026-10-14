@@ -2,6 +2,14 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
+## 0.10.1 - 2026-10-14
+
+### Changed
+
+- The brief's *Same shape, other fields* section opens with one line saying why those papers look unrelated and how to read them, so an agent reading it cold maps them instead of calling them noise.
+- The skill installs in Codex from the same marketplace: `codex plugin marketplace add https://github.com/Superstos/Eonrise`, then `codex plugin add eonrise@eonrise`.
+- The README shows the new banner, linked by full address so it also shows on PyPI.
+
 ## 0.10.0 - 2026-10-14
 
 ### Added

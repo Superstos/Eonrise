@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/banner.png" alt="EONRISE in white letters framed by an ASCII tracing of Rorschach inkblot card I in sky blue, above the line: finds the fields that already solved your problem" width="100%">
+<img src="https://raw.githubusercontent.com/Superstos/Eonrise/main/docs/assets/banner.png" alt="EONRISE in white letters framed by an ASCII tracing of Rorschach inkblot card I in sky blue, above the line: finds the fields that already solved your problem" width="100%">
 
 # Eonrise
 
