@@ -99,6 +99,13 @@ def _compact_limitations(result):
     return lines
 
 
+# Agents reading a brief cold called these papers noise until someone told them what they
+# were for. The brief now says it itself, so every reader gets the framing, not only ours.
+READ_DISTANT = ("*These look unrelated on purpose: each solved a problem with the same shape as "
+                "yours, in another field. Before judging one, write what they solved and what "
+                "your version would be.*")
+
+
 def _distant_papers(result: dict) -> list[str]:
     # The papers the gate set aside that carry the same shape. Distant fields are the
     # product; a brief that only showed the on-topic map hid them.
@@ -109,6 +116,8 @@ def _distant_papers(result: dict) -> list[str]:
         group = _harvest_group(harvested, distant)
         if group:
             lines += ["", f"## {heading}", ""]
+            if distant:
+                lines += [READ_DISTANT, ""]
             lines += [_harvest_line(h, stored) for h in group[:5]]
     return lines
 
