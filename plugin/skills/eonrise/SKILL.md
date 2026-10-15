@@ -75,6 +75,11 @@ A paper marked *from an earlier run* came from the local store, not a fresh sear
 
 ## 3. Map every distant item
 
+**Confirmation bias warning:** Don't lead your search with an answer you already suspect.
+Don't reject unfamiliar findings before checking for a meaningful connection or similar pattern.
+But don't force connections where none exist. Both premature rejection and forced connections
+can reinforce confirmation bias and create an echo chamber.
+
 For each paper or concept from another field, write one line:
 
 > their problem -> what they did -> our version
