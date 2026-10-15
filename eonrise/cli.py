@@ -16,6 +16,7 @@ from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajPr
                          EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
                          ProviderError, SemanticScholarProvider)
 from .report import write_outputs
+from . import angles
 from .scheduling import ProviderStates
 
 
@@ -23,6 +24,7 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Expand one topic into a grounded up/down/sideways map.")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     p.add_argument("--demo", action="store_true", help="Offline run on a sample bundle shipped with Eonrise; writes only to --out")
+    p.add_argument("--angles", default="", help="File of questions, one per line: run each into <out>/angle-N, then merge into angles.md")
     _provider_arguments(p)
     _run_arguments(p)
     _map_arguments(p)
@@ -233,6 +235,8 @@ def _args() -> argparse.Namespace:
     args = p.parse_args()
     if args.demo:
         _use_demo(args)
+    elif args.angles:
+        args.question = args.question or "angles"
     elif not args.question:
         p.error("the following arguments are required: question (or --demo)")
     return args
@@ -248,6 +252,8 @@ def _use_demo(args):
 
 def main() -> None:
     args = _args()
+    if args.angles:
+        return _run_angles(args, Path(args.cache_dir or os.getenv("EONRISE_CACHE_DIR") or Path.home() / ".cache" / "eonrise"))
     if not args.demo:
         return _run(args, Path(args.cache_dir or os.getenv("EONRISE_CACHE_DIR") or Path.home() / ".cache" / "eonrise"))
     with tempfile.TemporaryDirectory() as cache:
@@ -266,6 +272,22 @@ def _run(args, cache):
     if corpus is not None:
         _grow_corpus(corpus, result)
     _finish_run(result, args)
+
+
+def _run_angles(args, cache):
+    """Runs each question in turn (stores are append-only files, so never in parallel) and merges them."""
+    out = Path(args.out)
+    folders = []
+    for i, question in enumerate(angles.read_questions(args.angles), 1):
+        folder = out / f"angle-{i}"
+        try:
+            _run(argparse.Namespace(**{**vars(args), "question": question, "out": str(folder)}), cache)
+        except SystemExit:
+            pass  # a failed angle is reported in its own folder; the others still count
+        folders.append(folder)
+    merged = angles.write_merge(out, folders)
+    print(json.dumps({"angles": len(merged["angles"]), "papers": merged["papers"],
+                      "fields": len(merged["fields"]), "output": str(out.resolve())}, indent=2))
 
 
 def _finish_run(result, args):

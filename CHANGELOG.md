@@ -2,6 +2,12 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
+## Unreleased
+
+### Added
+
+- `--angles FILE` asks one problem from several angles: each line of the file is a question, run into `<out>/angle-N`, then merged into `angles.md` with each angle's root topic, papers, papers no other angle found, and fields no earlier angle reached.
+
 ## 0.10.2 - 2026-10-14
 
 ### Fixed

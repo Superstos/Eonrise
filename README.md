@@ -77,6 +77,10 @@ Then ask your own question:
 eonrise "how can written instructions prevent the same mistakes from repeating when every worker is new" --out output
 ```
 
+To ask one problem from several angles, put one question per line in a file and run
+`eonrise --angles questions.txt --out output`; `output/angles.md` shows what each angle
+found that the others missed.
+
 Four sources run by default, with no key. Semantic Scholar and CORE join when you give their
 free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 

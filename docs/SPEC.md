@@ -874,6 +874,19 @@ query only. Paper text is untouched, so evidence extraction and every snapshot a
 unchanged. After: root `inventions borrowing method unrelated field`, 0 such titles.
 A question made only of filler keeps its words. `form` stays: it is a real noun in papers.
 
+## Angles
+
+One phrasing steers a whole run: on 2026-10-15 "day", "serves" (food servings) and "write
+once" (storage papers) each pulled a run sideways. Asking the fatigue question from 6
+angles, each written in its own model call, gave 296 distinct papers with at most 2%
+overlap between any two; the single question's 50 papers shared 4 with them.
+`--angles FILE` runs each question in turn (the stores are append-only files, so never in
+parallel) and `angles.py` writes `angles.md` and `angles.json`. The count of angles is not
+fixed: the report shows new fields per angle, and fields, not papers, are the stop signal,
+since nearly every paper was found by one angle only and a paper count never saturates.
+Not built yet: growing new angles from the words of found papers, guarded by the seed's
+core nouns, a family tree that closes repeated root topics, and a 2-step limit.
+
 ## Candidate features, not built
 
 From an Eonrise run on how ideas form where two fields meet (2026-10-14), followed by
