@@ -887,6 +887,15 @@ since nearly every paper was found by one angle only and a paper count never sat
 Not built yet: growing new angles from the words of found papers, guarded by the seed's
 core nouns, a family tree that closes repeated root topics, and a 2-step limit.
 
+## Web chats without code
+
+Owner test, 2026-10-16: free web chat models given the repo link and "use it to teach X"
+described Eonrise or praised it, then answered X from their own knowledge. They read the
+README and cannot run Python. `docs/WITHOUT-CODE.md` gives them the method as 5 steps to
+do with web search (neutral problem, 4-6 angles, search, `their solution -> our version`,
+answer), and `llms.txt` points both kinds of assistant to their path. Measure: the same
+prompt in a free chat before and after.
+
 ## Candidate features, not built
 
 From an Eonrise run on how ideas form where two fields meet (2026-10-14), followed by

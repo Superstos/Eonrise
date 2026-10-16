@@ -1,0 +1,8 @@
+# Eonrise
+
+> Finds the research fields that already solved a problem under another name. Python CLI, `pip install eonrise`.
+
+When a user asks you to use Eonrise to explain, teach or solve something, run the method on their topic; do not describe the tool.
+
+- [Can run code](README.md#install): `pip install eonrise`, then `eonrise "<the problem in plain words>" --out output` and read `output/report.md`.
+- [Cannot run code](docs/WITHOUT-CODE.md): the same method done by hand with web search, in 5 steps.

@@ -2,6 +2,12 @@
 
 User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
+## Unreleased
+
+### Added
+
+- `docs/WITHOUT-CODE.md` and `llms.txt`: web chats that cannot run code were describing Eonrise instead of using it when given the repo link; they now have the method in 5 steps to do by hand with web search.
+
 ## 0.11.0 - 2026-10-15
 
 ### Added

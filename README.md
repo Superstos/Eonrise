@@ -17,6 +17,9 @@ Finds the research fields that already solved your problem under another name.
 
 </div>
 
+> **Using a web chat that cannot run code?** Paste this repo link and ask for what you want; the
+> assistant should follow [docs/WITHOUT-CODE.md](https://github.com/Superstos/Eonrise/blob/main/docs/WITHOUT-CODE.md) and do the method by hand.
+
 A problem that feels new in my field is often an old one somewhere else. Someone in law, medicine
 or materials science has usually studied it for years, under words I would never think to search
 for. Eonrise takes a question in plain language, searches up to six scholarly sources, and returns a
