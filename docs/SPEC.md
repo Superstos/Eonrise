@@ -896,6 +896,37 @@ do with web search (neutral problem, 4-6 angles, search, `their solution -> our 
 answer), and `llms.txt` points both kinds of assistant to their path. Measure: the same
 prompt in a free chat before and after.
 
+## Keyless sources (v0.12)
+
+Owner rule, 2026-10-20: Eonrise stays email-free, with no contact email and no signup keys, and
+pirate libraries stay out. Sources were found by asking what similar tools search
+(local-deep-research, paper-qa, ToolUniverse, findpapers), then each was tested live with no key.
+
+- **Added by default:** OpenAIRE (EU open-access graph, 352 hits on a 3-word test query) and
+  OpenReview (conference submissions; `source=forum` keeps reviews from passing their titles
+  and dates off as the paper's). arXiv follows: 7 of 20 arXiv hits for one question were missing
+  from OpenAIRE, which already collects much of arXiv.
+- **arXiv matching, measured on the engine's own queries:** bare words are ORed, so `group` and
+  `experiment` pulled particle physics; every word ANDed returned 0 for 5-word queries; the first
+  three words required in the abstract stayed on the question's shape (multi-agent software
+  papers, copying errors in self-copying systems). Requests are spaced 3 s apart, as arXiv asks.
+- **XML:** arXiv answers in Atom, so the client gained `get_xml`, sharing cache, retry and
+  cooldown with `get_json`. Bodies are cached as bytes so a declared encoding is honoured. An
+  expat first pass refuses any DTD, in any encoding: expat caps entity expansion only from
+  Python 3.8.12 and Eonrise supports 3.8.0, and no source we call sends one.
+- **Retracted papers:** OpenAlex is asked for `is_retracted:false`; Crossref drops records whose
+  `updated-by` or `update-to` names a retraction or withdrawal (tested on the retracted 1998
+  Lancet MMR paper and its notice). The other sources carry no such flag.
+- **Tested and not shipped:** Wikipedia answered a question about keeping copies of a record in
+  sync with album pages; Open Library matches every word, so natural questions found 0 books.
+- **Measured and not fixed:** on an open question, arXiv added 99 papers to the pool and 2 of
+  them reached the 50 kept, both credited to another source's copy. `_keep_score` weighs
+  metadata richness and citations, and arXiv's feed gives no citation count, so preprints
+  rarely win a slot. Whether that bias costs ideas is not measured yet.
+- **Reviewed:** a second model wrote blind tests from the contracts alone and reviewed each
+  change until it reported no defects; it caught a null result list crashing, a date of 0
+  being lost, error entries becoming papers, and the UTF-16 DTD bypass.
+
 ## Candidate features, not built
 
 From an Eonrise run on how ideas form where two fields meet (2026-10-14), followed by
