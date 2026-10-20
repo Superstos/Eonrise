@@ -48,7 +48,7 @@ class DocsMatchCodeTests(unittest.TestCase):
         demo = json.loads((ROOT / "eonrise" / "data" / "demo_bundle.json").read_text(encoding="utf-8"))
         self.assertIn(f"a sample of {len(demo['papers'])} papers", readme)
         defaults = cli._provider_names(cli.parser().parse_args(["q", "--s2-key", "", "--core-key", ""]), {})
-        words = {4: "Four", 5: "Five", 6: "Six"}
+        words = {4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine"}
         self.assertIn(f"{words[len(defaults)]} sources run by default", readme)
 
 

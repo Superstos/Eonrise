@@ -181,3 +181,75 @@ class RetractedPapersStayOutTest(unittest.TestCase):
         OpenAlexProvider(http).search("agent memory", 5)
         params = urllib.parse.parse_qs(urllib.parse.urlsplit(http.urls[0]).query)
         self.assertEqual(params["filter"], ["is_retracted:false"])
+
+
+ARXIV_FEED = """<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <entry>
+    <id>http://arxiv.org/abs/2306.15804v2</id>
+    <published>2023-06-27T21:00:00Z</published>
+    <title>The Impact of Shared
+      Leadership in Teams</title>
+    <summary>  We measure how shared leadership changes output.  </summary>
+    <arxiv:doi>10.1/teams</arxiv:doi>
+    <arxiv:journal_ref>Nat Commun 16 (2025)</arxiv:journal_ref>
+    <category term="physics.soc-ph"/><category term="cs.CY"/><category term="cs.SI"/><category term="I.2.7"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.24389v1</id>
+    <published>2025-05-30T00:00:00Z</published>
+    <title>Leadership in intensive care</title>
+    <summary>Video study.</summary>
+    <category term="q-bio.NC"/>
+  </entry>
+  <entry><id>http://arxiv.org/abs/2501.00001v1</id><title>  </title></entry>
+</feed>"""
+
+
+class FakeXmlHttp(FakeHttp):
+    def get_xml(self, url, headers=None):
+        from xml.etree import ElementTree
+        self.urls.append(url); return ElementTree.fromstring(self.payload)
+
+
+class ArxivTests(unittest.TestCase):
+    def test_entries_become_papers_with_plain_field_names(self):
+        from eonrise.providers import ArxivProvider
+        first, second = ArxivProvider(FakeXmlHttp(ARXIV_FEED)).search("shared leadership", 5)
+        self.assertEqual((first.paper_id, first.doi, first.year), ("10.1/teams", "10.1/teams", 2023))
+        self.assertEqual(first.title, "The Impact of Shared Leadership in Teams")
+        self.assertEqual(first.abstract, "We measure how shared leadership changes output.")
+        self.assertEqual(first.url, "https://arxiv.org/abs/2306.15804")
+        self.assertEqual(first.fields, ["Physics", "Computer Science"])
+        self.assertEqual(first.venue, "Nat Commun 16 (2025)")
+        self.assertEqual((second.paper_id, second.venue, second.fields), ("arxiv:2505.24389", "arXiv", ["Biology"]))
+
+    def test_query_needs_the_first_three_words_in_the_abstract(self):
+        import urllib.parse
+        from eonrise.providers import ArxivProvider
+        http = FakeXmlHttp(ARXIV_FEED)
+        ArxivProvider(http).search('how do "teams" (share) leadership:', 500)
+        params = urllib.parse.parse_qs(urllib.parse.urlsplit(http.urls[0]).query)
+        self.assertEqual(params["search_query"], ["abs:how AND abs:do AND abs:teams"])
+        self.assertEqual((params["max_results"], params["sortBy"]), (["100"], ["relevance"]))
+
+    def test_arxiv_runs_by_default(self):
+        from eonrise import cli
+        defaults = cli._provider_names(cli.parser().parse_args(["q", "--s2-key", "", "--core-key", ""]), {})
+        self.assertIn("arxiv", defaults)
+
+    def test_an_error_feed_raises_instead_of_becoming_a_paper(self):
+        from eonrise.providers import ArxivProvider, ProviderError
+        feed = """<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+          <id>http://arxiv.org/api/errors#incorrect_id_format_for_1234.12345</id><title>Error</title>
+          <summary>incorrect id format for 1234.12345</summary></entry></feed>"""
+        with self.assertRaises(ProviderError) as ctx:
+            ArxivProvider(FakeXmlHttp(feed)).search("x", 5)
+        self.assertIn("incorrect id format", str(ctx.exception))
+
+    def test_old_style_ids_keep_their_archive(self):
+        from eonrise.providers import ArxivProvider
+        feed = """<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+          <id>http://arxiv.org/abs/hep-ex/0307015v2</id><title>Old paper</title></entry></feed>"""
+        [paper] = ArxivProvider(FakeXmlHttp(feed)).search("x", 5)
+        self.assertEqual((paper.paper_id, paper.url), ("arxiv:hep-ex/0307015", "https://arxiv.org/abs/hep-ex/0307015"))

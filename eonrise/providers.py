@@ -12,6 +12,8 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+from xml.etree import ElementTree
+from xml.parsers import expat
 
 from . import __version__
 from .models import Paper
@@ -45,49 +47,57 @@ class CachedHttpClient:
         self._host_last: dict[str, float] = {}
         self._host_cooldown: dict[str, str] = {}
     def get_json(self, url: str, headers: dict[str, str] | None = None) -> dict:
+        return self._get(url, {"Accept": "application/json", **(headers or {})}, ".json", json.loads)
+
+    def get_xml(self, url: str, headers: dict[str, str] | None = None) -> ElementTree.Element:
+        """For sources that answer in XML, such as arXiv's Atom feed."""
+        return self._get(url, headers or {}, ".xml", _parse_xml)
+
+    def _get(self, url, headers, suffix, decode):
         key = hashlib.sha256(url.encode()).hexdigest()
-        cache_file = self.cache_dir / f"{key}.json"
+        cache_file = self.cache_dir / f"{key}{suffix}"
         if self._cache_fresh(cache_file):
-            return json.loads(cache_file.read_text(encoding="utf-8"))
+            return decode(cache_file.read_bytes())
         host = urllib.parse.urlsplit(url).netloc
         if host in self._host_cooldown:
             # 16 doomed requests per run is how the previous build spent a rate limit.
             raise ProviderUnavailable(self._host_cooldown[host])
-        merged = {"User-Agent": self.user_agent, "Accept": "application/json"}
-        merged.update(headers or {})
-        return self._fetch_json(url, merged, cache_file)
+        return self._fetch(url, {"User-Agent": self.user_agent, **headers}, cache_file, decode)
 
     def _cache_fresh(self, cache_file):
         return cache_file.exists() and time.time() - cache_file.stat().st_mtime <= self.cache_ttl_seconds
 
-    def _fetch_json(self, url, headers, cache_file):
+    def _fetch(self, url, headers, cache_file, decode):
         host = urllib.parse.urlsplit(url).netloc
         last_error = None
         for attempt in range(self.max_retries):
             self._wait_for_host(host)
             try:
-                return self._request_json(url, headers, cache_file)
+                return self._request(url, headers, cache_file, decode)
             except urllib.error.HTTPError as exc:
                 last_error = exc
                 if not self._retry_http(exc, host):
                     break
-            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ElementTree.ParseError) as exc:
                 last_error = exc
             time.sleep(2**attempt)
         self._request_failed(url, last_error)
 
     def _wait_for_host(self, host):
+        interval = max(self.min_interval, _HOST_INTERVALS.get(host, 0.0))
         elapsed = time.monotonic() - self._host_last.get(host, 0.0)
-        if elapsed < self.min_interval:
-            time.sleep(self.min_interval - elapsed)
+        if elapsed < interval:
+            time.sleep(interval - elapsed)
 
-    def _request_json(self, url, headers, cache_file):
+    def _request(self, url, headers, cache_file, decode):
         host = urllib.parse.urlsplit(url).netloc
         self._last_request = self._host_last[host] = time.monotonic()
         # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- every caller passes a fixed https API base plus urlencoded parameters
         with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=self.timeout) as response:
-            payload = json.loads(response.read().decode())
-            cache_file.write_text(json.dumps(payload))
+            # Bytes, not text: XML names its own encoding, and json.loads detects UTF-8/16/32.
+            body = response.read()
+            payload = decode(body)
+            cache_file.write_bytes(body)
             return payload
 
     def _retry_http(self, exc, host):
@@ -104,6 +114,28 @@ class CachedHttpClient:
     def _request_failed(self, url, last_error):
         # The query string carries api_key and mailto, and this text lands in report.md.
         raise ProviderError(f"Request failed: {urllib.parse.urlsplit(url)._replace(query='').geturl()}: {last_error}")
+
+
+# arXiv asks for one request every 3 seconds (info.arxiv.org/help/api/tou.html).
+_HOST_INTERVALS = {"export.arxiv.org": 3.0}
+
+
+def _parse_xml(body):
+    # Expat caps entity expansion only from Python 3.8.12, and Eonrise supports 3.8.0. No API we
+    # call sends a DTD, so a first pass refuses one at its opening tag, in any encoding, before
+    # any entity is declared; ElementTree never fetches external entities.
+    guard = expat.ParserCreate()
+    guard.StartDoctypeDeclHandler = _refuse_dtd
+    try:
+        guard.Parse(body, True)
+        return ElementTree.fromstring(body)  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
+    except (expat.ExpatError, LookupError, ValueError) as exc:
+        # An unknown or unsupported declared encoding raises LookupError or ValueError.
+        raise ElementTree.ParseError(str(exc)) from exc
+
+
+def _refuse_dtd(*_):
+    raise ValueError("XML with a DTD refused")
 
 
 def _retry_after_seconds(exc) -> float:
@@ -394,6 +426,64 @@ class OpenReviewProvider:
             f"openreview:{item.get('id', '')}", title, _strip_markup(_openreview_value(content, "abstract")),
             f"https://openreview.net/forum?id={item.get('id', '')}", "", _openreview_year(item), 0, self.name,
             keywords if isinstance(keywords, list) else [], [], [], _openreview_value(content, "venue") or "", [query])
+
+class ArxivProvider:
+    """Keyless preprints, mostly physics, maths, CS and AI, months before journals. Tested
+    2026-10-20: 7 of 20 arXiv hits for one question were missing from OpenAIRE."""
+    name = "arxiv"
+    def __init__(self, http, email=""):
+        self.http = http
+    def search(self, query, limit=20):
+        # Bare words are ORed, so 'group' and 'experiment' pulled particle physics; all words
+        # ANDed returned 0 for 5-word queries. The first three in the abstract stayed on shape.
+        words = re.findall(r"\w+", query)[:3]
+        url = "https://export.arxiv.org/api/query?" + urllib.parse.urlencode(
+            {"search_query": " AND ".join(f"abs:{w}" for w in words), "max_results": str(max(1, min(limit, 100))), "sortBy": "relevance"})
+        entries = self.http.get_xml(url).findall(f"{_ATOM}entry")
+        # A bad query comes back as a feed whose one entry is the error message.
+        errors = [e for e in entries if "/api/errors" in (e.findtext(f"{_ATOM}id") or "")]
+        if errors:
+            raise ProviderError(f"arXiv: {(errors[0].findtext(f'{_ATOM}summary') or '').strip()}")
+        return _parsed(self._paper, entries, query)
+
+    def _paper(self, entry, query):
+        title = _strip_markup(entry.findtext(f"{_ATOM}title"))
+        arxiv_id = _arxiv_id(entry.findtext(f"{_ATOM}id", ""))
+        if not title or not arxiv_id:
+            return None
+        doi = entry.findtext(f"{_ARXIV}doi", "").strip()
+        fields = [_arxiv_field(c.get("term", "")) for c in entry.findall(f"{_ATOM}category")]
+        return Paper(
+            doi or f"arxiv:{arxiv_id}", title, _strip_markup(entry.findtext(f"{_ATOM}summary")),
+            f"https://arxiv.org/abs/{arxiv_id}", doi, _parse_year(entry.findtext(f"{_ATOM}published", "")[:4]),
+            0, self.name, [], list(dict.fromkeys(f for f in fields if f)), [],
+            entry.findtext(f"{_ARXIV}journal_ref", "").strip() or "arXiv", [query])
+
+
+def _arxiv_id(entry_id):
+    """'http://arxiv.org/abs/2306.15804v2' -> '2306.15804'; anything else, such as an error entry, -> ''."""
+    if "/abs/" not in entry_id:
+        return ""
+    return re.sub(r"v\d+$", "", entry_id.split("/abs/", 1)[1])
+
+
+# arXiv subject codes (cs.CL, physics.soc-ph) by archive, named the way OpenAlex names fields.
+_ARXIV_FIELDS = {
+    "cs": "Computer Science", "math": "Mathematics", "stat": "Statistics", "econ": "Economics",
+    "q-bio": "Biology", "q-fin": "Finance", "eess": "Electrical Engineering", "physics": "Physics",
+    "astro-ph": "Astronomy", "cond-mat": "Physics", "gr-qc": "Physics", "hep-ex": "Physics",
+    "hep-lat": "Physics", "hep-ph": "Physics", "hep-th": "Physics", "math-ph": "Physics",
+    "nlin": "Physics", "nucl-ex": "Physics", "nucl-th": "Physics", "quant-ph": "Physics",
+}
+
+
+def _arxiv_field(code):
+    """Unknown archives (cross-listed journal codes such as 'I.2.7') yield no field."""
+    return _ARXIV_FIELDS.get(code.split(".", 1)[0], "")
+
+
+_ATOM = "{http://www.w3.org/2005/Atom}"
+_ARXIV = "{http://arxiv.org/schemas/atom}"
 
 def _openaire_doi(item):
     return next((x.get("value", "") for x in item.get("pids") or [] if x.get("scheme") == "doi"), "")

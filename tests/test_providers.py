@@ -108,5 +108,91 @@ class ProviderCooldownTests(unittest.TestCase):
         self.assertNotIn("a%40b.c", message)
 
 
+class _Response:
+    def __init__(self, body): self.body = body
+    def read(self): return self.body
+    def __enter__(self): return self
+    def __exit__(self, *exc): return False
+
+
+def _replay(bodies, calls):
+    def fake(request, timeout=0):
+        calls.append(getattr(request, "full_url", request))
+        return _Response(bodies.pop(0))
+    return fake
+
+
+class XmlClientTests(unittest.TestCase):
+    """get_xml shares get_json's cache, retry and cooldown; these pin what XML adds."""
+
+    def _client(self, tmp, **kw):
+        return CachedHttpClient(cache_dir=Path(tmp), min_interval=0.0, **kw)
+
+    def test_declared_encoding_is_honoured_live_and_from_cache(self):
+        body = b'<?xml version="1.0" encoding="ISO-8859-1"?><r>caf\xe9</r>'
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp:
+            client = self._client(tmp)
+            with mock.patch("urllib.request.urlopen", side_effect=_replay([body], calls)):
+                first = client.get_xml("https://export.arxiv.org/api/query?q=1")
+                second = client.get_xml("https://export.arxiv.org/api/query?q=1")
+        self.assertEqual((first.text, second.text, len(calls)), ("café", "café", 1))
+
+    def test_malformed_xml_is_retried_and_never_cached(self):
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp:
+            client = self._client(tmp, max_retries=2)
+            with mock.patch("urllib.request.urlopen", side_effect=_replay([b"<r>", b"<r>ok</r>"], calls)),                     mock.patch("time.sleep"):
+                self.assertEqual(client.get_xml("https://export.arxiv.org/api/query?q=2").text, "ok")
+            self.assertEqual([f.read_bytes() for f in Path(tmp).iterdir()], [b"<r>ok</r>"])
+        self.assertEqual(len(calls), 2)
+
+    def test_a_dtd_is_refused_so_entity_bombs_cannot_expand(self):
+        bomb = b'<?xml version="1.0"?><!DOCTYPE r [<!ENTITY a "x">]><r>&a;</r>'
+        with tempfile.TemporaryDirectory() as tmp:
+            client = self._client(tmp, max_retries=1)
+            with mock.patch("urllib.request.urlopen", side_effect=_replay([bomb], [])), mock.patch("time.sleep"):
+                with self.assertRaises(providers.ProviderError):
+                    client.get_xml("https://export.arxiv.org/api/query?q=3")
+            self.assertEqual(list(Path(tmp).iterdir()), [])
+
+    def test_a_dtd_is_refused_in_utf16_too(self):
+        for encoding in ("utf-16", "utf-16-le", "utf-16-be"):
+            bomb = '<?xml version="1.0" encoding="%s"?><!DOCTYPE r [<!ENTITY a "x">]><r>&a;</r>' % encoding
+            body = bomb.encode(encoding)
+            with self.subTest(encoding=encoding), tempfile.TemporaryDirectory() as tmp:
+                client = self._client(tmp, max_retries=1)
+                with mock.patch("urllib.request.urlopen", side_effect=_replay([body], [])), mock.patch("time.sleep"):
+                    with self.assertRaises(providers.ProviderError):
+                        client.get_xml("https://export.arxiv.org/api/query?q=6")
+
+    def test_an_unknown_declared_encoding_is_retried_not_raised_raw(self):
+        calls = []
+        bodies = [b'<?xml version="1.0" encoding="xxx"?><r/>', b"<r>ok</r>"]
+        with tempfile.TemporaryDirectory() as tmp:
+            client = self._client(tmp, max_retries=2)
+            with mock.patch("urllib.request.urlopen", side_effect=_replay(bodies, calls)), mock.patch("time.sleep"):
+                self.assertEqual(client.get_xml("https://export.arxiv.org/api/query?q=7").text, "ok")
+        self.assertEqual(len(calls), 2)
+
+    def test_arxiv_requests_are_spaced_three_seconds_apart(self):
+        sleeps = []
+        with tempfile.TemporaryDirectory() as tmp:
+            client = self._client(tmp)
+            with mock.patch("urllib.request.urlopen", side_effect=_replay([b"<r/>", b"<r/>"], [])),                     mock.patch("time.sleep", side_effect=sleeps.append):
+                client.get_xml("https://export.arxiv.org/api/query?q=4")
+                client.get_xml("https://export.arxiv.org/api/query?q=5")
+        self.assertTrue(sleeps and sleeps[-1] > 2.5, sleeps)
+
+    def test_json_cache_written_by_older_versions_still_reads(self):
+        url = "https://api.crossref.org/works?q=old"
+        with tempfile.TemporaryDirectory() as tmp:
+            import hashlib
+            Path(tmp, hashlib.sha256(url.encode()).hexdigest() + ".json").write_text('{"a": "é"}', encoding="utf-8")
+            with mock.patch("urllib.request.urlopen") as net:
+                self.assertEqual(self._client(tmp).get_json(url), {"a": "é"})
+            net.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

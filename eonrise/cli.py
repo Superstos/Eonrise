@@ -12,7 +12,7 @@ from .engine import canonical_root, run_search
 from .equivalence import ConceptEquivalenceStore
 from .question_log import QuestionLog
 from .models import SearchSettings, Paper
-from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
+from .providers import (ArxivProvider, CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
                          EuropePMCProvider, EvidenceBundleProvider, OpenAireProvider, OpenAlexProvider,
                          OpenReviewProvider,
                          ProviderError, SemanticScholarProvider)
@@ -92,7 +92,7 @@ def _provider_names(args: argparse.Namespace, available: dict) -> list[str]:
     if args.crossref_only:
         return ["crossref"]
     keyed = [name for name, key in (("semanticscholar", args.s2_key), ("core", args.core_key)) if key]
-    return ["crossref", "openalex", "europepmc", "doaj", "openaire", "openreview", *keyed]
+    return ["crossref", "openalex", "europepmc", "doaj", "openaire", "openreview", "arxiv", *keyed]
 
 
 def _chosen_providers(raw, available):
@@ -121,6 +121,7 @@ def _live_providers(args: argparse.Namespace, http: CachedHttpClient, corpus: Pa
         "core": lambda: CoreProvider(http, args.core_key),
         "openaire": lambda: OpenAireProvider(http),
         "openreview": lambda: OpenReviewProvider(http),
+        "arxiv": lambda: ArxivProvider(http),
     }
     providers = [available[name]() for name in dict.fromkeys(_provider_names(args, available))]
     # The store answers first and costs nothing: a paper already held needs no API

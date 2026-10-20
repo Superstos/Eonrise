@@ -22,7 +22,7 @@ Finds the research fields that already solved your problem under another name.
 
 A problem that feels new in my field is often an old one somewhere else. Someone in law, medicine
 or materials science has usually studied it for years, under words I would never think to search
-for. Eonrise takes a question in plain language, searches up to eight scholarly sources, and returns a
+for. Eonrise takes a question in plain language, searches up to nine scholarly sources, and returns a
 short brief: what the literature says about the question, what it admits it cannot do, and which
 distant fields share the same shape of problem.
 
@@ -85,7 +85,7 @@ To ask one problem from several angles, put one question per line in a file and 
 `eonrise --angles questions.txt --out output`; `output/angles.md` shows what each angle
 found that the others missed.
 
-Six sources run by default, with no key. Semantic Scholar and CORE join when you give their
+Seven sources run by default, with no key. Semantic Scholar and CORE join when you give their
 free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 
 | Source | Access |
@@ -96,6 +96,7 @@ free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 | DOAJ | keyless |
 | OpenAIRE | keyless |
 | OpenReview | keyless |
+| arXiv | keyless |
 | Semantic Scholar | free API key, or `--providers` |
 | CORE | free API key, or `--providers` |
 

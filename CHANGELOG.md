@@ -8,6 +8,7 @@ User-facing changes. `docs/SPEC.md` keeps the engineering history.
 
 - `docs/WITHOUT-CODE.md` and `llms.txt`: web chats that cannot run code were describing Eonrise instead of using it when given the repo link; they now have the method in 5 steps to do by hand with web search.
 - Two keyless sources run by default: OpenAIRE (the EU open-access graph) and OpenReview (conference papers, with venues such as "Withdrawn" kept visible). A live run drew 30 and 7 papers from them, with abstracts, and no rate limits.
+- arXiv runs by default, keyless: preprints in physics, maths, computer science and AI, often months before a journal prints them. In one check, 7 of 20 arXiv results for a question were missing from OpenAIRE. Requests to arXiv are spaced 3 seconds apart, as arXiv asks.
 - Retracted papers stay out of OpenAlex and Crossref results: OpenAlex is asked for unretracted works only, and Crossref results flagged by Retraction Watch as retracted or withdrawn are dropped, along with the retraction notices themselves. The other sources carry no retraction flag.
 
 ## 0.11.0 - 2026-10-15
