@@ -22,7 +22,7 @@ Finds the research fields that already solved your problem under another name.
 
 A problem that feels new in my field is often an old one somewhere else. Someone in law, medicine
 or materials science has usually studied it for years, under words I would never think to search
-for. Eonrise takes a question in plain language, searches up to six scholarly sources, and returns a
+for. Eonrise takes a question in plain language, searches up to eight scholarly sources, and returns a
 short brief: what the literature says about the question, what it admits it cannot do, and which
 distant fields share the same shape of problem.
 
@@ -52,7 +52,8 @@ from any run's `research_map.json`.
 <a href="https://superstos.github.io/Eonrise/demo/"><img src="docs/assets/concept-map.png" alt="Network map of 1,950 concepts one Eonrise run reached from a question about written instructions and repeated mistakes, in muted colours by cluster. The question sits near the centre. Labelled concepts around it include second language acquisition, visual word, lexical access, proactive interference, memory interference, cognitive flexibility, phonological processing and reading disorders." width="100%"></a>
 
 1. The question becomes one root topic, and every later search stays tied to it.
-2. Each round searches the scholarly sources and drops papers about something else.
+2. Each round searches the scholarly sources and drops papers about something else. OpenAlex
+   and Crossref also drop papers marked retracted; the other sources carry no such flag.
 3. Terms, relations and stated limitations come from titles and abstracts. Each term joins
    the map as a parent, sibling or child of the root.
 4. Empty parts of the map send targeted searches back to step 2, up to `--max-rounds`.
@@ -84,7 +85,7 @@ To ask one problem from several angles, put one question per line in a file and 
 `eonrise --angles questions.txt --out output`; `output/angles.md` shows what each angle
 found that the others missed.
 
-Four sources run by default, with no key. Semantic Scholar and CORE join when you give their
+Six sources run by default, with no key. Semantic Scholar and CORE join when you give their
 free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 
 | Source | Access |
@@ -93,6 +94,8 @@ free key; [docs/USAGE.md](docs/USAGE.md) lists the environment variables.
 | OpenAlex | keyless, optional API key |
 | Europe PMC | keyless |
 | DOAJ | keyless |
+| OpenAIRE | keyless |
+| OpenReview | keyless |
 | Semantic Scholar | free API key, or `--providers` |
 | CORE | free API key, or `--providers` |
 

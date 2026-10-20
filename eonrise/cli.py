@@ -13,7 +13,8 @@ from .equivalence import ConceptEquivalenceStore
 from .question_log import QuestionLog
 from .models import SearchSettings, Paper
 from .providers import (CachedHttpClient, CoreProvider, CrossrefProvider, DoajProvider,
-                         EuropePMCProvider, EvidenceBundleProvider, OpenAlexProvider,
+                         EuropePMCProvider, EvidenceBundleProvider, OpenAireProvider, OpenAlexProvider,
+                         OpenReviewProvider,
                          ProviderError, SemanticScholarProvider)
 from .report import write_outputs
 from . import angles
@@ -42,7 +43,7 @@ def _provider_arguments(p):
     p.add_argument("--bundle", action="append", help="JSON evidence bundle for assistant mode: a file or a folder of *.json; repeat to merge several")
     p.add_argument("--fixture", help=argparse.SUPPRESS)
     p.add_argument("--crossref-only", action="store_true", help="Crossref alone (no abstracts or topics; expect neighbor_field to stay empty)")
-    p.add_argument("--providers", default="", help="Comma-separated subset of: crossref,openalex,europepmc,doaj,semanticscholar,core")
+    p.add_argument("--providers", default="", help="Comma-separated subset of: crossref,openalex,europepmc,doaj,openaire,openreview,semanticscholar,core")
     p.add_argument("--s2-key", default=os.getenv("S2_API_KEY", ""), help="Semantic Scholar key (free; the keyless pool answers 429 under load)")
     p.add_argument("--core-key", default=os.getenv("CORE_API_KEY", ""), help="CORE key (free; keyless requests 429 after a few calls)")
 
@@ -91,7 +92,7 @@ def _provider_names(args: argparse.Namespace, available: dict) -> list[str]:
     if args.crossref_only:
         return ["crossref"]
     keyed = [name for name, key in (("semanticscholar", args.s2_key), ("core", args.core_key)) if key]
-    return ["crossref", "openalex", "europepmc", "doaj", *keyed]
+    return ["crossref", "openalex", "europepmc", "doaj", "openaire", "openreview", *keyed]
 
 
 def _chosen_providers(raw, available):
@@ -118,6 +119,8 @@ def _live_providers(args: argparse.Namespace, http: CachedHttpClient, corpus: Pa
         "doaj": lambda: DoajProvider(http, args.email),
         "semanticscholar": lambda: SemanticScholarProvider(http, args.s2_key),
         "core": lambda: CoreProvider(http, args.core_key),
+        "openaire": lambda: OpenAireProvider(http),
+        "openreview": lambda: OpenReviewProvider(http),
     }
     providers = [available[name]() for name in dict.fromkeys(_provider_names(args, available))]
     # The store answers first and costs nothing: a paper already held needs no API

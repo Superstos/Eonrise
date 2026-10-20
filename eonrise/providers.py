@@ -143,7 +143,7 @@ class CrossrefProvider:
     def _paper(self, item, query):
         doi = str(item.get("DOI", "")).strip()
         title = _strip_markup(_first_title(item.get("title")))
-        if not title:
+        if not title or _crossref_retracted(item):
             return None
         # nosemgrep: python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1 -- a stable ID for papers without a DOI, not security; changing it would re-key stored papers
         paper_id = doi or hashlib.sha1(title.lower().encode(), usedforsecurity=False).hexdigest()
@@ -172,7 +172,9 @@ class OpenAlexProvider:
         # search needs one; keyless keyword search is the default because Crossref
         # carries no abstracts or topic hierarchy (measured: 16% / 0%).
         params = {self._search_key(): query, "per_page": str(max(1,min(limit,100))),
-                  "select": "id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_topic,topics,keywords"}
+                  "select": "id,doi,title,abstract_inverted_index,publication_year,cited_by_count,primary_topic,topics,keywords",
+                  # A retracted paper must never reach a harvest; OpenAlex flags them from Retraction Watch.
+                  "filter": "is_retracted:false"}
         self._identify(params)
         payload = self.http.get_json("https://api.openalex.org/works?" + urllib.parse.urlencode(params))
         return _parsed(self._paper, payload.get("results", []), query)
@@ -347,9 +349,83 @@ class CoreProvider:
             [], list(dict.fromkeys(subjects))[:5], [], "", [query])
 
 
+class OpenAireProvider:
+    """Keyless EU open-access graph, deduplicated across repositories. Tested 2026-10-20:
+    352 hits for a 3-word query with abstracts, keywords and open-access flags, no key."""
+    name = "openaire"
+    def __init__(self, http, email=""):
+        self.http = http
+    def search(self, query, limit=20):
+        url = "https://api.openaire.eu/graph/v1/researchProducts?" + urllib.parse.urlencode(
+            {"search": query, "type": "publication", "pageSize": str(max(1, min(limit, 100)))})
+        return _parsed(self._paper, self.http.get_json(url).get("results") or [], query)
+
+    def _paper(self, item, query):
+        title = _strip_markup(item.get("mainTitle"))
+        if not title:
+            return None
+        doi = _openaire_doi(item)
+        return Paper(
+            doi or f"openaire:{item.get('id','')}", title, _strip_markup(" ".join(str(x) for x in item.get("descriptions") or [] if x)),
+            f"https://doi.org/{doi}" if doi else f"https://explore.openaire.eu/search/result?id={item.get('id','')}",
+            doi, _parse_year(str(item.get("publicationDate") or "")[:4]), _openaire_citations(item), self.name,
+            [], _openaire_subjects(item), [], (item.get("container") or {}).get("name") or "", [query])
+
+class OpenReviewProvider:
+    """Keyless conference papers (ICLR, NeurIPS workshops, Agents4Science). The venue keeps
+    'Withdrawn' or 'Desk Rejected' visible as a quality signal."""
+    name = "openreview"
+    def __init__(self, http, email=""):
+        self.http = http
+    def search(self, query, limit=20):
+        # source=forum returns submissions only; without it, reviews come back carrying their
+        # own titles and dates in place of the paper's.
+        url = "https://api2.openreview.net/notes/search?" + urllib.parse.urlencode(
+            {"term": query, "source": "forum", "limit": str(max(1, min(limit, 100)))})
+        return _parsed(self._paper, self.http.get_json(url).get("notes") or [], query)
+
+    def _paper(self, item, query):
+        content = item.get("content") or {}
+        title = _strip_markup(_openreview_value(content, "title"))
+        if not title or (item.get("forum") or item.get("id")) != item.get("id"):
+            return None
+        keywords = _openreview_value(content, "keywords")
+        return Paper(
+            f"openreview:{item.get('id', '')}", title, _strip_markup(_openreview_value(content, "abstract")),
+            f"https://openreview.net/forum?id={item.get('id', '')}", "", _openreview_year(item), 0, self.name,
+            keywords if isinstance(keywords, list) else [], [], [], _openreview_value(content, "venue") or "", [query])
+
+def _openaire_doi(item):
+    return next((x.get("value", "") for x in item.get("pids") or [] if x.get("scheme") == "doi"), "")
+
+
+def _openaire_subjects(item):
+    subjects = [((x.get("subject") or {}).get("value") or "").strip() for x in item.get("subjects") or []]
+    return list(dict.fromkeys(s for s in subjects if s))[:8]
+
+
+def _openaire_citations(item):
+    return int(((item.get("indicators") or {}).get("citationImpact") or {}).get("citationCount") or 0)
+
+
+def _openreview_year(item):
+    return time.gmtime(item["cdate"] / 1000).tm_year if item.get("cdate") is not None else None
+
+
+def _openreview_value(content, key):
+    return (content.get(key) or {}).get("value")
+
+
 def _parsed(parse, items, query):
     """Papers parsed from a provider's result items; items without a title are skipped."""
     return [paper for paper in (parse(item, query) for item in items) if paper is not None]
+
+
+def _crossref_retracted(item):
+    """A retracted or withdrawn paper (Retraction Watch data in `updated-by`), or the notice
+    that retracts one (`update-to`): neither is evidence."""
+    updates = (item.get("updated-by") or []) + (item.get("update-to") or [])
+    return any(u.get("type") in {"retraction", "withdrawal"} for u in updates if isinstance(u, dict))
 
 
 def _crossref_subjects(item):
